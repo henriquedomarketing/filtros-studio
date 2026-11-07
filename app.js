@@ -83,7 +83,7 @@ function layout(content){const admin=app.profile?.role==='admin';
     const clientBrand=home
       ? `<div class="client-brand client-brand-without-icon client-brand-with-studio-logo">
           <span class="client-header-studio-logo" aria-hidden="true"><img src="./assets/filtros-studio-mark.svg" alt="" decoding="async"></span>
-          <span class="client-brand-copy"><strong>${escapeHtml(app.company?.name||'Minha empresa')}</strong><small>FILTROS PERSONALIZADOS</small></span>
+          <span class="client-brand-copy"><strong>Filtros Studio</strong><small>FILTROS PERSONALIZADOS</small></span>
         </div>`
       : `<div class="client-brand client-platform-brand">
           <span class="client-brand-mark client-platform-mark fs-logo-mark"><img src="./assets/filtros-studio-mark.svg" alt="" aria-hidden="true"></span>
@@ -92,7 +92,7 @@ function layout(content){const admin=app.profile?.role==='admin';
     const cameraMode=type==='is-camera';
     const cameraDrawer=cameraMode?`<div class="client-camera-menu-backdrop" data-act="close-client-menu" aria-hidden="true"></div>
       <aside class="client-camera-drawer" id="clientCameraDrawer" style="${brandStyle(testing?testingCompany:app.company)}" aria-label="Menu de categorias" aria-hidden="true" inert>
-        <div class="client-camera-drawer-heading"><strong>${escapeHtml((testing?testingCompany:app.company)?.name||'Minha empresa')}</strong>
+        <div class="client-camera-drawer-heading"><strong>Filtros Studio</strong>
           <button type="button" class="client-camera-drawer-close" data-act="close-client-menu" aria-label="Fechar menu">✕</button>
         </div>
         <button type="button" class="client-camera-drawer-home" data-act="${testing?'exit-admin-test':'back-categories'}">
@@ -330,9 +330,6 @@ function settings(){const branding=app.settings.branding||{};return header('PERS
 function clientCategories(){
   return `<section class="client-home">
     <div class="client-home-heading">
-      <div class="client-company-logo-wrap">
-        ${brandImg(app.company,'client-company-logo')||'<span class="client-logo-fallback">'+escapeHtml(companyInitials(app.company))+'</span>'}
-      </div>
       <div class="client-home-heading-copy">
         <h1>Bem-vindo!</h1>
         <p>Escolha uma categoria, selecione seu filtro e crie fotos para suas redes sociais.</p>
