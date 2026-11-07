@@ -1,0 +1,63 @@
+/* Filtros Studio — identidade azul global (camada visual, sem alterar eventos). */
+:root{--fs-deep:#001993;--fs-ink:#001993;--fs-surface:#fff}
+body:has(.client-app){background:#001993!important}
+.client-app,.client-app.is-home,.client-app.is-camera,.client-app.is-preview{
+ position:relative!important;isolation:isolate!important;min-height:100dvh;
+ background:radial-gradient(circle at 90% 14%,#1337b4 0%,transparent 38%),linear-gradient(150deg,#06145b 0%,#001993 55%,#06145b 100%)!important;
+ color:#fff!important;overflow-x:clip;
+}
+.client-app::before,.client-app::after{
+ content:"";position:fixed;z-index:-1;pointer-events:none;border-radius:50%;
+ border:1px solid rgba(162,205,255,.32);
+ background:radial-gradient(circle at 65% 65%,rgba(62,142,255,.20),rgba(21,70,190,.09) 55%,transparent 75%);
+ width:min(70vw,390px);aspect-ratio:1;
+}
+.client-app::before{top:-16vw;left:-31vw}
+.client-app::after{bottom:-21vw;right:-35vw}
+.client-app .client-content{background:transparent!important;position:relative;z-index:1}
+.client-app .client-header,.client-app.is-home .client-header,.client-app.is-camera .client-camera-header{
+ background:transparent!important;color:#fff!important;border-color:transparent!important;box-shadow:none!important;
+}
+.client-app .client-header :is(h1,strong,span),.client-app .client-camera-header :is(h1,strong,span){color:#fff}
+.client-app.is-home .client-home-heading{
+ background:linear-gradient(130deg,rgba(29,76,207,.60),rgba(0,25,147,.65))!important;
+ border:1px solid rgba(127,188,255,.50)!important;color:#fff!important;
+}
+.client-app.is-home .client-home-heading::before,.client-app.is-home .client-home-heading::after{opacity:.65}
+.client-app.is-home .client-company-logo-wrap,.client-app.is-home .client-company-logo,
+.client-app.is-home .client-logo-fallback{display:none!important}
+.client-app.is-home .client-category-item{
+ background:linear-gradient(145deg,#fff,#f0f4ff)!important;color:#001993!important;
+ border:1px solid rgba(255,255,255,.96)!important;
+ box-shadow:0 7px 20px rgba(0,10,75,.18)!important;
+ text-shadow:none!important;
+}
+.client-app.is-home .client-category-item::before{display:none}
+.client-app.is-home .client-category-name,.client-app.is-home .client-category-arrow{
+ color:#001993!important;text-shadow:none!important;
+}
+.client-app.is-home .client-category-count{color:#001993!important;background:#e8eeff!important;border-color:#d8e2ff!important}
+.client-app.is-camera .client-camera-drawer{
+ background:linear-gradient(150deg,#082ca8,#001993 65%,#06145b)!important;
+ color:#fff!important;border-color:rgba(142,192,255,.3)!important;
+}
+.client-app.is-camera .client-camera-drawer-heading strong,
+.client-app.is-camera .client-camera-drawer-label{color:#fff!important}
+.client-app.is-camera .client-camera-drawer-home,
+.client-app.is-camera .client-camera-drawer-category,
+.client-app.is-camera .client-camera-drawer-bottom button{
+ background:#fff!important;color:#001993!important;border:1px solid #e4ebff!important;
+ box-shadow:0 5px 16px rgba(0,10,75,.16)!important;
+}
+.client-app.is-camera .client-camera-drawer-category span,
+.client-app.is-camera .client-camera-drawer-home strong,
+.client-app.is-camera .client-camera-drawer-bottom button span{color:#001993!important}
+.client-app.is-camera .client-camera-drawer-category.selected{background:#dfeaff!important;color:#001993!important}
+.client-app.is-camera .client-photo-controls{background:rgba(8,35,145,.82)!important;border-color:rgba(255,255,255,.35)!important}
+.client-app.is-camera .client-control-secondary{background:#fff!important;color:#001993!important}
+.client-app .client-footer,.client-app .client-footer *{color:#e0e9ff!important}
+.client-app .client-camera-preview,.client-app video,.client-app canvas,.client-app .client-photo-preview{
+ /* Do not tint the actual camera feed, imported photo or customer PNG overlay. */
+ filter:none!important;
+}
+@media(prefers-reduced-motion:reduce){.client-app::before,.client-app::after{animation:none!important}}
