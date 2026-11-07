@@ -575,3 +575,23 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
   .auth-layout .auth-card .field input{min-height:44px!important}
   .auth-layout .auth-card .btn-primary{min-height:46px!important}
 }
+
+/* Login ocupa a altura visível do iPhone; teclado/zoom ainda podem rolar. */
+.auth-layout:has(> .auth-card){
+  box-sizing:border-box!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+}
+/* Créditos e links em branco: nunca azul sobre o fundo azul da plataforma. */
+.auth-layout .studio-credits-auth strong,
+.auth-layout .studio-credits-auth a,
+.auth-layout .studio-credits-auth a:visited,
+.client-app .studio-credits a,
+.admin-layout .studio-credits-admin a{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  text-decoration-color:#dce7ff!important;
+}
