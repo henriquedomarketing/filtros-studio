@@ -579,7 +579,6 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
 /* Login ocupa a altura visível do iPhone; teclado/zoom ainda podem rolar. */
 .auth-layout:has(> .auth-card){
   box-sizing:border-box!important;
-  height:100dvh!important;
   min-height:100dvh!important;
   padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))!important;
   overflow-x:hidden!important;
@@ -594,4 +593,30 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
   color:#fff!important;
   -webkit-text-fill-color:#fff!important;
   text-decoration-color:#dce7ff!important;
+}
+
+/* Distribuição do login no iPhone: logo, formulário e suporte equilibrados
+   verticalmente. Evita o bloco de conteúdo preso no topo e o vazio no rodapé. */
+.auth-layout .auth-card>.brand{
+  min-height:clamp(230px,29dvh,390px)!important;
+  margin-bottom:0!important;
+}
+.auth-layout .auth-card .form{
+  margin:auto auto 0!important;
+}
+.auth-layout .auth-card .auth-support-link{
+  margin:clamp(14px,2.5dvh,25px) auto auto!important;
+}
+/* Se não houver altura suficiente, o conteúdo volta a fluir naturalmente. */
+@media(max-height:720px){
+  .auth-layout .auth-card>.brand{
+    min-height:clamp(130px,22dvh,190px)!important;
+    margin-bottom:8px!important;
+  }
+  .auth-layout .auth-card .form{
+    margin:10px auto 0!important;
+  }
+  .auth-layout .auth-card .auth-support-link{
+    margin:10px auto auto!important;
+  }
 }

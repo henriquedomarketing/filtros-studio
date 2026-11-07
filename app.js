@@ -4,6 +4,27 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 const SUPABASE_URL = 'https://imfgumnpbxhbrjlkiphf.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_kJL7tvsZ-pTX6hm5JRTcFw_W66hhoxv';
 const api = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {auth:{autoRefreshToken:true,persistSession:true}});
+// A saída explícita deve permanecer válida mesmo quando a rede ou o Auth falhar.
+// O nome da chave corresponde ao storage padrão do Supabase para este projeto.
+const AUTH_SESSION_STORAGE_KEY = 'sb-' + new URL(SUPABASE_URL).hostname.split('.')[0] + '-auth-token';
+const EXPLICIT_LOGOUT_KEY = 'filtros-studio-explicit-logout-v1';
+let logoutPending = false;
+function setExplicitLogout(value){
+  try {
+    if(value)sessionStorage.setItem(EXPLICIT_LOGOUT_KEY,'1');
+    else sessionStorage.removeItem(EXPLICIT_LOGOUT_KEY);
+  } catch (_) { /* Safari privado: o logout local segue normalmente. */ }
+}
+function wasExplicitlyLoggedOut(){
+  try { return sessionStorage.getItem(EXPLICIT_LOGOUT_KEY)==='1'; }
+  catch (_) { return false; }
+}
+function clearStoredAuthSession(){
+  try {
+    localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
+    localStorage.removeItem(AUTH_SESSION_STORAGE_KEY+'-code-verifier');
+  } catch (_) { /* A SDK também tentará limpar a sessão. */ }
+}
 const $ = id=>document.getElementById(id);
 const escapeHtml = v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const brl = n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -485,7 +506,18 @@ async function loadData(){
   render();
 }
 async function refresh(){await loadData();toast('Dados atualizados.');}
-async function init(){const {data:{session}}=await api.auth.getSession();app.user=session?.user||null;if(app.user){try{await loadData()}catch(error){toast(errorMessage(error));$('root').innerHTML=waiting()}}else render();}
+async function init(){
+  // Não restaurar um login anterior após o usuário tocar explicitamente em Sair.
+  if(wasExplicitlyLoggedOut()){
+    clearStoredAuthSession();
+    app.user=null;app.profile=null;app.company=null;
+    render();return;
+  }
+  const {data:{session}}=await api.auth.getSession();
+  app.user=session?.user||null;
+  if(app.user){try{await loadData()}catch(error){toast(errorMessage(error));$('root').innerHTML=waiting()}}
+  else render();
+}
 const clientUsernamePattern=/^[a-z][a-z0-9_-]{2,31}$/;
 function normalizeClientUsername(value){
   const username=String(value||'').trim().toLowerCase();
@@ -500,7 +532,13 @@ function loginAuthEmail(identifier){
   }
   return normalizeClientUsername(value)+'@usuarios.filtros.studio';
 }
-async function authSubmit(form){const data=Object.fromEntries(new FormData(form));$('authError').textContent='';const submit=form.querySelector('button[type=submit]');submit.disabled=true;try{const {data:auth,error}=await api.auth.signInWithPassword({email:loginAuthEmail(data.login),password:data.password});if(error)throw error;app.user=auth.user;await loadData();}catch(error){const node=$('authError');if(node)node.textContent=errorMessage(error)}finally{if(submit.isConnected)submit.disabled=false;}}
+async function authSubmit(form){
+  if(logoutPending){
+    const errorNode=$('authError');
+    if(errorNode)errorNode.textContent='Aguarde a conclusão da saída e tente novamente.';
+    return;
+  }
+  const data=Object.fromEntries(new FormData(form));$('authError').textContent='';const submit=form.querySelector('button[type=submit]');submit.disabled=true;try{const {data:auth,error}=await api.auth.signInWithPassword({email:loginAuthEmail(data.login),password:data.password});if(error)throw error;setExplicitLogout(false);app.user=auth.user;await loadData();}catch(error){const node=$('authError');if(node)node.textContent=errorMessage(error)}finally{if(submit.isConnected)submit.disabled=false;}}
 async function manager(body){
   const {data,error}=await api.functions.invoke('manage-client',{body});
   if(error){
@@ -1033,6 +1071,32 @@ function saveCapturedPhoto(){
   else downloadCapturedPhoto();
 }
 
+async function logoutCurrentBrowser(){
+  if(logoutPending)return;
+  logoutPending=true;
+  // Primeiro encerra o acesso visual e remove o token persistido, sem
+  // depender de uma resposta de rede para respeitar o clique em "Sair".
+  setExplicitLogout(true);
+  clearStoredAuthSession();
+  app.adminTest.active=false;
+  stopCamera();clearCapturedPhoto();clearGalleryPhoto();
+  app.images.forEach(url=>URL.revokeObjectURL(url));app.images.clear();
+  app.user=null;app.profile=null;app.company=null;
+  app.companies=[];app.categories=[];app.filters=[];app.invoices=[];
+  app.settings={};app.modal=null;app.selectedCategory=null;app.selectedFilter=null;
+  app.page='dashboard';
+  render();
+  try {
+    // 'local' encerra este navegador, sem desconectar outros dispositivos.
+    const {error}=await api.auth.signOut({scope:'local'});
+    if(error)console.warn('A sessão foi removida do aparelho, mas a revogação remota falhou.');
+  } catch (_) {
+    // Logout local permanece obrigatório mesmo sem conexão.
+  } finally {
+    clearStoredAuthSession();
+    logoutPending=false;
+  }
+}
 async function click(event){const target=event.target.closest('[data-act],[data-nav]');if(!target)return;if(target.dataset.nav){navigate(target.dataset.nav);return;}const act=target.dataset.act,uid=target.dataset.id;try{if(act==='check-client-access'){
   if(app.profile?.role==='admin')return;
   await loadData();
@@ -1053,7 +1117,7 @@ if(act==='open-client-menu'){setClientCameraMenu(true);return;}if(act==='close-c
   if(!next||(app.adminTest.active&&next.company_id!==app.adminTest.companyId))return;
   if(app.selectedCategory===uid){setClientCameraMenu(false);return;}
   resetCameraSession(uid);return;
-}if(act==='logout'){app.adminTest.active=false;stopCamera();clearCapturedPhoto();clearGalleryPhoto();app.images.forEach(v=>URL.revokeObjectURL(v));app.images.clear();await api.auth.signOut();app.user=null;app.profile=null;app.company=null;app.modal=null;render();return;}if(act==='toggle-client-access'){
+}if(act==='logout'){await logoutCurrentBrowser();return;}if(act==='toggle-client-access'){
   if(app.profile?.role!=='admin')return;
   const company=app.companies.find(c=>c.id===uid);
   if(!company)return;
