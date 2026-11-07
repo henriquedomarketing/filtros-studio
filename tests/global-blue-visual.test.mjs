@@ -43,7 +43,7 @@ test('photo capture/gallery/preview preserve the original video and PNG overlay'
     assert.match(app,new RegExp('data-act="'+action+'"'));
 });
 test('admin dashboard, client management and finance share the official blue background',()=>{
-  const admin=app.slice(app.indexOf('return `<div class="layout admin-layout"'),app.indexOf('function table('));
+  const admin=app.slice(app.indexOf("const menu=[['dashboard'"),app.indexOf('function table('));
   for(const menu of ['dashboard','clients','filters','test-filters','finance','settings'])
     assert.ok(admin.includes("'"+menu+"'"),menu+' remains in sidebar');
   assert.match(admin,/class="workspace"/);
