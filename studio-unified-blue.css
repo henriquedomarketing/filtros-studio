@@ -502,3 +502,76 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
 @media(prefers-reduced-motion:reduce){
  .admin-layout .nav-btn{transition:none!important}
 }
+
+/* Login compacto: cabe no viewport móvel sem rolagem desnecessária.
+   O layout não bloqueia o scroll quando o teclado abre ou a tela é baixa. */
+.auth-layout .auth-card{
+  flex:1 1 auto!important;
+}
+.auth-layout .auth-card>.brand{
+  min-height:clamp(145px,26dvh,235px)!important;
+  margin-bottom:clamp(8px,1.4dvh,16px)!important;
+  padding-top:clamp(14px,2.4dvh,24px)!important;
+  padding-bottom:clamp(14px,2.4dvh,24px)!important;
+}
+.auth-layout .auth-card .brand .brand-mark.fs-logo-mark{
+  flex-basis:clamp(56px,14vw,90px)!important;
+  width:clamp(56px,14vw,90px)!important;
+  height:clamp(56px,14vw,90px)!important;
+}
+.auth-layout .auth-card .brand>span:last-child{
+  font-size:clamp(24px,6.8vw,42px)!important;
+}
+.auth-layout .auth-card .brand>span:last-child small{
+  font-size:clamp(15px,4.6vw,27px)!important;
+}
+.auth-layout .auth-card .form{
+  gap:clamp(8px,1.3dvh,12px)!important;
+}
+.auth-layout .auth-card .field{
+  gap:3px!important;
+}
+.auth-layout .auth-card .field label{
+  margin:0 0 2px!important;
+  font-size:clamp(13px,2.8vw,16px)!important;
+}
+.auth-layout .auth-card .field input{
+  min-height:48px!important;
+  padding:11px 13px!important;
+}
+.auth-layout .auth-card .auth-login-help{
+  margin:0!important;
+  line-height:1.35!important;
+}
+.auth-layout .auth-card .btn-primary{
+  min-height:50px!important;
+  margin:3px auto 0!important;
+  font-size:18px!important;
+}
+.auth-layout .auth-card .auth-error{
+  min-height:0!important;
+  line-height:1.4!important;
+}
+.auth-layout .auth-card .auth-support-link{
+  min-height:40px!important;
+  margin:8px auto 0!important;
+  padding:8px 14px!important;
+}
+.auth-layout .studio-credits-auth{
+  margin:5px auto 0!important;
+  padding:2px 12px 4px!important;
+  line-height:1.35!important;
+}
+@media(max-height:650px){
+  .auth-layout .auth-card>.brand{
+    min-height:clamp(115px,22dvh,155px)!important;
+    margin-bottom:8px!important;
+  }
+  .auth-layout .auth-card .brand .brand-mark.fs-logo-mark{
+    flex-basis:clamp(48px,12vw,70px)!important;
+    width:clamp(48px,12vw,70px)!important;
+    height:clamp(48px,12vw,70px)!important;
+  }
+  .auth-layout .auth-card .field input{min-height:44px!important}
+  .auth-layout .auth-card .btn-primary{min-height:46px!important}
+}
