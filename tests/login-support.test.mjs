@@ -16,9 +16,9 @@ test('Tela inicial apresenta login sem cadastro ou primeiro acesso',()=>{
   assert.doesNotMatch(loginSource,/Primeiro acesso|Criar conta|register-view|login-view|Criar conta inicial/);
 });
 
-test('SUPORT abre o WhatsApp indicado pelo proprietário em nova aba',()=>{
+test('Link de dúvidas abre o WhatsApp de suporte em nova aba',()=>{
   assert.match(loginSource,/class="auth-support-link"/);
-  assert.match(loginSource,/>SUPORT<\/a>/);
+  assert.match(loginSource,/>Tire suas dúvidas<\/span>/);
   assert.match(loginSource,/https:\/\/wa\.me\/5544997497915/);
   assert.match(loginSource,/target="_blank" rel="noopener noreferrer"/);
   assert.match(styles,/\.auth-support-link\{/);

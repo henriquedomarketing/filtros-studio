@@ -34,7 +34,7 @@ test('Tela de login pede usuário e senha, mantém suporte e admite admin por e-
   assert.match(auth,/field\('login','Nome de usuário'/);
   assert.match(auth,/field\('password','Senha'/);
   assert.match(auth,/Administrador: entre com seu e-mail habitual/);
-  assert.match(auth,/SUPORT/);
+  assert.match(auth,/Tire suas dúvidas/);
   assert.doesNotMatch(auth,/field\('email'/);
   assert.doesNotMatch(auth,/Primeiro acesso|Criar conta/);
   assert.match(src,/api\.auth\.signInWithPassword\(\{email:loginAuthEmail\(data\.login\)/);

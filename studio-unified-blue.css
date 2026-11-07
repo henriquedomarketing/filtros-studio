@@ -1,73 +1,485 @@
-/* Filtros Studio — identidade azul unificada, 07/11/2026.
-   Fundo compartilhado: curvas suaves em todas as telas, sem alterar fotos e PNGs. */
-:root{--studio-bg:#061f96;--studio-bg-deep:#06166f;--studio-text:#fff}
-html,body,#root{min-height:100%;background:var(--studio-bg)}
-.client-app,.auth-layout,.access-paused-layout{
+/*
+ * Filtros Studio — identidade azul global (novembro/2026)
+ * Camada única e definitiva para as telas do cliente.
+ * Mantém intactos canvas, vídeos, PNGs, Supabase e painel administrativo.
+ * Replaces the obsolete welcome-responsive.css and reference-blue.css layers.
+ */
+:root {
+  --studio-blue:#001893;
+  --studio-blue-deep:#00116f;
+  --studio-ice:#eef3ff;
+  --studio-white:#fff;
+  --studio-surface-art: 
+    radial-gradient(circle at -16% 13%,rgba(123,184,255,.16) 0 15%,transparent 32%),
+    radial-gradient(circle at 112% 91%,rgba(118,180,255,.17) 0 14%,transparent 33%),
+    radial-gradient(circle at -19% 13%,transparent 0 245px,rgba(218,233,255,.17) 246px 247px,transparent 249px),
+    radial-gradient(circle at 118% 81%,transparent 0 275px,rgba(218,233,255,.16) 276px 277px,transparent 279px),
+    radial-gradient(ellipse at 92% 8%,rgba(37,96,236,.21),transparent 49%),
+    linear-gradient(150deg,#001574 0%,#001893 45%,#07279e 78%,#001575 100%);
+}
+html,body,#root{min-height:100%;background:var(--studio-blue)}
+/* O background é uma propriedade do app, nunca um overlay sobre a câmera. */
+.client-app,.auth-layout,.access-paused-layout {
   position:relative!important;
   isolation:isolate;
   min-height:100dvh!important;
-  background:
-    radial-gradient(circle at -16% 12%,transparent 0 180px,rgba(135,174,255,.25) 181px,transparent 183px),
-    radial-gradient(circle at 110% 65%,transparent 0 240px,rgba(145,181,255,.23) 241px,transparent 243px),
-    radial-gradient(ellipse at 98% 12%,rgba(64,118,245,.22),transparent 40%),
-    linear-gradient(155deg,#07166c 0%,#09259e 48%,#061c85 100%)!important;
-  background-attachment:fixed!important;
-  color:var(--studio-text);
+  color:var(--studio-white)!important;
+  background-color:var(--studio-blue)!important;
+  background-image:var(--studio-surface-art)!important;
+  background-position:center top!important;
+  background-repeat:no-repeat!important;
+  background-size:cover!important;
 }
-.client-app::before,.client-app::after{display:none!important}
-.client-app .client-content,.client-app .client-home,.client-app .client-camera-screen{
-  background:transparent!important;
+.client-app::before,.client-app::after,
+.auth-layout::before,.auth-layout::after{display:none!important}
+.client-app .client-content,
+.client-app .client-home,
+.client-app .client-camera-screen,
+.client-app.is-preview .client-content{background:transparent!important}
+.client-app .client-content{flex:1;min-width:0}
+
+/* Login: painel superior branco inspirado no material aprovado. */
+.auth-layout{
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+  justify-content:flex-start!important;
+  gap:0!important;
+  padding:0 0 calc(16px + env(safe-area-inset-bottom,0px))!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+}
+.auth-layout .auth-card{
+  flex:1 0 auto!important;
+  width:100%!important;max-width:none!important;min-height:0!important;
+  padding:0 22px!important;margin:0!important;
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  background:transparent!important;backdrop-filter:none!important;
+}
+.auth-layout .auth-card>.brand{
+  display:flex!important;flex:0 0 auto!important;
+  justify-content:center!important;align-items:center!important;
+  gap:clamp(12px,3vw,22px)!important;
+  width:calc(100% + 44px)!important;max-width:none!important;
+  min-height:clamp(260px,43dvh,520px)!important;
+  margin:0 -22px clamp(22px,5.2dvh,48px)!important;
+  padding:32px clamp(18px,5vw,60px)!important;
+  background:#fff!important;border-radius:0 0 clamp(34px,7vw,60px) clamp(34px,7vw,60px)!important;
+  box-shadow:none!important;text-align:left!important;
+}
+.auth-card .brand .brand-mark.fs-logo-mark{
+  flex:0 0 clamp(70px,19vw,130px)!important;
+  width:clamp(70px,19vw,130px)!important;height:clamp(70px,19vw,130px)!important;
+  min-width:0!important;min-height:0!important;
+  padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;
+}
+.auth-card .brand .brand-mark.fs-logo-mark img{width:100%!important;height:100%!important;object-fit:contain!important}
+.auth-card .brand>span:last-child{
+  font-size:clamp(26px,8vw,60px)!important;line-height:1!important;
+  color:#060606!important;letter-spacing:-.045em!important;
+}
+.auth-card .brand>span:last-child small{
+  margin-top:3px!important;
+  font-size:clamp(16px,5.65vw,42px)!important;letter-spacing:.18em!important;
+  font-weight:350!important;color:#060606!important;
+}
+.auth-layout .auth-card>h1,.auth-layout .auth-card>p.muted{display:none!important}
+.auth-layout .auth-card .form{
+  width:min(100%,440px)!important;margin:0 auto!important;
+  gap:clamp(14px,2.7dvh,24px)!important;
+}
+.auth-layout .auth-card .field{width:100%!important}
+.auth-layout .auth-card .field label{
+  display:block!important;margin:0 0 10px!important;
+  color:#fff!important;text-align:center!important;
+  font-size:clamp(16px,3.8vw,20px)!important;font-weight:500!important;
+}
+.auth-layout .auth-card .field input{
+  width:100%!important;min-height:55px!important;
+  color:#fff!important;background:var(--studio-blue-deep)!important;
+  border:1px solid rgba(201,218,255,.13)!important;border-radius:12px!important;
+  box-shadow:none!important;font-size:16px!important;
+}
+.auth-layout .auth-card .field input:focus-visible{
+  outline:3px solid #b7cfff!important;outline-offset:2px!important;
+}
+.auth-layout .auth-card .auth-login-help{color:#d9e5ff!important;text-align:center!important;font-size:11px!important}
+.auth-layout .auth-card .btn-primary{
+  display:block!important;
+  width:min(72%,320px)!important;min-height:58px!important;
+  margin:clamp(9px,2dvh,20px) auto 0!important;
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:0!important;border-radius:13px!important;
+  box-shadow:none!important;text-shadow:none!important;
+  font-size:20px!important;font-weight:820!important;
+}
+.auth-layout .auth-card .btn-primary:hover:not(:disabled){background:#ecf2ff!important;box-shadow:none!important;transform:none!important}
+.auth-layout .auth-card .auth-support-link{
+  margin:16px auto 0!important;color:#fff!important;
+  background:transparent!important;border:1px solid rgba(255,255,255,.32)!important;
+  box-shadow:none!important;
+}
+.auth-layout .auth-card .auth-support-link:hover{color:#fff!important;background:#ffffff18!important}
+.auth-layout .auth-card .auth-whatsapp-icon{color:#fff!important}
+.auth-layout .studio-credits-auth{margin:12px auto 0!important;color:#dbe5ff!important;background:transparent!important;font-size:10px!important}
+/* Uma tela excepcional de conta pendente também deve continuar legível. */
+.auth-layout:has(> .pending){justify-content:center!important;padding:28px 18px!important}
+.auth-layout:has(> .pending) .pending{color:#1f2f53}
+
+/* Página inicial: sem foto da empresa, sem cartão, sem margem vazia. */
+.client-app.is-home .client-header{
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;backdrop-filter:none!important;
+  color:#fff!important;
+}
+.client-app.is-home .client-header .client-brand-copy strong,
+.client-app.is-home .client-header .client-brand-copy small{color:#fff!important}
+.client-app.is-home .client-header-studio-logo{
+  background:rgba(255,255,255,.95)!important;border:0!important;
+}
+.client-app.is-home .client-logout{
+  color:#fff!important;background:#ffffff14!important;
+  border:1px solid #ffffff5e!important;border-radius:12px!important;
+}
+.client-app.is-home .client-logout:hover{background:#ffffff28!important}
+.client-app.is-home .client-content{width:min(100%,620px)!important;color:#fff!important}
+.client-app.is-home .client-home{
+  min-height:0!important;justify-content:flex-start!important;
+  padding:clamp(16px,4dvh,42px) 0 20px!important;
 }
 .client-app.is-home .client-home-heading{
-  background:none!important;border:0!important;box-shadow:none!important;
-  backdrop-filter:none!important;padding:0!important;margin:0 0 clamp(28px,5dvh,48px)!important;
+  display:block!important;width:100%!important;
+  max-width:100%!important;min-height:0!important;overflow:visible!important;
+  margin:0 0 clamp(24px,4dvh,38px)!important;padding:0!important;
+  border:0!important;border-radius:0!important;
+  background:none!important;box-shadow:none!important;backdrop-filter:none!important;
+  animation:none!important;
 }
-.client-app.is-home .client-home-heading-copy h1{margin:0 0 13px!important;color:#fff!important}
-.client-app.is-home .client-home-heading-copy p{color:#e4ebff!important}
+.client-app.is-home .client-home-heading::before,
+.client-app.is-home .client-home-heading::after{display:none!important}
 .client-app.is-home .client-company-logo-wrap{display:none!important}
-.client-app.is-home .client-header{background:transparent!important}
+.client-app.is-home .client-home-heading-copy{width:100%!important;text-align:center!important}
+.client-app.is-home .client-home-heading-copy h1{
+  color:#fff!important;font-size:clamp(27px,6vw,35px)!important;
+  line-height:1.17!important;font-weight:850!important;
+  margin:0 0 13px!important;text-shadow:none!important;
+}
+.client-app.is-home .client-home-heading-copy p{
+  max-width:400px!important;margin:0 auto!important;
+  color:#e6ecff!important;font-size:clamp(13px,3.4vw,15px)!important;
+  line-height:1.55!important;text-align:center!important;
+}
+.client-app.is-home .client-category-grid{width:100%!important;gap:clamp(12px,2.5dvh,24px)!important}
 .client-app.is-home .client-category-item{
-  background:#fff!important;color:#061f96!important;border-radius:15px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  min-height:clamp(56px,7dvh,76px)!important;padding:13px 18px!important;
+  gap:0!important;background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;border-radius:15px!important;
+  box-shadow:0 6px 14px rgba(0,7,66,.08)!important;text-shadow:none!important;
+  transform:none!important;filter:none!important;
 }
-.client-app.is-camera .client-camera-header,.client-app.is-preview .client-preview-header{
+.client-app.is-home .client-category-item::before,.client-app.is-home .client-category-item::after{display:none!important}
+.client-app.is-home .client-category-item:hover,
+.client-app.is-home .client-category-item:focus-visible{
+  background:#ecf2ff!important;box-shadow:0 6px 14px rgba(0,7,66,.10)!important;
+}
+.client-app.is-home .client-category-name{
+  flex:1!important;color:var(--studio-blue)!important;
+  font-size:clamp(14px,3.5vw,19px)!important;font-weight:850!important;
+  text-transform:uppercase!important;text-align:center!important;
+}
+.client-app.is-home .client-category-item .client-category-count,
+.client-app.is-home .client-category-item .client-category-arrow{display:none!important}
+.client-app.is-home .client-empty{color:#fff!important;border-color:#ffffff55!important}
+
+/* Câmera e galeria são a mesma tela, com mesmo fundo, sem camada sobre o frame. */
+.client-app.is-camera .client-camera-header,
+.client-app.is-preview .client-preview-header{
   background:transparent!important;border:0!important;box-shadow:none!important;
+  backdrop-filter:none!important;
 }
-.client-app.is-camera .client-camera-header .client-camera-menu-toggle,
+.client-app.is-camera .client-camera-header{gap:9px!important;min-height:73px!important;height:73px!important}
+.client-app.is-camera .client-camera-header .client-camera-menu-toggle{
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;border-radius:13px!important;
+  box-shadow:none!important;
+}
+.client-app.is-camera .client-camera-header .client-camera-menu-toggle:focus-visible{
+  outline:3px solid #bcd4ff!important;outline-offset:2px!important;
+}
 .client-app.is-camera .client-top-filters .client-filter-choice{
-  border-radius:14px!important;
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;border-radius:12px!important;
+  box-shadow:none!important;
 }
-.client-app.is-camera .client-photo-controls{background:transparent!important}
+.client-app.is-camera .client-top-filters .client-filter-choice[aria-pressed="true"]{
+  border:2px solid #9dc4ff!important;background:#eaf0ff!important;
+}
+.client-app.is-camera .client-top-filters .client-filter-choice .client-filter-name,
+.client-app.is-camera .client-top-filters .client-filter-choice[aria-pressed="true"] .client-filter-name{
+  color:var(--studio-blue)!important;
+}
+.client-app.is-camera .client-top-filters-empty{color:#fff!important}
+.client-app.is-camera .client-camera-screen{max-width:440px!important;width:100%!important}
+.client-app.is-camera .client-viewfinder-wrap{width:100%!important;max-width:440px!important}
+.client-app.is-camera .client-viewfinder{
+  width:min(100%,420px,calc(56.25dvh - 125px))!important;
+  height:auto!important;max-width:100%!important;
+  aspect-ratio:9/16!important;
+  background:#0d162f!important;
+  border:2px solid #ffffffa8!important;border-radius:18px!important;
+  box-shadow:0 12px 28px rgba(0,8,65,.22)!important;
+}
+.client-app.is-camera:has(.client-gallery-finish) .client-viewfinder{
+  width:min(100%,420px,calc(56.25dvh - 152px))!important;
+}
+.client-app.is-camera .client-viewfinder video,
+.client-app.is-camera .client-viewfinder img{background:transparent!important}
+.client-app.is-camera .client-viewfinder video{object-fit:cover}
+.client-app.is-camera .client-viewfinder img.client-gallery-image{
+  object-fit:cover!important;object-position:center!important;
+}
+.client-app.is-camera .client-viewfinder img#cameraOverlay{object-fit:fill!important}
+.client-app.is-camera .client-photo-controls{
+  width:min(100%,355px)!important;max-width:355px!important;
+  margin:8px auto 8px!important;min-height:72px!important;
+  padding:7px 14px!important;border:1px solid rgba(255,255,255,.25)!important;
+  border-radius:18px!important;background:rgba(1,18,102,.27)!important;
+  box-shadow:none!important;
+}
 .client-app.is-camera .client-control-secondary,
+.client-app.is-camera .client-control-secondary[data-act="pick-gallery"],
+.client-app.is-camera .client-control-secondary[data-act="use-camera"]{
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;border-radius:13px!important;box-shadow:none!important;
+}
+.client-app.is-camera .client-control-secondary small{color:var(--studio-blue)!important}
+.client-app.is-camera .client-gallery-finish{
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;border-radius:15px!important;
+  box-shadow:none!important;
+}
+.client-app.is-camera .client-gallery-finish *{color:var(--studio-blue)!important}
+.client-app.is-camera .client-gallery-finish-icon{
+  background:#edf2ff!important;color:var(--studio-blue)!important;
+}
+.client-app.is-camera .client-gallery-back{
+  background:#001893ea!important;color:#fff!important;
+}
+.client-app.is-camera .client-shutter{
+  border-color:#fff!important;box-shadow:0 0 0 2px #c6d7ff75!important;
+}
+.client-app.is-camera .client-shutter span{background:#e42d43!important}
+/* Mantenha as miniaturas, vídeo, sobreposição PNG e canvas intocados. */
+
+/* Salvar/Compartilhar: fundo igual, controles brancos e resultado sem filtros. */
 .client-app.is-preview .client-preview-back{
-  background:#fff!important;color:#061f96!important;border-color:#dce6ff!important;
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;box-shadow:none!important;border-radius:13px!important;
 }
-.client-app.is-camera .studio-credits.client-camera-credits,
-.client-app .studio-credits.client-footer{
-  background:transparent!important;color:#d8e3ff!important;border:0!important;
+.client-app.is-preview .client-result-heading h1{color:#fff!important}
+.client-app.is-preview .client-result-heading .client-eyebrow{color:#cad9ff!important}
+.client-app.is-preview .client-result-heading p{color:#e6ecff!important}
+.client-app.is-preview .client-result-preview{
+  background:rgba(1,16,92,.45)!important;
+  border:1px solid rgba(255,255,255,.25)!important;
+  box-shadow:0 10px 27px rgba(0,8,65,.14)!important;
 }
-.client-app .studio-credits strong{color:#fff!important}
+.client-app.is-preview .client-result-preview figcaption{color:#e6edff!important}
+.client-app.is-preview .client-result-btn{
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;box-shadow:none!important;
+  border-radius:13px!important;
+}
+.client-app.is-preview .client-result-secondary button{
+  background:rgba(255,255,255,.93)!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;border-radius:12px!important;
+}
+.client-app.is-preview .client-result-note{color:#dbe5ff!important}
+.client-app.is-preview .client-result-note b{color:#fff!important}
+/* CSS never alters saved image source/canvas pixels. */
+
+/* Menu lateral: mesma arte do fundo e botões com contraste. */
 .client-app.is-camera .client-camera-drawer{
-  background:
-    radial-gradient(circle at -30% 15%,transparent 0 170px,#8baeff55 171px,transparent 173px),
-    radial-gradient(circle at 120% 85%,transparent 0 200px,#8baeff44 201px,transparent 203px),
-    linear-gradient(150deg,#09268e,#06196e)!important;
+  background-color:var(--studio-blue)!important;
+  background-image:var(--studio-surface-art)!important;
+  background-size:cover!important;background-position:center top!important;
+  background-repeat:no-repeat!important;
+  color:#fff!important;border-right:1px solid rgba(255,255,255,.28)!important;
+  box-shadow:12px 0 28px rgba(0,6,50,.24)!important;
 }
+.client-app.is-camera .client-camera-drawer-heading strong,
+.client-app.is-camera .client-camera-drawer-label{color:#fff!important}
+.client-app.is-camera .client-camera-drawer-label{opacity:.85!important}
 .client-app.is-camera .client-camera-drawer-home,
 .client-app.is-camera .client-camera-drawer-category,
 .client-app.is-camera .client-camera-drawer-bottom button{
-  background:#fff!important;color:#061f96!important;border-color:#fff!important;
+  min-height:49px!important;
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;border-radius:13px!important;
+  box-shadow:none!important;font-weight:750!important;
 }
-.client-app.is-camera .client-camera-drawer-home strong{color:#061f96!important}
-.client-app.is-camera .client-camera-drawer-category.selected{outline:2px solid #a4beff;outline-offset:2px}
-.client-app.is-camera .client-camera-drawer-label{color:#dbe5ff!important}
-.client-app.is-camera .client-camera-drawer-heading strong{color:#fff!important}
-.client-app.is-preview .client-content{background:transparent!important}
-.client-app .camera-frame.client-viewfinder,
-.client-app .client-viewfinder{background:#101827!important}
-.client-app .camera-frame video,.client-app .camera-frame img{background:transparent}
-.auth-layout::before,.auth-layout::after{display:none!important}
+.client-app.is-camera .client-camera-drawer-home strong,
+.client-app.is-camera .client-camera-drawer-home span,
+.client-app.is-camera .client-camera-drawer-category span,
+.client-app.is-camera .client-camera-drawer-bottom button span{color:var(--studio-blue)!important}
+.client-app.is-camera .client-camera-drawer-category.selected{
+  background:#dde8ff!important;color:var(--studio-blue)!important;
+  border:2px solid #99bbff!important;
+}
+.client-app.is-camera .client-camera-drawer-home:hover,
+.client-app.is-camera .client-camera-drawer-category:hover,
+.client-app.is-camera .client-camera-drawer-bottom button:hover{background:#edf2ff!important}
+.client-app.is-camera .client-camera-drawer-close{
+  background:rgba(255,255,255,.15)!important;color:#fff!important;
+  border:1px solid rgba(255,255,255,.38)!important;
+}
+.client-app.is-camera .client-camera-drawer-bottom{border-top-color:rgba(255,255,255,.3)!important}
+.client-app .studio-credits.client-footer,
+.client-app .studio-credits.client-camera-credits{
+  background:transparent!important;border:0!important;color:#d6e1ff!important;
+}
+.client-app .studio-credits strong{color:#fff!important}
+.access-paused-layout .access-paused-card{background:#fff!important;color:#1a2d53!important}
+
+/* Layout adaptativo: mais altura para a imagem, controles sempre acessíveis. */
 @media(max-width:430px){
- .client-app.is-home .client-home{padding-top:clamp(18px,5dvh,40px)!important}
- .client-app.is-home .client-home-heading{margin-bottom:30px!important}
+  .client-app.is-home .client-content{padding-left:22px!important;padding-right:22px!important}
+  .client-app.is-home .client-home{padding-top:clamp(12px,3dvh,32px)!important}
+  .client-app.is-home .client-category-grid{gap:clamp(12px,2.1dvh,18px)!important}
+  .client-app.is-camera .client-content{padding:4px 10px calc(9px + env(safe-area-inset-bottom,0px))!important}
+  .client-app.is-preview .client-content{padding-left:15px!important;padding-right:15px!important}
+  .auth-layout .auth-card>.brand{min-height:clamp(240px,39dvh,430px)!important}
 }
-@media(prefers-reduced-motion:reduce){.client-app *{scroll-behavior:auto!important}}
+@media(max-height:680px){
+  .auth-layout .auth-card>.brand{min-height:32dvh!important;margin-bottom:22px!important}
+  .auth-layout .auth-card .form{gap:11px!important}
+  .client-app.is-camera .client-viewfinder{width:min(100%,340px,calc(56.25dvh - 120px))!important}
+  .client-app.is-camera:has(.client-gallery-finish) .client-viewfinder{width:min(100%,340px,calc(56.25dvh - 150px))!important}
+}
+@media(min-width:750px){
+  .client-app.is-home .client-home{padding-top:45px!important}
+  .client-app.is-camera .client-viewfinder{width:min(100%,420px,calc(56.25dvh - 125px))!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .client-app .client-category-item,.client-app .client-result-btn,
+  .client-app .client-camera-drawer,.client-app .client-camera-menu-backdrop{transition:none!important;animation:none!important}
+}
+
+/* Administração: a mesma identidade azul, preservando cards/tabelas brancos
+   e todos os fluxos financeiros, cadastros, PNGs e modais. */
+.admin-layout{
+  position:relative!important;isolation:isolate;
+  min-height:100dvh!important;background-color:var(--studio-blue)!important;
+  background-image:var(--studio-surface-art)!important;
+  background-position:center top!important;
+  background-size:cover!important;background-repeat:no-repeat!important;
+  color:#fff!important;
+}
+.admin-layout .workspace{min-width:0;background:transparent!important}
+.admin-layout .content{position:relative;color:#fff!important}
+.admin-layout .sidebar{
+  background-color:var(--studio-blue)!important;
+  background-image:var(--studio-surface-art)!important;
+  background-size:cover!important;background-position:left top!important;
+  color:#fff!important;border-right:1px solid #ffffff3b!important;
+  box-shadow:6px 0 20px #000e6028!important;
+}
+.admin-layout .sidebar .brand,
+.admin-layout .sidebar .brand>span:last-child,
+.admin-layout .sidebar .brand>span:last-child small{
+  color:#fff!important;-webkit-text-fill-color:#fff!important;
+}
+.admin-layout .sidebar .fs-logo-mark{background:#fff!important}
+.admin-layout .sidebar .nav-btn{
+  display:flex!important;align-items:center!important;
+  min-height:47px!important;
+  color:var(--studio-blue)!important;background:#fff!important;
+  border:1px solid #fff!important;border-radius:13px!important;
+  box-shadow:none!important;font-size:13px!important;
+  font-weight:760!important;
+}
+.admin-layout .sidebar .nav-btn:hover,
+.admin-layout .sidebar .nav-btn.active{
+  background:#e6efff!important;color:var(--studio-blue)!important;
+  border-color:#b4ceff!important;box-shadow:none!important;
+}
+.admin-layout .sidebar .nav-btn.active{
+  outline:2px solid #aecaff!important;outline-offset:1px!important;
+}
+.admin-layout .sidebar-bottom{
+  background:#ffffff19!important;color:#e8eeff!important;
+  border:1px solid #ffffff50!important;border-radius:16px!important;
+}
+.admin-layout .sidebar-bottom b,
+.admin-layout .sidebar-bottom p{color:#fff!important;overflow-wrap:anywhere}
+.admin-layout .sidebar-bottom .btn{
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;border-radius:12px!important;
+}
+.admin-layout .topbar{
+  background:rgba(0,17,111,.25)!important;
+  border-bottom:1px solid rgba(255,255,255,.23)!important;
+  color:#f5f8ff!important;
+  box-shadow:none!important;backdrop-filter:blur(10px);
+}
+.admin-layout .topbar .admin-breadcrumb,
+.admin-layout .topbar .admin-breadcrumb strong{color:#fff!important}
+.admin-layout .topbar-right>.btn,
+.admin-layout .mobile-menu-toggle,
+.admin-layout .sidebar-close{
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;border-radius:12px!important;
+}
+.admin-layout .heading h1,
+.admin-layout .heading small,
+.admin-layout .heading p{color:#fff!important;text-shadow:none!important}
+.admin-layout .heading small{opacity:.83}
+.admin-layout .heading p{opacity:.9}
+.admin-layout .heading>.btn-primary,
+.admin-layout .heading .btn-primary{
+  background:#fff!important;color:var(--studio-blue)!important;
+  border:1px solid #fff!important;box-shadow:none!important;
+}
+.admin-layout .card,
+.admin-layout .stat{
+  background:#fff!important;color:#1b2a4a!important;
+  border:1px solid rgba(223,232,255,.95)!important;
+  border-radius:19px!important;
+  box-shadow:0 8px 23px rgba(0,8,76,.1)!important;
+}
+.admin-layout .card h2,.admin-layout .stat b{color:#152955!important}
+.admin-layout .card p,.admin-layout .card small,
+.admin-layout .stat label,.admin-layout .stat small{color:#627494}
+.admin-layout .card .table td,.admin-layout .card .table th{color:#2c4061}
+.admin-layout .card .table th{background:#f3f6ff!important;color:#526b9b}
+.admin-layout .card .table-wrap{border-color:#dfe7f6!important;border-radius:13px!important}
+.admin-layout .card .field input,
+.admin-layout .card .field select,
+.admin-layout .card .field textarea{
+  background:#f8faff!important;color:#152955!important;
+  border:1px solid #dce4f5!important;border-radius:12px!important;
+}
+.admin-layout .card .field input:focus,
+.admin-layout .card .field select:focus,
+.admin-layout .card .field textarea:focus{outline:2px solid #9bbcff!important;outline-offset:1px!important}
+.admin-layout .card .btn-primary{background:var(--studio-blue)!important;color:#fff!important;border:1px solid var(--studio-blue)!important}
+.admin-layout .studio-credits-admin{
+  color:#dbe6ff!important;background:transparent!important;
+}
+.admin-layout .studio-credits-admin strong{color:#fff!important}
+.overlay{background:rgba(0,12,73,.74)!important}
+.overlay .modal{
+  background:#fff!important;color:#192b4c!important;
+  border-radius:20px!important;
+}
+.overlay .modal :is(input,select,textarea){color:#182e56;background:#f9fbff}
+@media(max-width:700px){
+ .admin-layout .sidebar{background-image:var(--studio-surface-art)!important}
+ .admin-layout .content{padding:20px 14px 45px!important}
+ .admin-layout .heading{gap:13px!important}
+ .admin-layout .mobile-menu-toggle{flex:0 0 45px!important}
+ .admin-layout .sidebar .nav-btn{white-space:normal!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .admin-layout .nav-btn{transition:none!important}
+}

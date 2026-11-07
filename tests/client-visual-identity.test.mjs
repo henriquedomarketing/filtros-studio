@@ -8,11 +8,13 @@ const css=readFileSync(new URL('../client.css',import.meta.url),'utf8');
 const layout=app.slice(app.indexOf('function layout(content){'),app.indexOf('function table(',app.indexOf('function layout(content){')));
 const camera=app.slice(app.indexOf('function cameraView(){'),app.indexOf('function previewView(){'));
 
-test('A logo do cliente permanece centralizada, não no cabeçalho',()=>{
-  assert.match(app,/brandImg\(app\.company,'client-company-logo'\)/);
+test('Boas-vindas não exibem logo do cliente e cabeçalho usa a marca Filtros Studio',()=>{
+  const home=app.slice(app.indexOf('function clientCategories(){'),app.indexOf('function cameraView(){'));
+  assert.doesNotMatch(home,/client-company-logo-wrap|brandImg\(/);
+  assert.match(home,/>Bem-vindo!</);
   assert.doesNotMatch(layout,/brandImg\(app\.company,'client-brand-logo'\)/);
-  assert.match(layout,/class="client-brand client-brand-without-icon"/);
-  assert.match(layout,/escapeHtml\(app\.company\?\.name\|\|'Minha empresa'\)/);
+  assert.match(layout,/class="client-brand client-brand-without-icon client-brand-with-studio-logo"/);
+  assert.match(layout,/class="client-brand-copy"><strong>Filtros Studio/);
 });
 
 test('Menu da câmera usa a identidade fixa do Filtros Studio inclusive no teste admin',()=>{
