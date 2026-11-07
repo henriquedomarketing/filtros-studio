@@ -620,3 +620,40 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
     margin:10px auto auto!important;
   }
 }
+
+/* Referência aprovada: a faixa branca deve ocupar quase metade da tela
+   de login, com a marca centralizada dentro dela. Este bloco vem depois
+   das regras compactas antigas para definir a proporção real no iPhone. */
+@media(max-width:700px) and (min-height:721px){
+  .auth-layout .auth-card>.brand{
+    height:43dvh!important;
+    min-height:43dvh!important;
+    max-height:none!important;
+    flex:0 0 43dvh!important;
+    margin-bottom:0!important;
+    padding-block:clamp(20px,4dvh,45px)!important;
+  }
+  .auth-layout .auth-card .form{
+    margin:clamp(14px,2.5dvh,25px) auto 0!important;
+  }
+  .auth-layout .auth-card .auth-support-link{
+    margin:clamp(12px,2dvh,20px) auto auto!important;
+  }
+}
+/* Em aparelhos mais baixos, preserva os campos inteiros e evita
+   criar rolagem apenas para imitar a proporção da referência. */
+@media(max-width:700px) and (max-height:720px){
+  .auth-layout .auth-card>.brand{
+    height:34dvh!important;
+    min-height:34dvh!important;
+    max-height:none!important;
+    flex:0 0 34dvh!important;
+    margin-bottom:0!important;
+  }
+  .auth-layout .auth-card .form{
+    margin:clamp(8px,1.5dvh,13px) auto 0!important;
+  }
+  .auth-layout .auth-card .auth-support-link{
+    margin:10px auto auto!important;
+  }
+}
