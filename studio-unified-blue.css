@@ -595,3 +595,29 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
   -webkit-text-fill-color:#fff!important;
   text-decoration-color:#dce7ff!important;
 }
+
+/* Distribuição do login no iPhone: logo, formulário e suporte equilibrados
+   verticalmente. Evita o bloco de conteúdo preso no topo e o vazio no rodapé. */
+.auth-layout .auth-card>.brand{
+  min-height:clamp(230px,29dvh,390px)!important;
+  margin-bottom:0!important;
+}
+.auth-layout .auth-card .form{
+  margin:auto auto 0!important;
+}
+.auth-layout .auth-card .auth-support-link{
+  margin:clamp(14px,2.5dvh,25px) auto auto!important;
+}
+/* Se não houver altura suficiente, o conteúdo volta a fluir naturalmente. */
+@media(max-height:720px){
+  .auth-layout .auth-card>.brand{
+    min-height:clamp(130px,22dvh,190px)!important;
+    margin-bottom:8px!important;
+  }
+  .auth-layout .auth-card .form{
+    margin:10px auto 0!important;
+  }
+  .auth-layout .auth-card .auth-support-link{
+    margin:10px auto auto!important;
+  }
+}
