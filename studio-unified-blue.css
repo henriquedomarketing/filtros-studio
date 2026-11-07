@@ -579,7 +579,6 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
 /* Login ocupa a altura visível do iPhone; teclado/zoom ainda podem rolar. */
 .auth-layout:has(> .auth-card){
   box-sizing:border-box!important;
-  height:100dvh!important;
   min-height:100dvh!important;
   padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))!important;
   overflow-x:hidden!important;
