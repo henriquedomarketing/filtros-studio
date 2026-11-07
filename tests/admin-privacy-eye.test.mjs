@@ -1,0 +1,63 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+
+const appSource=readFileSync(new URL('../app.js',import.meta.url),'utf8');
+const css=readFileSync(new URL('../studio-unified-blue.css',import.meta.url),'utf8');
+const layout=appSource.slice(appSource.indexOf('function layout(content)'),appSource.indexOf('function table('));
+const dashboard=appSource.slice(appSource.indexOf('function dashboard(){'),appSource.indexOf('function clients(){'));
+const clients=appSource.slice(appSource.indexOf('function clients(){'),appSource.indexOf('function orderedCategoriesForCompany('));
+const finance=appSource.slice(appSource.indexOf('function finance(){'),appSource.indexOf('function settings(){'));
+
+test('Botão de olho aparece exclusivamente no cabeçalho do administrador, inclusive mobile',()=>{
+  const admin=layout.slice(layout.indexOf('const menu=[['));
+  assert.match(admin,/class="layout admin-layout/);
+  assert.match(admin,/data-act="toggle-admin-sensitive"/);
+  assert.match(admin,/aria-pressed="\$\{app\.adminSensitiveHidden\}"/);
+  assert.match(admin,/Mostrar números do painel/);
+  assert.match(admin,/Desfocar números do painel/);
+  assert.match(admin,/class="admin-eye-on"/);
+  assert.match(admin,/class="admin-eye-off"/);
+  assert.match(css,/\.admin-layout \.admin-privacy-toggle/);
+  assert.match(css,/@media\(max-width:700px\)/);
+  const user=layout.slice(0,layout.indexOf('const menu=[['));
+  assert.doesNotMatch(user,/admin-privacy-toggle/);
+});
+test('Números do dashboard, financeiro e clientes estão marcados sem esconder rótulos',()=>{
+  assert.match(appSource,/const stat=\(label,value,sub\)=>`<div class="stat"><label>\$\{label\}<\/label><b class="admin-sensitive">/);
+  assert.match(appSource,/const sensitiveValue=value/);
+  assert.match(appSource,/replace\(\/\(\\d\[\\d\.,\]\*\)\/g/);
+  assert.match(dashboard,/sensitiveValue\(dateBR\(i\.due_date\)\)/);
+  assert.match(dashboard,/sensitiveValue\(brl\(i\.amount\)\)/);
+  assert.match(finance,/sensitiveValue\(dateBR\(x\.due_date\)\)/);
+  assert.match(finance,/sensitiveValue\(brl\(x\.amount\)\)/);
+  assert.match(clients,/sensitiveValue\(brl\(c\.monthly_fee\)\)/);
+  assert.match(clients,/sensitiveValue\(dateBR\(c\.next_due_date\)\)/);
+  assert.match(css,/\.admin-layout\.admin-sensitive-hidden \.admin-sensitive\{/);
+  assert.match(css,/filter:blur\(9px\)!important/);
+  assert.doesNotMatch(css,/\.client-app\.admin-sensitive-hidden/);
+});
+test('Persistência e interação mudam apenas a apresentação, sem renderizar nem atualizar banco',()=>{
+  const snippet=appSource.slice(appSource.indexOf('function toggleAdminSensitive()'),appSource.indexOf('async function click(event)'));
+  const stored=new Map();
+  const localStorage={getItem:key=>stored.get(key)||null,setItem:(key,value)=>stored.set(key,value)};
+  const attrs={};
+  const control={setAttribute:(key,value)=>{attrs[key]=value;},title:''};
+  const classes=new Set();
+  const adminRoot={classList:{toggle:(k,v)=>{if(v)classes.add(k);else classes.delete(k);}},querySelector:()=>control};
+  const document={getElementById:()=>adminRoot};
+  const app={profile:{role:'admin'},adminSensitiveHidden:false};
+  const toggle=new Function('app','localStorage','document',snippet+'return toggleAdminSensitive;')(app,localStorage,document);
+  toggle();assert.equal(app.adminSensitiveHidden,true);
+  assert.equal(localStorage.getItem('fs-admin-sensitive-hidden'),'1');
+  assert.equal(attrs['aria-pressed'],'true');
+  assert.equal(attrs['aria-label'],'Mostrar números do painel');
+  assert.ok(classes.has('admin-sensitive-hidden'));
+  toggle();assert.equal(app.adminSensitiveHidden,false);
+  assert.equal(localStorage.getItem('fs-admin-sensitive-hidden'),'0');
+  assert.equal(attrs['aria-label'],'Desfocar números do painel');
+  assert.equal(classes.has('admin-sensitive-hidden'),false);
+  app.profile.role='client';
+  toggle();assert.equal(app.adminSensitiveHidden,false);
+  assert.doesNotMatch(snippet,/\brender\(|\.from\(|\.update\(|\.delete\(/);
+});
