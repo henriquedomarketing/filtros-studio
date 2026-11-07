@@ -31,7 +31,8 @@ const brl = n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'B
 const dateBR = d=>d?new Date(d+'T12:00:00').toLocaleDateString('pt-BR'):'—';
 const today=()=>new Date().toISOString().slice(0,10);
 const id=()=>crypto.randomUUID();
-const app={ user:null,profile:null,company:null,companies:[],categories:[],filters:[],invoices:[],settings:{},page:'dashboard', modal:null, selectedCategory:null,selectedFilter:null,stream:null,images:new Map(),processing:false,captureData:null,galleryPhoto:null,cameraRequestId:0,adminTest:{active:false,companyId:null,categoryId:null},categoryOrderCompanyId:null,orderSaving:false };
+function readAdminPrivacyPreference(){try{return localStorage.getItem('fs-admin-sensitive-hidden')==='1';}catch(_){return false;}}
+const app={ adminSensitiveHidden:readAdminPrivacyPreference(),user:null,profile:null,company:null,companies:[],categories:[],filters:[],invoices:[],settings:{},page:'dashboard', modal:null, selectedCategory:null,selectedFilter:null,stream:null,images:new Map(),processing:false,captureData:null,galleryPhoto:null,cameraRequestId:0,adminTest:{active:false,companyId:null,categoryId:null},categoryOrderCompanyId:null,orderSaving:false };
 let toastTimer;
 const toast=(message)=>{const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),5000)};
 const errorMessage=error=>error?.message||'Não foi possível concluir esta operação.';
@@ -51,7 +52,8 @@ const dueStatus=invoice=>invoice.status==='paid'?'paid':invoice.status==='cancel
 const button=(label,action)=>`<button class="btn btn-primary" data-act="${action}">＋ ${label}</button>`;
 const action=(what,uid,label,css='')=>`<button class="small-action ${css}" data-act="${what}" data-id="${escapeHtml(uid)}">${label}</button>`;
 const header=(tag,title,subtitle,right='')=>`<div class="heading"><div><small>${tag}</small><h1>${title}</h1><p>${subtitle}</p></div>${right}</div>`;
-const stat=(label,value,sub)=>`<div class="stat"><label>${label}</label><b>${value}</b><small>${sub}</small></div>`;
+const sensitiveValue=value=>`<span class="admin-sensitive">${value}</span>`;
+const stat=(label,value,sub)=>`<div class="stat"><label>${label}</label><b class="admin-sensitive">${value}</b><small>${String(sub).replace(/(\d[\d.,]*)/g,match=>sensitiveValue(match))}</small></div>`;
 const field=(name,label,value='',type='text',required=true,minLength=0)=>`<div class="field"><label for="f_${name}">${label}</label><input id="f_${name}" name="${name}" type="${type}" value="${escapeHtml(value)}" ${minLength?`minlength="${minLength}" maxlength="128"`:''} ${required?'required':''}></div>`;
 const select=(name,label,opts)=>`<div class="field"><label for="f_${name}">${label}</label><select name="${name}" id="f_${name}" required>${opts}</select></div>`;
 const companyOptions=(selected='')=>app.companies.map(c=>option(c.id,c.name,c.id===selected)).join('');
@@ -148,7 +150,7 @@ function layout(content){const admin=app.profile?.role==='admin';
     </div>`;
   }
   const menu=[['dashboard','◫ Visão geral'],['clients','♙ Clientes'],['filters','▧ Filtros PNG'],['test-filters','◉ Testar filtros'],['finance','▤ Financeiro'],['settings','⚙ Configurações']];
-  return `<div class="layout admin-layout" id="adminLayout">
+  return `<div class="layout admin-layout ${app.adminSensitiveHidden?'admin-sensitive-hidden':''}" id="adminLayout">
     <button type="button" class="mobile-menu-backdrop" data-act="close-mobile-menu" tabindex="-1" aria-label="Fechar menu"></button>
     <aside class="sidebar" id="adminSidebar" aria-label="Menu administrativo">
       <div class="admin-sidebar-head">
@@ -166,6 +168,16 @@ function layout(content){const admin=app.profile?.role==='admin';
           </button>
           <div class="admin-breadcrumb">Workspace / <strong>Painel administrativo</strong></div>
         </div>
+        <button type="button" class="admin-privacy-toggle" data-act="toggle-admin-sensitive"
+          aria-label="${app.adminSensitiveHidden?'Mostrar números do painel':'Desfocar números do painel'}"
+          aria-pressed="${app.adminSensitiveHidden}" title="${app.adminSensitiveHidden?'Mostrar números':'Desfocar números'}">
+          <svg class="admin-eye-on" viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          <svg class="admin-eye-off" viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10.6 5.1A11 11 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.1 3.8"/><path d="M6.1 6.5C3.5 8.3 2 12 2 12s3.5 7 10 7c1.9 0 3.6-.6 5.1-1.5"/><path d="M10 10a3 3 0 0 0 4 4"/><path d="M3 3l18 18"/>
+          </svg>
+        </button>
         <div class="topbar-right"><span class="chip">Conta autenticada</span><button class="btn" data-act="logout">Sair</button></div>
       </header>
       <main class="content">${content}</main>
@@ -174,8 +186,8 @@ function layout(content){const admin=app.profile?.role==='admin';
   </div>${app.modal?`<div class="overlay" id="overlay"><div class="modal ${app.modal.formId==='editFilterForm'?'modal-filter-preview':''}" role="dialog" aria-modal="true" aria-label="${escapeHtml(app.modal.title)}"><div class="modal-head"><h2>${escapeHtml(app.modal.title)}</h2><button class="btn" data-act="close-modal">✕</button></div>${app.modal.content}</div></div>`:''}`;
 }
 function table(headings,rows){return `<div class="table-wrap"><table class="table"><thead><tr>${headings.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows||`<tr><td class="empty" colspan="${headings.length}">Nenhum registro encontrado</td></tr>`}</tbody></table></div>`}
-function dashboard(){const overdue=app.invoices.filter(i=>dueStatus(i)==='overdue'),unpaid=app.invoices.filter(i=>i.status==='pending');return header('DASHBOARD','Visão geral','Os indicadores abaixo são calculados a partir dos seus dados reais.',button('Cadastrar cliente','add-client'))+`<div class="stats">${stat('Clientes',app.companies.length,'Máximo permitido: 100')}${stat('Clientes ativos',app.companies.filter(x=>x.active).length,'Contas habilitadas')}${stat('Filtros PNG',app.filters.length,'Arquivos cadastrados')}${stat('A receber',brl(unpaid.reduce((sum,i)=>sum+Number(i.amount),0)),unpaid.length+' cobranças abertas • '+overdue.length+' vencidas')}</div>`+`<div class="card"><h2>Próximos vencimentos</h2>${table(['CLIENTE','VENCIMENTO','VALOR','STATUS'],app.invoices.slice().filter(i=>i.status==='pending').sort((a,b)=>a.due_date.localeCompare(b.due_date)).slice(0,8).map(i=>`<tr><td><b>${escapeHtml(companyName(i.company_id))}</b></td><td>${dateBR(i.due_date)}</td><td>${brl(i.amount)}</td><td>${badge(dueStatus(i))}</td></tr>`).join(''))}</div>`}
-function clients(){return header('GERENCIAMENTO','Clientes','Cada empresa terá seu próprio login e seus próprios filtros.',button('Novo cliente','add-client'))+`<div class="card">${table(['CLIENTE','SITUAÇÃO','MENSALIDADE','VENCIMENTO','AÇÕES'],app.companies.map(c=>`<tr><td><div class="company-admin-name"><span class="company-admin-logo">${brandImg(c,'company-admin-logo-img')||'<span>▣</span>'}</span><span><b>${escapeHtml(c.name)}</b><small>Usuário: ${escapeHtml(c.login_username||'Não configurado')}</small></span></div></td><td>${badge(c.access_paused?'paused':c.active?'active':'inactive')}</td><td>${Number(c.monthly_fee)>0?brl(c.monthly_fee):'<span class="free-client-label">Gratuito / isento</span>'}</td><td>${Number(c.monthly_fee)>0&&c.next_due_date?dateBR(c.next_due_date):'—'}</td><td><div class="actions">${action('edit-client',c.id,'Editar')}${action('toggle-client-access',c.id,c.access_paused?'Reativar acesso':'Pausar acesso',c.access_paused?'client-access-resume':'client-access-pause')}${action('reset-password',c.id,'Nova senha')}${action('remove-client',c.id,'Excluir','danger')}</div></td></tr>`).join(''))}</div>`}
+function dashboard(){const overdue=app.invoices.filter(i=>dueStatus(i)==='overdue'),unpaid=app.invoices.filter(i=>i.status==='pending');return header('DASHBOARD','Visão geral','Os indicadores abaixo são calculados a partir dos seus dados reais.',button('Cadastrar cliente','add-client'))+`<div class="stats">${stat('Clientes',app.companies.length,'Máximo permitido: 100')}${stat('Clientes ativos',app.companies.filter(x=>x.active).length,'Contas habilitadas')}${stat('Filtros PNG',app.filters.length,'Arquivos cadastrados')}${stat('A receber',brl(unpaid.reduce((sum,i)=>sum+Number(i.amount),0)),unpaid.length+' cobranças abertas • '+overdue.length+' vencidas')}</div>`+`<div class="card"><h2>Próximos vencimentos</h2>${table(['CLIENTE','VENCIMENTO','VALOR','STATUS'],app.invoices.slice().filter(i=>i.status==='pending').sort((a,b)=>a.due_date.localeCompare(b.due_date)).slice(0,8).map(i=>`<tr><td><b>${escapeHtml(companyName(i.company_id))}</b></td><td>${sensitiveValue(dateBR(i.due_date))}</td><td>${sensitiveValue(brl(i.amount))}</td><td>${badge(dueStatus(i))}</td></tr>`).join(''))}</div>`}
+function clients(){return header('GERENCIAMENTO','Clientes','Cada empresa terá seu próprio login e seus próprios filtros.',button('Novo cliente','add-client'))+`<div class="card">${table(['CLIENTE','SITUAÇÃO','MENSALIDADE','VENCIMENTO','AÇÕES'],app.companies.map(c=>`<tr><td><div class="company-admin-name"><span class="company-admin-logo">${brandImg(c,'company-admin-logo-img')||'<span>▣</span>'}</span><span><b>${escapeHtml(c.name)}</b><small>Usuário: ${escapeHtml(c.login_username||'Não configurado')}</small></span></div></td><td>${badge(c.access_paused?'paused':c.active?'active':'inactive')}</td><td>${Number(c.monthly_fee)>0?sensitiveValue(brl(c.monthly_fee)):'<span class="free-client-label">Gratuito / isento</span>'}</td><td>${Number(c.monthly_fee)>0&&c.next_due_date?sensitiveValue(dateBR(c.next_due_date)):'—'}</td><td><div class="actions">${action('edit-client',c.id,'Editar')}${action('toggle-client-access',c.id,c.access_paused?'Reativar acesso':'Pausar acesso',c.access_paused?'client-access-resume':'client-access-pause')}${action('reset-password',c.id,'Nova senha')}${action('remove-client',c.id,'Excluir','danger')}</div></td></tr>`).join(''))}</div>`}
 
 
 function orderedCategoriesForCompany(companyId){
@@ -346,7 +358,7 @@ function testFilters(){
       <p class="admin-test-explanation">Fotografe, importe imagens da galeria, alterne filtros e gere o resultado em 1080 × 1920. Você permanece conectado como administrador, sem alterar cadastros.</p>
     </div>`;
 }
-function finance(){const pending=app.invoices.filter(x=>x.status==='pending'),paid=app.invoices.filter(x=>x.status==='paid'),late=pending.filter(x=>x.due_date<today());return header('COBRANÇAS','Financeiro','Mensalidades sincronizadas com os clientes e cobranças manuais; sem integração bancária.',button('Nova cobrança','add-invoice'))+`<div class="stats">${stat('A receber',brl(pending.reduce((s,x)=>s+Number(x.amount),0)),pending.length+' cobranças abertas')}${stat('Recebido',brl(paid.reduce((s,x)=>s+Number(x.amount),0)),paid.length+' pagamentos registrados')}${stat('Atrasado',brl(late.reduce((s,x)=>s+Number(x.amount),0)),late.length+' cobranças vencidas')}${stat('Empresas',app.companies.length,'Clientes cadastrados')}</div><div class="card">${table(['CLIENTE','TIPO','VENCIMENTO','VALOR','STATUS','AÇÕES'],app.invoices.map(x=>`<tr><td><b>${escapeHtml(companyName(x.company_id))}</b></td><td>${x.origin==='monthly'?'Mensalidade':'Manual'}</td><td>${dateBR(x.due_date)}</td><td>${brl(x.amount)}</td><td>${badge(dueStatus(x))}</td><td><div class="actions">${action('toggle-paid',x.id,x.status==='paid'?'Reabrir':'Marcar pago')}${x.origin==='monthly'?action('edit-client',x.company_id,'Editar mensalidade'):action('edit-invoice',x.id,'Editar')+action('remove-invoice',x.id,'Excluir','danger')}</div></td></tr>`).join(''))}</div>`}
+function finance(){const pending=app.invoices.filter(x=>x.status==='pending'),paid=app.invoices.filter(x=>x.status==='paid'),late=pending.filter(x=>x.due_date<today());return header('COBRANÇAS','Financeiro','Mensalidades sincronizadas com os clientes e cobranças manuais; sem integração bancária.',button('Nova cobrança','add-invoice'))+`<div class="stats">${stat('A receber',brl(pending.reduce((s,x)=>s+Number(x.amount),0)),pending.length+' cobranças abertas')}${stat('Recebido',brl(paid.reduce((s,x)=>s+Number(x.amount),0)),paid.length+' pagamentos registrados')}${stat('Atrasado',brl(late.reduce((s,x)=>s+Number(x.amount),0)),late.length+' cobranças vencidas')}${stat('Empresas',app.companies.length,'Clientes cadastrados')}</div><div class="card">${table(['CLIENTE','TIPO','VENCIMENTO','VALOR','STATUS','AÇÕES'],app.invoices.map(x=>`<tr><td><b>${escapeHtml(companyName(x.company_id))}</b></td><td>${x.origin==='monthly'?'Mensalidade':'Manual'}</td><td>${sensitiveValue(dateBR(x.due_date))}</td><td>${sensitiveValue(brl(x.amount))}</td><td>${badge(dueStatus(x))}</td><td><div class="actions">${action('toggle-paid',x.id,x.status==='paid'?'Reabrir':'Marcar pago')}${x.origin==='monthly'?action('edit-client',x.company_id,'Editar mensalidade'):action('edit-invoice',x.id,'Editar')+action('remove-invoice',x.id,'Excluir','danger')}</div></td></tr>`).join(''))}</div>`}
 function settings(){const branding=app.settings.branding||{};return header('PERSONALIZAÇÃO','Configurações','Altere o nome da plataforma e o WhatsApp de suporte.')+`<div class="card"><form id="settingsForm" class="form">${field('appName','Nome da plataforma',branding.appName||'Filtros Studio')}${field('supportWhatsapp','WhatsApp de suporte',branding.supportWhatsapp||'', 'tel',false)}<p class="settings-support-hint">Informe o DDD e o número do suporte. Esse contato aparecerá automaticamente para todos os clientes com acesso pausado. Exemplo: (44) 99999-9999. Não é necessário editar cada cliente.</p><button type="submit" class="btn btn-primary">Salvar configurações</button></form><p class="note">O limite de 100 clientes é aplicado pelo banco. As senhas ficam no Supabase Auth e os PNGs em um armazenamento privado.</p></div>`}
 function clientCategories(){
   return `<section class="client-home">
@@ -1097,7 +1109,21 @@ async function logoutCurrentBrowser(){
     logoutPending=false;
   }
 }
-async function click(event){const target=event.target.closest('[data-act],[data-nav]');if(!target)return;if(target.dataset.nav){navigate(target.dataset.nav);return;}const act=target.dataset.act,uid=target.dataset.id;try{if(act==='check-client-access'){
+function toggleAdminSensitive(){
+  if(app.profile?.role!=='admin')return;
+  app.adminSensitiveHidden=!app.adminSensitiveHidden;
+  try{localStorage.setItem('fs-admin-sensitive-hidden',app.adminSensitiveHidden?'1':'0');}catch(_){}
+  const adminRoot=document.getElementById('adminLayout');
+  if(!adminRoot)return;
+  adminRoot.classList.toggle('admin-sensitive-hidden',app.adminSensitiveHidden);
+  const control=adminRoot.querySelector('.admin-privacy-toggle');
+  if(control){
+    control.setAttribute('aria-pressed',String(app.adminSensitiveHidden));
+    control.setAttribute('aria-label',app.adminSensitiveHidden?'Mostrar números do painel':'Desfocar números do painel');
+    control.title=app.adminSensitiveHidden?'Mostrar números':'Desfocar números';
+  }
+}
+async function click(event){const target=event.target.closest('[data-act],[data-nav]');if(!target)return;if(target.dataset.nav){navigate(target.dataset.nav);return;}const act=target.dataset.act,uid=target.dataset.id;try{if(act==='toggle-admin-sensitive'){toggleAdminSensitive();return;}if(act==='check-client-access'){
   if(app.profile?.role==='admin')return;
   await loadData();
   if(app.company?.access_paused||app.company?.active===false)toast('O acesso ainda está pausado. Entre em contato com o suporte.');

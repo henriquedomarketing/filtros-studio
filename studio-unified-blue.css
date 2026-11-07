@@ -666,3 +666,58 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
     margin:10px auto auto!important;
   }
 }
+
+/* Privacidade visual do administrador: ícone de olho no cabeçalho.
+   Somente métricas, números financeiros e vencimentos marcados são desfocados.
+   É um recurso de apresentação, não criptografia ou controle de permissão. */
+.admin-layout .admin-privacy-toggle{
+  flex:0 0 48px;
+  display:inline-grid;
+  place-items:center;
+  width:48px;
+  height:48px;
+  min-width:44px;
+  min-height:44px;
+  padding:10px;
+  margin:0;
+  border:1px solid #fff;
+  border-radius:13px;
+  background:#fff;
+  color:var(--studio-blue);
+  box-shadow:0 3px 12px rgba(0,8,60,.10);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.admin-layout .admin-privacy-toggle:hover{background:#edf2ff;border-color:#edf2ff}
+.admin-layout .admin-privacy-toggle:focus-visible{
+  outline:3px solid #a8c8ff;
+  outline-offset:3px;
+}
+.admin-layout .admin-privacy-toggle .admin-eye-on{display:block}
+.admin-layout .admin-privacy-toggle .admin-eye-off{display:none}
+.admin-layout.admin-sensitive-hidden .admin-privacy-toggle .admin-eye-on{display:none}
+.admin-layout.admin-sensitive-hidden .admin-privacy-toggle .admin-eye-off{display:block}
+.admin-layout .admin-sensitive{
+  display:inline-block;
+  max-width:100%;
+  transition:filter .18s ease;
+}
+.admin-layout.admin-sensitive-hidden .admin-sensitive{
+  filter:blur(9px)!important;
+  -webkit-filter:blur(9px)!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+  pointer-events:none!important;
+}
+@media(max-width:700px){
+  .admin-layout .topbar{gap:10px!important}
+  .admin-layout .admin-privacy-toggle{
+    flex-basis:46px;
+    width:46px;
+    height:46px;
+    min-width:46px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .admin-layout .admin-sensitive{transition:none}
+}
