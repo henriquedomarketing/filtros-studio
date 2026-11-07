@@ -18,6 +18,25 @@
     linear-gradient(150deg,#001574 0%,#001893 45%,#07279e 78%,#001575 100%);
 }
 html,body,#root{min-height:100%;background:var(--studio-blue)}
+/* iPhone/Safari: estilos legados têm seletor .client-app.is-home/is-camera
+   (mais específico que .client-app) com background branco !important.
+   Repetir a mesma especificidade e carregar POR ÚLTIMO restaura o fundo real
+   em todas as telas, inclusive galeria (is-camera) e resultado (is-preview). */
+.client-app.is-home,
+.client-app.is-camera,
+.client-app.is-preview{
+  background-color:var(--studio-blue)!important;
+  background-image:var(--studio-surface-art)!important;
+  background-position:center top!important;
+  background-repeat:no-repeat!important;
+  background-size:cover!important;
+  color:#fff!important;
+}
+.client-app.is-home .client-content,
+.client-app.is-camera .client-content,
+.client-app.is-preview .client-content{
+  background:transparent!important;
+}
 /* O background é uma propriedade do app, nunca um overlay sobre a câmera. */
 .client-app,.auth-layout,.access-paused-layout {
   position:relative!important;
