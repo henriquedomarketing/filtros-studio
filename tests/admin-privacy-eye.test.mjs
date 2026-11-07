@@ -61,3 +61,19 @@ test('Persistência e interação mudam apenas a apresentação, sem renderizar 
   toggle();assert.equal(app.adminSensitiveHidden,false);
   assert.doesNotMatch(snippet,/\brender\(|\.from\(|\.update\(|\.delete\(/);
 });
+
+test('Cards do dashboard mantêm três linhas separadas, com ou sem desfoque',()=>{
+  const statMarkup=appSource.slice(appSource.indexOf('const stat='),appSource.indexOf('const field='));
+  assert.match(statMarkup,/<div class="stat"><label>\$\{label\}<\/label><b class="admin-sensitive">\$\{value\}<\/b><small>/);
+  const repair=css.slice(css.indexOf('/* Corrige regressão dos cards do dashboard'));
+  assert.ok(repair.length>0,'Regra de layout deve estar no fim do tema');
+  assert.match(repair,/\.admin-layout \.stats \.stat\{/);
+  assert.match(repair,/display:flex!important/);
+  assert.match(repair,/flex-direction:column!important/);
+  assert.match(repair,/\.admin-layout \.stats \.stat > label\{/);
+  assert.match(repair,/\.admin-layout \.stats \.stat > b\.admin-sensitive\{/);
+  assert.match(repair,/display:block!important/);
+  assert.match(repair,/\.admin-layout \.stats \.stat > small\{/);
+  assert.match(css,/\.admin-layout\.admin-sensitive-hidden \.admin-sensitive\{/);
+  assert.match(css,/filter:blur\(9px\)!important/);
+});

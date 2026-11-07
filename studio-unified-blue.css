@@ -721,3 +721,35 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
 @media(prefers-reduced-motion:reduce){
   .admin-layout .admin-sensitive{transition:none}
 }
+
+/* Corrige regressão dos cards do dashboard depois da opção de privacidade.
+   O 'display:inline-block' genérico de .admin-sensitive havia sobrescrito
+   o display:block original dos números, colando título, número e legenda. */
+.admin-layout .stats .stat{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  min-width:0;
+}
+.admin-layout .stats .stat > label{
+  display:block!important;
+  width:100%;
+  margin:0!important;
+  line-height:1.35;
+}
+.admin-layout .stats .stat > b.admin-sensitive{
+  display:block!important;
+  align-self:flex-start;
+  max-width:100%;
+  width:auto;
+  margin:11px 0 4px!important;
+  line-height:1.15!important;
+  overflow-wrap:anywhere;
+}
+.admin-layout .stats .stat > small{
+  display:block!important;
+  width:100%;
+  line-height:1.5!important;
+  overflow-wrap:break-word;
+}
