@@ -53,7 +53,7 @@ const button=(label,action)=>`<button class="btn btn-primary" data-act="${action
 const action=(what,uid,label,css='')=>`<button class="small-action ${css}" data-act="${what}" data-id="${escapeHtml(uid)}">${label}</button>`;
 const header=(tag,title,subtitle,right='')=>`<div class="heading"><div><small>${tag}</small><h1>${title}</h1><p>${subtitle}</p></div>${right}</div>`;
 const sensitiveValue=value=>`<span class="admin-sensitive">${value}</span>`;
-const stat=(label,value,sub)=>`<div class="stat"><label>${label}</label><b class="admin-sensitive">${value}</b><small>${String(sub).replace(/(\\d[\\d.,]*)/g,match=>sensitiveValue(match))}</small></div>`;
+const stat=(label,value,sub)=>`<div class="stat"><label>${label}</label><b class="admin-sensitive">${value}</b><small>${String(sub).replace(/(\d[\d.,]*)/g,match=>sensitiveValue(match))}</small></div>`;
 const field=(name,label,value='',type='text',required=true,minLength=0)=>`<div class="field"><label for="f_${name}">${label}</label><input id="f_${name}" name="${name}" type="${type}" value="${escapeHtml(value)}" ${minLength?`minlength="${minLength}" maxlength="128"`:''} ${required?'required':''}></div>`;
 const select=(name,label,opts)=>`<div class="field"><label for="f_${name}">${label}</label><select name="${name}" id="f_${name}" required>${opts}</select></div>`;
 const companyOptions=(selected='')=>app.companies.map(c=>option(c.id,c.name,c.id===selected)).join('');
