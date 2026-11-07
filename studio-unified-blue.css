@@ -9,13 +9,6 @@
   --studio-blue-deep:#00116f;
   --studio-ice:#eef3ff;
   --studio-white:#fff;
-  --studio-surface-art:
-    radial-gradient(circle at -16% 13%,rgba(123,184,255,.16) 0 15%,transparent 32%),
-    radial-gradient(circle at 112% 91%,rgba(118,180,255,.17) 0 14%,transparent 33%),
-    radial-gradient(circle at -19% 13%,transparent 0 245px,rgba(218,233,255,.17) 246px 247px,transparent 249px),
-    radial-gradient(circle at 118% 81%,transparent 0 275px,rgba(218,233,255,.16) 276px 277px,transparent 279px),
-    radial-gradient(ellipse at 92% 8%,rgba(37,96,236,.21),transparent 49%),
-    linear-gradient(150deg,#001574 0%,#001893 45%,#07279e 78%,#001575 100%);
   --studio-surface-art: 
     radial-gradient(circle at -16% 13%,rgba(123,184,255,.16) 0 15%,transparent 32%),
     radial-gradient(circle at 112% 91%,rgba(118,180,255,.17) 0 14%,transparent 33%),
