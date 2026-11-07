@@ -71,6 +71,7 @@ test('Login mantém a logo presente, usa espaçamento equilibrado e acessível e
   assert.match(layout,/\.auth-layout \.auth-card \.auth-support-link\{/);
   assert.match(layout,/margin:clamp\(14px,2\.5dvh,25px\) auto auto!important/);
   assert.match(layout,/@media\(max-height:720px\)/);
-  assert.match(css,/height:100dvh!important/);
+  assert.match(css,/min-height:100dvh!important/);
+  assert.doesNotMatch(css,/^[ \t]*height:100dvh!important/m);
   assert.match(css,/overflow-y:auto!important/);
 });
