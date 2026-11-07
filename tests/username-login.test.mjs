@@ -33,7 +33,7 @@ test('Tela de login pede usuário e senha, mantém suporte e admite admin por e-
   const auth=src.slice(src.indexOf('function authMarkup()'),src.indexOf('function layout(content)'));
   assert.match(auth,/field\('login','Nome de usuário'/);
   assert.match(auth,/field\('password','Senha'/);
-  assert.match(auth,/Administrador: entre com seu e-mail habitual/);
+  assert.doesNotMatch(auth,/Administrador: entre com seu e-mail habitual/);
   assert.match(auth,/Tire suas dúvidas/);
   assert.doesNotMatch(auth,/field\('email'/);
   assert.doesNotMatch(auth,/Primeiro acesso|Criar conta/);
