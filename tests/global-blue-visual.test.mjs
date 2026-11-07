@@ -64,3 +64,16 @@ test('visual-only update respects responsive layouts and has no database DDL',()
   assert.match(css,/@media\(max-height:680px\)/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
+
+test('background azul vence os antigos fundos brancos com seletores igualmente específicos',()=>{
+  const overrides=css.slice(css.indexOf('/* iPhone/Safari:'),css.indexOf('/* O background é uma propriedade'));
+  for(const screen of ['is-home','is-camera','is-preview'])
+    assert.match(overrides,new RegExp('\\.client-app\\.'+screen));
+  assert.match(overrides,/background-color:var\(--studio-blue\)!important/);
+  assert.match(overrides,/background-image:var\(--studio-surface-art\)!important/);
+  assert.match(overrides,/\.client-app\.is-home \.client-content,/);
+  assert.match(overrides,/\.client-app\.is-camera \.client-content,/);
+  assert.match(overrides,/\.client-app\.is-preview \.client-content\{/);
+  assert.match(overrides,/background:transparent!important/);
+  assert.ok(html.indexOf('./studio-unified-blue.css')>html.indexOf('./studio-glass.css'));
+});
