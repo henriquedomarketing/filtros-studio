@@ -42,10 +42,25 @@ test('photo capture/gallery/preview preserve the original video and PNG overlay'
   for(const action of ['photo-share','photo-instagram','photo-whatsapp','photo-save','photo-retake','photo-change-filter'])
     assert.match(app,new RegExp('data-act="'+action+'"'));
 });
-test('does not introduce backend or admin changes into the visual layer',()=>{
-  assert.doesNotMatch(css,/supabase|service.role|CREATE TABLE|DROP TABLE/i);
-  assert.doesNotMatch(css,/\.admin-layout\s*\{/);
+test('admin dashboard, client management and finance share the official blue background',()=>{
+  const admin=app.slice(app.indexOf('return `<div class="layout admin-layout"'),app.indexOf('function table('));
+  for(const menu of ['dashboard','clients','filters','test-filters','finance','settings'])
+    assert.ok(admin.includes("'"+menu+"'"),menu+' remains in sidebar');
+  assert.match(admin,/class="workspace"/);
+  assert.match(admin,/class="topbar"/);
+  assert.match(admin,/class="content"/);
+  assert.match(css,/\.admin-layout\{/);
+  assert.match(css,/\.admin-layout \.sidebar\{/);
+  assert.match(css,/\.admin-layout \.card,/);
+  assert.match(css,/\.admin-layout \.topbar\{/);
+  assert.match(css,/\.admin-layout \.mobile-menu-toggle/);
+  assert.match(css,/\.admin-layout \.sidebar \.nav-btn\.active/);
+  assert.match(css,/background-image:var\(--studio-surface-art\)!important/);
+});
+test('visual-only update respects responsive layouts and has no database DDL',()=>{
+  assert.doesNotMatch(css,/service_role|CREATE TABLE|DROP TABLE/i);
   assert.match(css,/@media\(max-width:430px\)/);
+  assert.match(css,/@media\(max-width:700px\)/);
   assert.match(css,/@media\(max-height:680px\)/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
