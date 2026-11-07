@@ -24,3 +24,17 @@ test('login conserva rolagem de segurança quando teclado abre ou viewport é ba
   assert.match(app,/api\.auth\.signInWithPassword/);
   assert.match(app,/class="auth-support-link"/);
 });
+
+test('faixa branca ocupa quase metade do viewport do iPhone, conforme referência',()=>{
+  const reference=css.slice(css.indexOf('/* Referência aprovada: a faixa branca'));
+  assert.match(reference,/@media\(max-width:700px\) and \(min-height:721px\)/);
+  assert.match(reference,/\.auth-layout \.auth-card>\.brand\{/);
+  assert.match(reference,/height:43dvh!important/);
+  assert.match(reference,/min-height:43dvh!important/);
+  assert.match(reference,/flex:0 0 43dvh!important/);
+  assert.match(reference,/\.auth-layout \.auth-card \.form\{/);
+  assert.match(reference,/margin:clamp\(14px,2\.5dvh,25px\) auto 0!important/);
+  assert.match(reference,/@media\(max-width:700px\) and \(max-height:720px\)/);
+  assert.match(reference,/height:34dvh!important/);
+  assert.match(css,/overflow-y:auto!important/);
+});
