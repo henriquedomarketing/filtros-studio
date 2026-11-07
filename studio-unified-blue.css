@@ -626,10 +626,10 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
    das regras compactas antigas para definir a proporção real no iPhone. */
 @media(max-width:700px) and (min-height:721px){
   .auth-layout .auth-card>.brand{
-    height:43dvh!important;
-    min-height:43dvh!important;
+    height:49dvh!important;
+    min-height:49dvh!important;
     max-height:none!important;
-    flex:0 0 43dvh!important;
+    flex:0 0 49dvh!important;
     margin-bottom:0!important;
     padding-block:clamp(20px,4dvh,45px)!important;
   }
@@ -638,6 +638,15 @@ html,body,#root{min-height:100%;background:var(--studio-blue)}
   }
   .auth-layout .auth-card .auth-support-link{
     margin:clamp(12px,2dvh,20px) auto auto!important;
+  }
+}
+/* Em aparelhos intermediários, um painel menor preserva todos os campos
+   sem precisar rolar; a proporção de 49% é destinada aos iPhones altos. */
+@media(max-width:700px) and (min-height:721px) and (max-height:820px){
+  .auth-layout .auth-card>.brand{
+    height:43dvh!important;
+    min-height:43dvh!important;
+    flex:0 0 43dvh!important;
   }
 }
 /* Em aparelhos mais baixos, preserva os campos inteiros e evita
