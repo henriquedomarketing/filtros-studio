@@ -29,8 +29,9 @@ test('Identidade de uma empresa não é usada para colorir interface',()=>{
   assert.match(modal,/A imagem manterá a proporção original/);
 });
 
-test('Logo e documentos do cliente continuam separados e protegidos',()=>{
-  assert.match(app,/brandImg\(app\.company,'client-company-logo'\)/);
+test('Logo do cliente é preservada nos dados mas não na tela de boas-vindas',()=>{
+  const home=app.slice(app.indexOf('function clientCategories(){'),app.indexOf('function cameraView(){'));
+  assert.doesNotMatch(home,/brandImg\(|client-company-logo-wrap/);
   assert.match(app,/async function uploadCompanyLogo/);
   assert.match(app,/async function brandLogoUrl/);
   assert.match(app,/function hydrateBrandLogos/);
