@@ -7,7 +7,7 @@ const pkg=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'ut
 test('Filtros Studio é a marca visível no aplicativo',()=>{
  assert.match(page,/<title>Filtros Studio/);
  assert.match(app,/Filtros Studio/);
- assert.match(app,/class="brand-mark">FS<\/span>/);
+ assert.match(app,/class="brand-mark fs-logo-mark"/);
  assert.doesNotMatch(page,/Camera Marketing Studio/);
  assert.doesNotMatch(app,/Camera Marketing Studio|camera marketing<small>/);
  assert.equal(pkg.name,'filtros-studio');
