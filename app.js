@@ -706,8 +706,8 @@ function photoEditorView(){
           </svg>
         </button>
       </div>
-      <label class="fs-edit-size">Tamanho <input id="photoTextSize" type="range" min="48" max="160" step="4" value="${active?.size||92}" ${active?'':'disabled'} aria-label="Tamanho da letra"></label>
-      <p class="fs-edit-hint">Arraste o texto para posicionar. Toque em Escrever para alterar.</p>
+      <label class="fs-edit-size">Tamanho <input id="photoTextSize" type="range" min="36" max="320" step="4" value="${active?.size||92}" ${active?'':'disabled'} aria-label="Tamanho da letra"></label>
+      <p class="fs-edit-hint">Arraste com um dedo · Ajuste o tamanho com dois dedos</p>
     </div>
     <div class="fs-edit-compose hidden" id="photoTextCompose">
       <div class="fs-edit-compose-head"><strong>Escreva seu texto</strong><button type="button" data-act="text-compose-done">Pronto</button></div>
@@ -941,45 +941,91 @@ function photoTextInputChanged(event){
     active.text=event.target.value.slice(0,220);
     photoTextRefreshLayers();
   }else if(event.target.id==='photoTextSize'){
-    active.size=Math.max(48,Math.min(160,Number(event.target.value)||92));
+    active.size=Math.max(36,Math.min(320,Number(event.target.value)||92));
     photoTextRefreshLayers();
   }
 }
 
+// Gesto padronizado de mouse, caneta ou dois dedos. Atua somente no texto.
+function photoTextGestureSnapshot(pointers){
+  const pts=Array.from(pointers.values()).slice(0,2);
+  const center={x:pts.reduce((sum,p)=>sum+p.x,0)/pts.length,
+    y:pts.reduce((sum,p)=>sum+p.y,0)/pts.length};
+  return {center,distance:pts.length===2?
+    Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y):1};
+}
+function photoTextGestureRebase(editor){
+  const drag=editor?.drag;
+  if(!drag)return;
+  const item=editor.texts.find(text=>text.id===drag.id);
+  if(!item||!drag.pointers.size){editor.drag=null;return;}
+  const values=photoTextGestureSnapshot(drag.pointers);
+  drag.start={...values,x:item.x,y:item.y,size:item.size};
+}
+function photoTextGestureTransform(start,current,rect){
+  const scale=current.distance===1||start.distance===1?1:
+    current.distance/Math.max(1,start.distance);
+  return {
+    x:Math.max(.07,Math.min(.93,start.x+(current.center.x-start.center.x)/Math.max(1,rect.width))),
+    y:Math.max(.05,Math.min(.95,start.y+(current.center.y-start.center.y)/Math.max(1,rect.height))),
+    size:Math.max(36,Math.min(320,Math.round(start.size*scale)))
+  };
+}
 function photoTextPointerDown(event){
-  if(app.page!=='editor'||app.photoEditor?.composing||app.photoEditor?.eyedropper)return;
-  const el=event.target.closest('[data-photo-text]');
-  if(!el)return;
-  const e=app.photoEditor,item=e.texts.find(x=>x.id===el.dataset.photoText);
-  if(!item)return;
-  e.selectedId=item.id;
-  e.drag={pointerId:event.pointerId,id:item.id,startX:event.clientX,startY:event.clientY,x:item.x,y:item.y,moved:false};
-  try{el.setPointerCapture(event.pointerId);}catch(_){}
+  const editor=app.photoEditor;
+  if(app.page!=='editor'||!editor||editor.composing||editor.eyedropper||editor.saving)return;
+  const stage=event.target.closest?.('#photoTextStage');
+  if(!stage)return;
+  const activeDrag=editor.drag;
+  // Segundo dedo pode tocar outra parte da foto, mas nunca troca o texto ativo.
+  let id=activeDrag?.id;
+  if(!activeDrag){
+    const el=event.target.closest?.('[data-photo-text]');
+    if(!el)return;
+    id=el.dataset.photoText;
+    if(!editor.texts.some(item=>item.id===id))return;
+    editor.selectedId=id;
+    editor.drag={id,pointers:new Map(),start:null};
+    photoTextRefreshControls();
+  }
+  if(editor.drag.pointers.size>=2)return;
+  editor.drag.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  photoTextGestureRebase(editor);
+  try{stage.setPointerCapture(event.pointerId);}catch(_){}
   event.preventDefault();
-  photoTextRefreshControls();
 }
-
 function photoTextPointerMove(event){
-  const e=app.photoEditor,drag=e?.drag;
-  if(app.page!=='editor'||!drag||drag.pointerId!==event.pointerId)return;
-  const stage=$('photoTextStage'),item=e.texts.find(x=>x.id===drag.id);
+  const editor=app.photoEditor,drag=editor?.drag;
+  if(app.page!=='editor'||!drag?.pointers.has(event.pointerId)||!drag.start)return;
+  const stage=$('photoTextStage');
+  const item=editor.texts.find(x=>x.id===drag.id);
   if(!stage||!item)return;
-  const rect=stage.getBoundingClientRect();
-  const dx=event.clientX-drag.startX,dy=event.clientY-drag.startY;
-  if(Math.abs(dx)+Math.abs(dy)>5)drag.moved=true;
-  item.x=Math.max(.07,Math.min(.93,drag.x+dx/rect.width));
-  item.y=Math.max(.05,Math.min(.95,drag.y+dy/rect.height));
-  const el=[...document.querySelectorAll('[data-photo-text]')].find(x=>x.dataset.photoText===item.id);
-  if(el){el.style.left=(item.x*100).toFixed(2)+'%';el.style.top=(item.y*100).toFixed(2)+'%';}
+  drag.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  const values=photoTextGestureTransform(drag.start,photoTextGestureSnapshot(drag.pointers),
+    stage.getBoundingClientRect());
+  Object.assign(item,values);
+  // Não recriar o DOM durante o gesto: mantém a captura do ponteiro no iOS.
+  const el=[...stage.querySelectorAll('[data-photo-text]')].find(x=>x.dataset.photoText===item.id);
+  if(el){
+    el.style.left=(item.x*100).toFixed(2)+'%';
+    el.style.top=(item.y*100).toFixed(2)+'%';
+    el.style.fontSize=(item.size/10.8).toFixed(3)+'cqw';
+  }
+  const slider=$('photoTextSize');
+  if(slider)slider.value=String(item.size);
   event.preventDefault();
 }
-
 function photoTextPointerUp(event){
-  const e=app.photoEditor,drag=e?.drag;
-  if(app.page!=='editor'||!drag||drag.pointerId!==event.pointerId)return;
-  e.drag=null;
-  photoTextRefreshLayers();
-  // Tocar seleciona o texto; a personalização permanece na tela de edição.
+  const editor=app.photoEditor,drag=editor?.drag;
+  if(app.page!=='editor'||!drag?.pointers.has(event.pointerId))return;
+  drag.pointers.delete(event.pointerId);
+  if(drag.pointers.size){
+    photoTextGestureRebase(editor);
+  }else{
+    editor.drag=null;
+    photoTextRefreshLayers();
+    photoTextRefreshControls();
+  }
 }
 
 function photoTextWrap(ctx,text,maxWidth){
@@ -1092,7 +1138,7 @@ function previewView(){
     <div class="fs-result-picture" style="--photo-ratio:${app.captureData.width||1080} / ${app.captureData.height||1920}">
       <img src="${escapeHtml(app.captureData.url)}" alt="Foto pronta com filtro aplicado"></div>
     <div class="fs-result-buttons">
-      <button type="button" class="fs-result-premium" data-act="photo-edit"><strong>ADICIONA TEXTO</strong></button>
+      <button type="button" class="fs-result-premium" data-act="photo-edit"><span class="fs-premium-crown" aria-hidden="true">👑</span><strong>EDITAR FOTO</strong></button>
       <button type="button" class="fs-result-save" data-act="photo-save"><span aria-hidden="true">↓</span> Salvar foto</button>
       <button type="button" class="fs-result-retry" data-act="photo-retake">↻ Nova foto</button>
     </div>
