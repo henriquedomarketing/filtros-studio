@@ -314,3 +314,96 @@
   color:inherit;
   opacity:.72;
 }
+
+
+/* Enquadramento interativo: o filtro PNG permanece imóvel, somente a foto move. */
+.client-app.is-camera .client-viewfinder{
+  touch-action:none;
+  cursor:grab;
+}
+.client-app.is-camera .client-viewfinder:active{cursor:grabbing}
+.client-app.is-camera .client-viewfinder #galleryBase,
+.client-app.is-camera .client-viewfinder #cameraVideo{
+  transform-origin:center center;
+  will-change:transform;
+  pointer-events:none;
+}
+.client-app.is-camera .client-viewfinder #cameraOverlay{
+  pointer-events:none;
+}
+.client-app.is-camera .client-viewfinder button{
+  touch-action:manipulation;
+  cursor:pointer;
+}
+.client-app.is-camera .client-framing-guide{
+  position:absolute;
+  z-index:4;
+  top:auto;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  width:max-content;
+  max-width:calc(100% - 20px);
+  padding:6px 10px;
+  border-radius:100px;
+  color:#fff;
+  background:rgba(0,0,0,.54);
+  font-size:10px;
+  font-weight:650;
+  text-align:center;
+  line-height:1.25;
+  pointer-events:none;
+  backdrop-filter:blur(5px);
+}
+.client-app.is-camera .client-framing-controls{
+  width:min(100%,355px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin:7px auto 0;
+  padding:6px 10px;
+  border:1px solid rgba(255,255,255,.26);
+  border-radius:13px;
+  background:rgba(1,18,102,.24);
+  color:#fff;
+}
+.client-app.is-camera .client-framing-zoom{
+  display:flex;gap:8px;
+  align-items:center;
+  flex:1;
+  min-width:0;
+  font-size:10px;
+  font-weight:700;
+}
+.client-app.is-camera .client-framing-zoom input{
+  flex:1;
+  min-width:0;
+  accent-color:#fff;
+}
+.client-app.is-camera .client-framing-zoom-value{
+  min-width:28px;
+  font-size:10px;
+  font-weight:750;
+  font-variant-numeric:tabular-nums;
+}
+.client-app.is-camera .client-framing-reset{
+  flex:0 0 auto;
+  padding:6px 8px;
+  color:#001893;
+  background:#fff;
+  border:0;
+  border-radius:8px;
+  font-size:10px;
+  font-weight:800;
+  cursor:pointer;
+}
+.client-app.is-camera .client-framing-reset:focus-visible{
+  outline:2px solid #fff;
+  outline-offset:3px;
+}
+@media(max-width:365px){
+  .client-app.is-camera .client-framing-controls{gap:5px;padding:5px 7px}
+  .client-app.is-camera .client-framing-zoom{gap:5px}
+  .client-app.is-camera .client-framing-reset{padding:6px}
+}
