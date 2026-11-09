@@ -407,3 +407,239 @@
   .client-app.is-camera .client-framing-zoom{gap:5px}
   .client-app.is-camera .client-framing-reset{padding:6px}
 }
+
+
+/* NOVO FLUXO — identidade azul Filtros Studio; composição simples, personalização depois. */
+.fs-photo-editor,.fs-framing-screen{
+  background-color:#001893!important;
+  background-image:var(--studio-surface-art,linear-gradient(155deg,#00116f,#1234aa))!important;
+  background-size:cover!important;
+  background-position:center!important;
+  color:#fff!important;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.fs-photo-editor{
+  min-height:0;height:100dvh;max-height:100dvh;
+  overflow:hidden;
+}
+.fs-edit-top,.fs-frame-top{
+  background:rgba(0,13,105,.35)!important;
+  border-bottom:1px solid rgba(255,255,255,.15)!important;
+  color:#fff;
+  backdrop-filter:blur(8px);
+}
+.fs-edit-top-title{color:#fff!important;font-size:14px}
+.fs-edit-top .fs-edit-top-back,.fs-frame-top .fs-frame-back{
+  background:rgba(255,255,255,.12)!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  border-radius:13px;
+  color:#fff;
+  font-size:13px;
+  font-weight:700;
+}
+.fs-edit-top .fs-edit-top-done,.fs-frame-top .fs-frame-done{
+  background:#fff!important;
+  border:1px solid #fff!important;
+  color:#001893!important;
+  border-radius:13px;
+  font-weight:800;
+}
+.fs-edit-workspace{
+  padding:10px 15px 5px!important;
+  min-height:0;flex:1 1 auto;
+  align-items:center;
+  justify-content:center;
+}
+.fs-edit-stage{
+  width:auto!important;
+  height:min(54dvh,560px)!important;
+  max-width:calc(100vw - 30px)!important;
+  max-height:100%!important;
+  aspect-ratio:var(--photo-ratio,9/16)!important;
+  flex:0 1 auto;
+  border:1px solid rgba(255,255,255,.42)!important;
+  box-shadow:0 12px 28px rgba(0,8,65,.24)!important;
+  border-radius:16px!important;
+  background:#0b1849!important;
+}
+.fs-edit-text.selected{outline:1px dashed #fff;outline-offset:3px}
+.fs-edit-panel{
+  position:relative;
+  padding:10px 15px calc(12px + env(safe-area-inset-bottom,0px))!important;
+  gap:9px!important;
+  background:rgba(0,13,100,.58)!important;
+  border-top:1px solid rgba(255,255,255,.18)!important;
+  backdrop-filter:blur(15px);
+}
+.fs-edit-actions{gap:8px}
+.fs-edit-actions button{
+  background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.38);
+  color:#fff;
+  min-height:40px;
+  border-radius:12px;
+}
+.fs-edit-actions .fs-edit-add{
+  color:#001893!important;background:#fff!important;border-color:#fff!important;
+}
+.fs-edit-fonts{
+  gap:7px;min-height:44px;
+  scroll-snap-type:x proximity;
+}
+.fs-edit-font{
+  scroll-snap-align:start;
+  padding:8px 13px!important;
+  min-height:38px!important;
+  border-radius:12px;
+  background:rgba(255,255,255,.13)!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  color:#fff!important;
+}
+.fs-edit-font.chosen,.fs-edit-style.chosen{
+  background:#fff!important;color:#001893!important;border-color:#fff!important;
+}
+.fs-edit-style{
+  background:rgba(255,255,255,.13)!important;
+  border-color:rgba(255,255,255,.34)!important;
+  border-radius:10px;
+}
+.fs-edit-size{color:#dce6ff!important;font-size:12px}
+.fs-edit-size input{accent-color:#fff}
+.fs-edit-hint{color:#e5ebff!important;font-size:11px!important}
+.fs-edit-compose{
+  top:clamp(68px,14dvh,140px)!important;
+  left:50%;width:min(calc(100vw - 28px),470px);
+  padding:15px!important;
+  border-radius:17px!important;
+  border:1px solid rgba(255,255,255,.42)!important;
+  background:linear-gradient(145deg,rgba(1,22,119,.97),rgba(14,44,153,.97))!important;
+  color:#fff;
+  box-shadow:0 14px 40px rgba(0,8,56,.35)!important;
+}
+.fs-edit-compose-head{margin-bottom:10px}
+.fs-edit-compose-head strong{font-size:14px}
+.fs-edit-compose-head button{
+  border-radius:11px!important;color:#001893!important;background:#fff!important;
+  min-height:40px;font-size:13px;
+}
+.fs-edit-compose textarea{
+  width:100%;
+  height:clamp(76px,14dvh,122px);
+  max-height:125px;
+  min-height:76px;
+  background:rgba(255,255,255,.12)!important;
+  border:1px solid rgba(255,255,255,.4)!important;
+  color:#fff!important;
+  border-radius:12px;
+  font-size:18px!important;
+}
+.fs-edit-compose textarea:focus{border-color:#fff!important}
+.fs-edit-compose textarea::placeholder{color:#d8e2ffb8!important}
+.fs-photo-editor:has(.fs-edit-compose:not(.hidden)) .fs-edit-base{filter:brightness(.60)!important}
+.fs-photo-editor:has(.fs-edit-compose:not(.hidden)) .fs-edit-panel{
+  opacity:.18;pointer-events:none
+}
+/* O editor fica limpo enquanto o usuário escreve; após Pronto exibe as 15 fontes. */
+.fs-edit-compose-fonts,.fs-edit-compose-options{display:none!important}
+
+.client-app.is-preview .fs-result-buttons .fs-result-premium{
+  color:#18130b!important;
+  background:linear-gradient(112deg,#fae6ae 0%,#eac060 40%,#d7a841 78%,#f3db9a 100%)!important;
+  border:1px solid #fff1ba!important;
+  box-shadow:0 6px 20px rgba(24,24,85,.19),inset 0 2px rgba(255,255,255,.45)!important;
+  letter-spacing:.7px;
+  font-weight:850!important;
+}
+.client-app.is-preview .fs-result-premium strong,
+.client-app.is-preview .fs-result-premium span{color:#18130b!important}
+.client-app.is-preview .fs-result-buttons{gap:10px}
+.client-app.is-preview .fs-result-buttons .fs-result-retry{
+  background:rgba(255,255,255,.14);color:#fff;
+}
+
+/* Enquadrar após fotografar ou importar: foto móvel e PNG totalmente parado. */
+.fs-framing-screen{
+  display:flex;flex-direction:column;
+  height:100dvh;min-height:0;max-height:100dvh;
+  overflow:hidden;
+  isolation:isolate;
+}
+.fs-frame-top{
+  flex:0 0 auto;
+  padding:calc(9px + env(safe-area-inset-top,0px)) 14px 10px;
+  display:flex;align-items:center;justify-content:space-between;gap:9px;
+  min-height:calc(65px + env(safe-area-inset-top,0px));
+}
+.fs-frame-top strong{font-size:14px;font-weight:800;text-align:center}
+.fs-frame-top button{
+  min-height:42px;padding:8px 12px;font-size:13px;font-weight:750;
+  cursor:pointer;
+}
+.fs-frame-top button:disabled{opacity:.6}
+.fs-frame-workspace{
+  flex:1;min-height:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;
+  padding:10px 12px calc(20px + env(safe-area-inset-bottom,0px));
+}
+.fs-frame-stage{
+  position:relative;flex:0 0 auto;
+  width:min(calc(100vw - 30px),calc(64dvh * .5625),430px);
+  aspect-ratio:var(--photo-ratio,9/16);
+  border:1px solid rgba(255,255,255,.65);
+  border-radius:16px;
+  box-shadow:0 14px 35px rgba(0,7,70,.26);
+  background:#0c1338;
+  overflow:hidden;
+  touch-action:none!important;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.fs-frame-stage[data-format="feed"]{
+  width:min(calc(100vw - 30px),calc(64dvh * .8),430px);
+}
+.fs-frame-source{
+  display:block;
+  position:absolute;
+  top:50%;left:50%;
+  width:100%;height:100%;
+  max-width:none;
+  object-fit:fill;
+  transform:translate(-50%,-50%);
+  pointer-events:none;user-select:none;
+  -webkit-user-drag:none;
+}
+.fs-frame-overlay{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:fill;
+  pointer-events:none;user-select:none;
+  -webkit-user-drag:none;
+}
+.fs-frame-hint{
+  margin:0;
+  padding:10px 15px;
+  max-width:350px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:14px;
+  background:rgba(0,15,107,.34);
+  font-size:12px;
+  line-height:1.4;
+  text-align:center;
+  color:#edf2ff;
+}
+@media(max-height:700px){
+  .fs-edit-stage{height:min(49dvh,430px)!important}
+  .fs-edit-panel{gap:6px!important;padding-top:7px!important}
+  .fs-edit-hint{display:none}
+  .fs-frame-stage{width:min(calc(100vw - 30px),calc(60dvh * .5625),410px)}
+  .fs-frame-stage[data-format="feed"]{width:min(calc(100vw - 30px),calc(60dvh * .8),410px)}
+}
+@media(max-width:370px){
+  .fs-edit-panel{padding-left:9px!important;padding-right:9px!important}
+  .fs-edit-font{padding:7px 10px!important}
+  .fs-frame-top button{padding:7px 9px}
+  .fs-frame-hint{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  .fs-edit-font,.fs-frame-stage{scroll-behavior:auto}
+}
