@@ -63,11 +63,11 @@ test('recorte central de imagem horizontal funciona nos dois formatos',()=>{
     return args;
   }
   const story=crop(1080,1920),feed=crop(1080,1350);
-  assert.equal(story[7],1920);
-  assert.equal(feed[7],1350);
-  assert.equal(feed[1],500);
+  assert.equal(story[8],1920);
+  assert.equal(feed[8],1350);
+  assert.equal(feed[1],800);
   assert.equal(feed[2],0);
-  assert.equal(feed[3],3000);
+  assert.equal(feed[3],2400);
   assert.equal(feed[4],3000);
   assert.ok(story[1]>feed[1]);
 });
