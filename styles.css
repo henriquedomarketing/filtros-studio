@@ -928,3 +928,18 @@ body.mobile-menu-lock{overflow:hidden}
   .filter-card-info b{font-size:12px;}
   .filter-card-info small{font-size:10px;}
 }
+
+
+/* Cadastro de filtros em lote: pré-visualização e organização antes do envio. */
+.filter-batch-preview{min-height:64px;margin:4px 0 14px}
+.filter-batch-count{margin:0 0 12px;font-size:13px;font-weight:650;color:inherit}
+.filter-batch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:12px}
+.filter-batch-item{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 9px 9px;min-width:0;background:rgba(116,150,220,.08);border:1px solid rgba(116,150,220,.24);border-radius:14px}
+.filter-batch-item img{height:145px;max-width:100%;aspect-ratio:9/16;object-fit:contain;border-radius:8px;background:repeating-conic-gradient(#e8ebf2 0% 25%,white 0% 50%) 50%/14px 14px}
+.filter-batch-number{position:absolute;left:5px;top:5px;display:grid;place-items:center;min-width:25px;height:25px;padding:0 5px;background:#1236a0;color:white;border-radius:100px;font-size:12px;font-weight:800}
+.filter-batch-filename{max-width:100%;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filter-batch-actions{width:100%;display:flex;justify-content:center;gap:6px}
+.filter-batch-actions button{min-width:30px;min-height:32px;border:1px solid rgba(116,150,220,.3);border-radius:9px;background:rgba(116,150,220,.12);color:inherit;cursor:pointer;font-size:17px}
+.filter-batch-actions button:disabled{opacity:.3;cursor:default}
+.filter-batch-actions button:not(:disabled):hover{background:rgba(116,150,220,.24)}
+@media(max-width:500px){.filter-batch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
