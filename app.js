@@ -676,7 +676,11 @@ function photoEditorView(){
   const colors=PHOTO_TEXT_COLORS.map(color=>
     `<button type="button" class="fs-edit-color ${active?.color===color?'chosen':''}" data-act="text-color" data-id="${color}"
       aria-label="Cor ${color}" ${active?'':'disabled'} style="--swatch:${color}"></button>`
-  ).join('');
+  ).join('')+`<button type="button" class="fs-edit-eyedropper" data-act="text-eyedropper" aria-label="Conta-gotas: escolher cor da foto ou moldura" title="Conta-gotas" ${active?'':'disabled'}>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m15 5 4 4M14.2 6.2l3.6 3.6M8 13l8-8a2.4 2.4 0 0 1 3.4 3.4l-8 8-4.5 1 1.1-4.4Z"/>
+      <path d="M6 18.5 4 20h4"/>
+    </svg></button>`;
   return `<section class="fs-photo-editor" aria-label="Editor de texto para foto">
     <header class="fs-edit-top">
       <button type="button" data-act="text-cancel" class="fs-edit-top-back">← <span>Voltar</span></button>
@@ -707,15 +711,127 @@ function photoEditorView(){
       <div class="fs-edit-compose-head"><strong>Escreva seu texto</strong><button type="button" data-act="text-compose-done">Pronto</button></div>
       <textarea id="photoTextInput" rows="3" maxlength="220" placeholder="Digite aqui..." aria-label="Texto da foto" autocomplete="off"></textarea>
     </div>
+    ${photoEyedropperView()}
   </section>`;
 }
 
+function photoEyedropperView(){
+  const pick=app.photoEditor?.eyedropper;
+  if(!pick)return '';
+  const photo=app.captureData;
+  return `<div class="fs-eye-overlay" role="dialog" aria-modal="true" aria-label="Escolher cor da imagem">
+    <header class="fs-eye-header">
+      <button type="button" data-act="eye-cancel">Cancelar</button>
+      <strong>Conta-gotas</strong>
+      <button type="button" class="fs-eye-confirm" data-act="eye-use-color" ${pick.loading?'disabled':''}>Usar cor</button>
+    </header>
+    <p class="fs-eye-instruction">Toque na foto ou na moldura para escolher a cor.</p>
+    <div class="fs-eye-workspace">
+      <div id="eyeSampleStage" class="fs-eye-stage" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920}">
+        <img src="${escapeHtml(photo.baseUrl||photo.url)}" draggable="false" alt="Foto e moldura para selecionar uma cor">
+        <span id="eyeSampleMarker" class="fs-eye-marker" style="left:${pick.x*100}%;top:${pick.y*100}%;--picked-color:${pick.color}" aria-hidden="true"></span>
+      </div>
+    </div>
+    <div class="fs-eye-selected"><span id="eyeSelectedSwatch" class="fs-eye-selected-swatch" style="background:${pick.color}"></span>
+      <span id="eyeSelectedHex">${pick.color}</span>
+    </div>
+  </div>`;
+}
+function photoEyedropperSamplePoint(colorContext,x,y){
+  const width=colorContext.canvas.width,height=colorContext.canvas.height;
+  const ix=Math.max(0,Math.min(width-1,Math.floor(x*width)));
+  const iy=Math.max(0,Math.min(height-1,Math.floor(y*height)));
+  const rgba=colorContext.getImageData(ix,iy,1,1).data;
+  return '#'+[rgba[0],rgba[1],rgba[2]].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+async function openPhotoEyedropper(){
+  const editor=app.photoEditor,active=photoTextActive(),photo=app.captureData;
+  if(app.page!=='editor'||!editor||!active||!photo)return;
+  if(editor.composing)photoTextComposeDone();
+  if(editor.eyedropper)return;
+  const selectedId=active.id;
+  try{
+    const img=new Image();
+    const src=photo.baseUrl||photo.url;
+    await new Promise((resolve,reject)=>{
+      img.onload=resolve;
+      img.onerror=()=>reject(Error('Não foi possível abrir a imagem para selecionar cores.'));
+      img.src=src;
+      if(img.complete&&img.naturalWidth)resolve();
+    });
+    if(app.page!=='editor'||!app.photoEditor||photoTextActive()?.id!==selectedId)return;
+    const canvas=document.createElement('canvas');
+    canvas.width=photo.width||img.naturalWidth;
+    canvas.height=photo.height||img.naturalHeight;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    if(!ctx)throw Error('Este navegador não conseguiu abrir o conta-gotas.');
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    editor.eyedropper={ctx,x:.5,y:.5,color:photoEyedropperSamplePoint(ctx,.5,.5),selectedId,
+      pointerId:null,loading:false};
+    render();
+  }catch(error){toast(errorMessage(error));}
+}
+function photoEyedropperSample(event){
+  const pick=app.photoEditor?.eyedropper,stage=$('eyeSampleStage');
+  if(!pick||!stage)return;
+  const rect=stage.getBoundingClientRect();
+  if(!rect.width||!rect.height)return;
+  const x=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));
+  const y=Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height));
+  pick.x=x;pick.y=y;
+  try{pick.color=photoEyedropperSamplePoint(pick.ctx,x,y);}
+  catch(error){toast('Não foi possível ler a cor deste ponto.');return;}
+  const marker=$('eyeSampleMarker');
+  if(marker){
+    marker.style.left=(x*100)+'%';
+    marker.style.top=(y*100)+'%';
+    marker.style.setProperty('--picked-color',pick.color);
+  }
+  const swatch=$('eyeSelectedSwatch'),hex=$('eyeSelectedHex');
+  if(swatch)swatch.style.backgroundColor=pick.color;
+  if(hex)hex.textContent=pick.color;
+}
+function photoEyedropperPointerDown(event){
+  if(app.page!=='editor'||!app.photoEditor?.eyedropper)return;
+  const stage=event.target.closest?.('#eyeSampleStage');
+  if(!stage)return;
+  app.photoEditor.eyedropper.pointerId=event.pointerId;
+  try{stage.setPointerCapture(event.pointerId);}catch(_){}
+  photoEyedropperSample(event);
+  event.preventDefault();
+}
+function photoEyedropperPointerMove(event){
+  const pick=app.photoEditor?.eyedropper;
+  if(app.page!=='editor'||!pick||pick.pointerId!==event.pointerId)return;
+  photoEyedropperSample(event);
+  event.preventDefault();
+}
+function photoEyedropperPointerUp(event){
+  const pick=app.photoEditor?.eyedropper;
+  if(pick&&pick.pointerId===event.pointerId)pick.pointerId=null;
+}
+function cancelPhotoEyedropper(){
+  if(app.photoEditor?.eyedropper)app.photoEditor.eyedropper=null;
+  if(app.page==='editor')render();
+}
+function usePhotoEyedropperColor(){
+  const editor=app.photoEditor,pick=editor?.eyedropper;
+  if(!pick)return;
+  const selected=editor.texts.find(item=>item.id===pick.selectedId);
+  if(selected){
+    selected.color=pick.color;
+    if(selected.style==='light')selected.style='plain'; // Estilo claro força texto preto.
+    editor.selectedId=selected.id;
+  }
+  editor.eyedropper=null;
+  render();
+}
 function photoTextOpen(){
   if(!app.captureData)return;
   const photo=app.captureData;
   if(!photo.baseBlob){photo.baseBlob=photo.blob;photo.baseUrl=photo.url;}
   const texts=(photo.texts||[]).map(item=>({...item}));
-  app.photoEditor={texts,selectedId:texts.at(-1)?.id||null,composing:false,drag:null,saving:false};
+  app.photoEditor={texts,selectedId:texts.at(-1)?.id||null,composing:false,drag:null,saving:false,eyedropper:null};
   app.page='editor';
   render();
   if(!texts.length)photoTextAdd();
@@ -829,7 +945,7 @@ function photoTextInputChanged(event){
 }
 
 function photoTextPointerDown(event){
-  if(app.page!=='editor'||app.photoEditor?.composing)return;
+  if(app.page!=='editor'||app.photoEditor?.composing||app.photoEditor?.eyedropper)return;
   const el=event.target.closest('[data-photo-text]');
   if(!el)return;
   const e=app.photoEditor,item=e.texts.find(x=>x.id===el.dataset.photoText);
@@ -2720,6 +2836,9 @@ if(act==='open-client-menu'){setClientCameraMenu(true);return;}if(act==='close-c
 if(act==='framing-back'){cancelPhotoFraming();return;}
 if(act==='framing-finish'){void finishPhotoFraming();return;}
 if(act==='photo-edit'){photoTextOpen();return;}
+if(act==='text-eyedropper'){void openPhotoEyedropper();return;}
+if(act==='eye-cancel'){cancelPhotoEyedropper();return;}
+if(act==='eye-use-color'){usePhotoEyedropperColor();return;}
 if(act==='text-add'){photoTextAdd();return;}
 if(act==='text-edit'){photoTextComposeOpen();return;}
 if(act==='text-compose-done'){photoTextComposeDone();return;}
@@ -2763,7 +2882,8 @@ function setAdminMobileMenu(open){
 document.addEventListener('keydown',event=>{
   if(event.key==='Escape'&&app.page==='framing'){cancelPhotoFraming();return;}
   if(event.key==='Escape'&&app.page==='editor'){
-    if(app.photoEditor?.composing)photoTextComposeDone();
+    if(app.photoEditor?.eyedropper)cancelPhotoEyedropper();
+    else if(app.photoEditor?.composing)photoTextComposeDone();
     else photoTextCancel();
     return;
   }
@@ -2778,11 +2898,15 @@ window.addEventListener('resize',()=>{
 $('root').addEventListener('click',click);
 $('root').addEventListener('pointerdown',categoryOrderPointerDown);
 $('root').addEventListener('pointerdown',photoTextPointerDown);
+$('root').addEventListener('pointerdown',photoEyedropperPointerDown);
 $('root').addEventListener('pointerdown',framingPointerDown);
 
 $('root').addEventListener('input',photoTextInputChanged);
 
 document.addEventListener('pointermove',photoTextPointerMove,{passive:false});
+document.addEventListener('pointermove',photoEyedropperPointerMove,{passive:false});
+document.addEventListener('pointerup',photoEyedropperPointerUp);
+document.addEventListener('pointercancel',photoEyedropperPointerUp);
 document.addEventListener('pointermove',framingPointerMove,{passive:false});
 document.addEventListener('pointerup',framingPointerEnd);
 document.addEventListener('pointercancel',framingPointerEnd);
