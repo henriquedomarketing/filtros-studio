@@ -977,7 +977,7 @@ function photoTextGestureRebase(editor){
   drag.start={...values,x:item.x,y:item.y,size:item.size};
 }
 function photoTextGestureTransform(start,current,rect){
-  const scale=current.distance===1||start.distance===1?1:
+  const scale=start.distance===1?1:
     current.distance/Math.max(1,start.distance);
   return {
     x:Math.max(.07,Math.min(.93,start.x+(current.center.x-start.center.x)/Math.max(1,rect.width))),
