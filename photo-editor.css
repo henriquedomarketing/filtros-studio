@@ -286,3 +286,31 @@
   .fs-edit-compose textarea{min-height:62px;max-height:90px}
   .fs-edit-compose-fonts{padding:6px 0 4px}
 }
+
+
+/* Dois formatos sem distorção: Stories 9:16 e Feed 4:5.
+   A proporção é escolhida pelo PNG ativo; sem alteração do banco. */
+.client-app.is-camera .client-viewfinder[data-filter-format="feed"]{
+  aspect-ratio:4/5!important;
+  width:min(100%,420px,calc((100dvh - 240px)*.8))!important;
+}
+.client-app.is-camera:has(.client-gallery-finish) .client-viewfinder[data-filter-format="feed"]{
+  width:min(100%,420px,calc((100dvh - 265px)*.8))!important;
+}
+.client-app.is-preview .fs-result-picture{
+  aspect-ratio:var(--photo-ratio,9/16);
+}
+.fs-edit-stage{
+  aspect-ratio:var(--photo-ratio,9/16);
+}
+/* Minúsculas também são visíveis ao organizar diversos filtros no painel. */
+.filter-batch-format{
+  display:block;
+  max-width:100%;
+  font-size:10px;
+  line-height:1.3;
+  text-align:center;
+  overflow-wrap:anywhere;
+  color:inherit;
+  opacity:.72;
+}
