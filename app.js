@@ -95,6 +95,54 @@ function studioCredits(extraClass=''){
     <span>Desde 2025 · Todos os direitos reservados.</span>
   </footer>`;
 }
+// Links de recuperação do Supabase autenticam temporariamente o usuário.
+const recoveryUrl=new URL(window.location.href);
+const recoveryHash=new URLSearchParams(recoveryUrl.hash.replace(/^#/,''));
+let passwordRecoveryActive=recoveryUrl.searchParams.get('type')==='recovery'||
+  recoveryHash.get('type')==='recovery'||recoveryUrl.searchParams.has('code');
+let passwordRecoveryError='';
+api.auth.onAuthStateChange((event)=>{
+  if(event==='PASSWORD_RECOVERY'){
+    passwordRecoveryActive=true;
+    setExplicitLogout(false);
+    render();
+  }
+});
+function recoveryMarkup(){
+  return `<div class="auth-layout"><div class="auth-card">
+    <div class="brand"><span class="brand-mark fs-logo-mark"><img src="./assets/filtros-studio-mark.svg" alt="" aria-hidden="true"></span><span>Filtros<small>STUDIO</small></span></div>
+    <h1>Criar nova senha</h1>
+    <p class="muted">Defina uma senha exclusiva para acessar sua conta. Não compartilhe sua senha com ninguém.</p>
+    ${passwordRecoveryError?`<div class="auth-error" role="alert">${escapeHtml(passwordRecoveryError)}</div>`:''}
+    <form class="form" id="passwordRecoveryForm">
+      <div class="field"><label for="recoveryPassword">Nova senha</label><input id="recoveryPassword" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></div>
+      <div class="field"><label for="recoveryConfirm">Confirmar nova senha</label><input id="recoveryConfirm" name="confirmation" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></div>
+      <button class="btn btn-primary btn-full" type="submit">Salvar nova senha</button>
+      <div id="authError" class="auth-error" role="alert"></div>
+    </form>
+    <p class="muted">Use pelo menos 12 caracteres. A alteração só funciona com um link de recuperação válido.</p>
+  </div>${studioCredits('studio-credits-auth')}</div>`;
+}
+async function submitPasswordRecovery(form){
+  const errorNode=$('authError');
+  const password=form.elements.password.value;
+  const confirmation=form.elements.confirmation.value;
+  if(password.length<12||password.length>128)throw Error('A nova senha deve ter de 12 a 128 caracteres.');
+  if(password!==confirmation)throw Error('As senhas informadas são diferentes.');
+  const {data:{session},error:sessionError}=await api.auth.getSession();
+  if(sessionError||!session)throw Error('Link expirado ou inválido. Solicite outro e-mail de recuperação.');
+  const {error}=await api.auth.updateUser({password});
+  if(error)throw error;
+  passwordRecoveryActive=false;
+  passwordRecoveryError='';
+  setExplicitLogout(true);
+  await api.auth.signOut({scope:'local'});
+  clearStoredAuthSession();
+  window.history.replaceState(null,'',window.location.pathname);
+  app.user=null;app.profile=null;app.company=null;
+  render();
+  toast('Senha atualizada! Entre com seu usuário ou e-mail e a nova senha.');
+}
 function authMarkup(){return `<div class="auth-layout"><div class="auth-card"><div class="brand"><span class="brand-mark fs-logo-mark"><img src="./assets/filtros-studio-mark.svg" alt="" aria-hidden="true"></span><span>Filtros<small>STUDIO</small></span></div><h1>Bem-vindo de volta</h1><p class="muted">Entre para acessar seu painel ou os filtros da sua empresa.</p><form class="form" id="authForm">${field('login','Nome de usuário','','text')}${field('password','Senha','','password',true,0)}<button class="btn btn-primary btn-full" type="submit">Entrar</button><div id="authError" class="auth-error"></div></form><a class="auth-support-link" href="https://wa.me/5544997497915?text=${encodeURIComponent('Olá! Preciso de suporte com o Filtros Studio.')}" target="_blank" rel="noopener noreferrer" aria-label="Tire suas dúvidas pelo WhatsApp"><svg class="auth-whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.04 2a9.9 9.9 0 0 0-8.5 15.01L2 22l5.12-1.48A9.96 9.96 0 1 0 12.04 2Zm0 18.05a8.08 8.08 0 0 1-4.11-1.12l-.3-.18-3.04.88.91-2.96-.2-.31a8.09 8.09 0 1 1 6.74 3.69Zm4.45-6.06c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.54.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.19-.71-.63-1.19-1.41-1.33-1.65-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.19-.47-.39-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.12 3.64.58.25 1.03.4 1.38.51.58.18 1.11.15 1.53.09.47-.07 1.43-.58 1.63-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z"/></svg><span>Tire suas dúvidas</span></a></div>${studioCredits('studio-credits-auth')}</div>`}
 function layout(content){const admin=app.profile?.role==='admin';
   const testing=admin&&app.adminTest.active&&['camera','preview'].includes(app.page);
@@ -455,6 +503,7 @@ function pausedClientView(){
 function waiting(){return `<div class="auth-layout"><div class="card pending"><div class="brand"><span class="brand-mark fs-logo-mark"><img src="./assets/filtros-studio-mark.svg" alt="" aria-hidden="true"></span><span>Filtros Studio</span></div><h2>Conta aguardando ativação</h2><p class="muted">Seu cadastro existe, mas ainda não foi vinculado a uma empresa ou autorizado como administrador. Solicite a ativação ao responsável.</p>${supportContactMarkup()}<button class="btn" data-act="logout">Sair</button></div></div>`}
 function render(){
   document.body.classList.remove('mobile-menu-lock','client-camera-menu-lock');
+  if(passwordRecoveryActive){$('root').innerHTML=recoveryMarkup();return;}
   if(!app.user){$('root').innerHTML=authMarkup();return;}
   if(!app.profile||app.profile.role!=='admin'&&!app.company){$('root').innerHTML=waiting();return;}
   if(app.profile.role!=='admin'&&(app.company?.access_paused||app.company?.active===false)){
@@ -519,6 +568,14 @@ async function loadData(){
 }
 async function refresh(){await loadData();toast('Dados atualizados.');}
 async function init(){
+  // O link de recuperação tem prioridade sobre o logout local e o painel normal.
+  if(passwordRecoveryActive){
+    setExplicitLogout(false);
+    const {data:{session},error}=await api.auth.getSession();
+    if(error||!session)passwordRecoveryError='Link expirado ou inválido. Solicite um novo e-mail de recuperação.';
+    render();
+    return;
+  }
   // Não restaurar um login anterior após o usuário tocar explicitamente em Sair.
   if(wasExplicitlyLoggedOut()){
     clearStoredAuthSession();
@@ -542,7 +599,9 @@ function loginAuthEmail(identifier){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))throw new Error('Informe seu e-mail de administrador corretamente.');
     return value;
   }
-  // Alias do administrador: a senha nunca é armazenada no frontend.\n  if(value==='adm')return 'entreemcontato.br@gmail.com';\n  return normalizeClientUsername(value)+'@usuarios.filtros.studio';
+  // Alias do administrador: a senha nunca é armazenada no frontend.
+  if(value==='adm')return 'entreemcontato.br@gmail.com';
+  return normalizeClientUsername(value)+'@usuarios.filtros.studio';
 }
 async function authSubmit(form){
   if(logoutPending){
@@ -957,7 +1016,16 @@ function hydrateBrandLogos(){
   });
 }
 
-async function handleForm(event){event.preventDefault();const form=event.target;const values=Object.fromEntries(new FormData(form));const button=form.querySelector('button[type=submit]');if(button)button.disabled=true;try{if(form.id==='authForm')return await authSubmit(form);if(form.id==='clientForm'){
+async function handleForm(event){event.preventDefault();const form=event.target;
+  if(form.id==='passwordRecoveryForm'){
+    const button=form.querySelector('button[type=submit]');
+    if(button)button.disabled=true;
+    try{await submitPasswordRecovery(form);}
+    catch(error){const node=$('authError');if(node)node.textContent=errorMessage(error);}
+    finally{if(button?.isConnected)button.disabled=false;}
+    return;
+  }
+  const values=Object.fromEntries(new FormData(form));const button=form.querySelector('button[type=submit]');if(button)button.disabled=true;try{if(form.id==='authForm')return await authSubmit(form);if(form.id==='clientForm'){
   const logo=values.logo instanceof File&&values.logo.size>0?values.logo:null;
   await validateCompanyLogo(logo);
   const c=app.companies.find(x=>x.id===app.modal?.recordId);
