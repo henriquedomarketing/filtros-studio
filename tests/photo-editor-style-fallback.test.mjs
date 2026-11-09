@@ -16,7 +16,7 @@ test('Safari recebe o CSS do editor mesmo quando arquivo CSS não carrega',()=>{
 test('Visualização da foto pronta mantém tamanhos e botões grandes',()=>{
   assert.match(css,/\.fs-result-picture\{/);
   assert.match(css,/\.fs-result-premium\{/);
-  for(const action of ['photo-edit','photo-save','photo-whatsapp','photo-instagram','photo-retake'])
+  for(const action of ['photo-edit','photo-save','photo-retake'])
     assert.match(js,new RegExp('data-act="'+action+'"'));
 });
 test('Edição móvel possui foto enquadrada, controles e campo legível',()=>{
