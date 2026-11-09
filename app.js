@@ -449,11 +449,32 @@ function clientCategories(){
     }).join('')||'<p class="client-empty">Nenhuma categoria disponível por enquanto. Fale com o administrador.</p>'}</div>
   </section>`;
 }
+// Formatos suportados. Os PNGs antigos não precisam de alteração no banco.
+const FILTER_FORMATS=Object.freeze({
+  story:Object.freeze({id:'story',width:1080,height:1920,ratio:'9 / 16',label:'Stories · 1080 × 1920'}),
+  feed:Object.freeze({id:'feed',width:1080,height:1350,ratio:'4 / 5',label:'Feed · 1080 × 1350'})
+});
+function detectFilterFormat(width,height){
+  if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)return null;
+  const ratio=width/height;
+  if(Math.abs(ratio-4/5)<.002)return FILTER_FORMATS.feed;
+  if(Math.abs(ratio-9/16)<.002)return FILTER_FORMATS.story;
+  return null;
+}
+function filterFormatOrLegacy(width,height){
+  // Conteúdo antigo fora das duas proporções continua se comportando como Stories.
+  return detectFilterFormat(width,height)||FILTER_FORMATS.story;
+}
+function applyCameraFilterFormat(format){
+  const frame=document.querySelector('.client-app.is-camera .client-viewfinder');
+  if(frame)frame.dataset.filterFormat=format.id;
+}
+
 function cameraView(){
   const fromGallery=Boolean(app.galleryPhoto);
   return `<section class="client-camera-screen">
     <div class="client-viewfinder-wrap">
-      <div class="camera-frame client-viewfinder">
+      <div class="camera-frame client-viewfinder" data-filter-format="story">
         ${fromGallery
           ? `<img id="galleryBase" class="client-gallery-image" src="${escapeHtml(app.galleryPhoto.url)}" alt="Foto escolhida na galeria, recortada ao centro em formato Stories">`
           : '<video id="cameraVideo" autoplay playsinline muted></video>'}
@@ -526,7 +547,7 @@ function photoEditorView(){
       <button type="button" data-act="text-finish" class="fs-edit-top-done">Concluir</button>
     </header>
     <div class="fs-edit-workspace">
-      <div class="fs-edit-stage" id="photoTextStage">
+      <div class="fs-edit-stage" id="photoTextStage" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
       </div>
@@ -714,8 +735,9 @@ function photoTextDraw(ctx,item){
   const step=size*1.22,pad=size*.26;
   const width=Math.min(1010,Math.max(...lines.map(line=>ctx.measureText(line).width),size)+pad*2);
   const height=lines.length*step+pad*2;
-  const x=Math.max(width/2,Math.min(1080-width/2,item.x*1080));
-  const y=Math.max(height/2,Math.min(1920-height/2,item.y*1920));
+  const canvasWidth=ctx.canvas?.width||1080,canvasHeight=ctx.canvas?.height||1920;
+  const x=Math.max(width/2,Math.min(canvasWidth-width/2,item.x*canvasWidth));
+  const y=Math.max(height/2,Math.min(canvasHeight-height/2,item.y*canvasHeight));
   if(item.style==='dark'||item.style==='light'){
     ctx.beginPath();
     if(typeof ctx.roundRect==='function')ctx.roundRect(x-width/2,y-height/2,width,height,size*.22);
@@ -760,10 +782,11 @@ async function photoTextFinish(){
       image.onload=resolve;image.onerror=()=>reject(Error('Não foi possível abrir sua foto para editar.'));
     });
     const canvas=document.createElement('canvas');
-    canvas.width=1080;canvas.height=1920;
+    canvas.width=photo.width||image.naturalWidth||1080;
+    canvas.height=photo.height||image.naturalHeight||1920;
     const ctx=canvas.getContext('2d');
     if(!ctx)throw Error('Não foi possível criar a foto editada.');
-    ctx.drawImage(image,0,0,1080,1920);
+    ctx.drawImage(image,0,0,canvas.width,canvas.height);
     const texts=editor.texts.filter(item=>item.text.trim()).map(item=>({...item}));
     for(const item of texts)photoTextDraw(ctx,item);
     const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Não foi possível salvar a edição.')),'image/png'));
@@ -785,7 +808,8 @@ async function photoTextFinish(){
 function previewView(){
   if(!app.captureData)return '<div class="client-empty">Não há fotografia disponível.</div>';
   return `<section class="fs-result-compact" aria-label="Foto pronta para compartilhar">
-    <div class="fs-result-picture"><img src="${escapeHtml(app.captureData.url)}" alt="Foto pronta com filtro aplicado"></div>
+    <div class="fs-result-picture" style="--photo-ratio:${app.captureData.width||1080} / ${app.captureData.height||1920}">
+      <img src="${escapeHtml(app.captureData.url)}" alt="Foto pronta com filtro aplicado"></div>
     <div class="fs-result-buttons">
       <button type="button" class="fs-result-premium" data-act="photo-edit"><span aria-hidden="true">✦ Aa</span><strong>Editar foto</strong></button>
       <button type="button" class="fs-result-save" data-act="photo-save"><span aria-hidden="true">↓</span> Salvar foto</button>
@@ -1031,7 +1055,7 @@ function filterModal(){
     </div>
     <div class="field"><label for="filterBatchFile">Filtros PNG (um ou vários)</label>
       <input id="filterBatchFile" type="file" name="file" accept="image/png,.png" multiple required>
-      <small class="muted">Selecione quantos PNGs quiser, com até 12 MB cada. Formato recomendado: 1080 × 1920, com transparência.</small>
+      <small class="muted">Formatos: Stories 1080 × 1920 (9:16) ou Feed 1080 × 1350 (4:5). Vários PNGs transparentes, até 12 MB cada. O sistema identifica automaticamente cada formato.</small>
     </div>
     <div id="filterBatchPreview" class="filter-batch-preview" aria-live="polite"><p class="muted">Escolha os arquivos para organizar a ordem antes de salvar.</p></div>
     ${endForm}
@@ -1102,7 +1126,7 @@ function editFilterModal(filterId){
         </div>
         <div class="field"><label for="editFilterFile">Substituir imagem PNG <small>(opcional)</small></label>
           <input id="editFilterFile" name="file" type="file" accept="image/png,.png">
-          <small class="filter-editor-file-note">Selecione outro PNG transparente (até 12 MB). Você verá a prévia antes de salvar. Sem arquivo novo, o PNG atual permanece.</small>
+          <small class="filter-editor-file-note">PNG transparente até 12 MB, nos formatos 1080 × 1920 ou 1080 × 1350. O formato é identificado automaticamente e pode ser alterado na substituição.</small>
         </div>
         <div class="filter-editor-actions">
           <button class="btn btn-primary filter-editor-save" type="submit">Salvar alterações</button>
@@ -1200,7 +1224,35 @@ function updateNewCategoryField(){
   if(wrap)wrap.classList.toggle('hidden',!isNew);
   if(field){field.required=isNew;field.disabled=!isNew;}
 }
-async function validatePNG(file){if(!file||file.type!=='image/png'||file.size>12582912)throw Error('Selecione um PNG válido de até 12 MB.');const uri=URL.createObjectURL(file);try{const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('PNG não reconhecido.'));img.src=uri;});const canvas=document.createElement('canvas');canvas.width=100;canvas.height=178;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,100,178);const pixels=ctx.getImageData(0,0,100,178).data;let transparent=false,visible=false;for(let i=3;i<pixels.length;i+=4){if(pixels[i]<240)transparent=true;if(pixels[i]>15)visible=true;if(transparent&&visible)break;}if(!transparent||!visible)throw Error('O filtro precisa ter elementos visíveis e fundo transparente.');}finally{URL.revokeObjectURL(uri);}}
+async function validatePNG(file){
+  if(!file||file.type!=='image/png'||file.size>12582912)
+    throw Error('Selecione um PNG válido de até 12 MB.');
+  const uri=URL.createObjectURL(file);
+  try{
+    const img=new Image();
+    await new Promise((resolve,reject)=>{
+      img.onload=resolve;img.onerror=()=>reject(Error('PNG não reconhecido.'));img.src=uri;
+    });
+    const format=detectFilterFormat(img.naturalWidth,img.naturalHeight);
+    if(!format)throw Error('O PNG deve ter proporção 9:16 (1080 × 1920) ou 4:5 (1080 × 1350).');
+    const sampleWidth=100,sampleHeight=format.id==='feed'?125:178;
+    const canvas=document.createElement('canvas');
+    canvas.width=sampleWidth;canvas.height=sampleHeight;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    if(!ctx)throw Error('Não foi possível validar a transparência do PNG.');
+    ctx.drawImage(img,0,0,sampleWidth,sampleHeight);
+    const pixels=ctx.getImageData(0,0,sampleWidth,sampleHeight).data;
+    let transparent=false,visible=false;
+    for(let i=3;i<pixels.length;i+=4){
+      if(pixels[i]<240)transparent=true;
+      if(pixels[i]>15)visible=true;
+      if(transparent&&visible)break;
+    }
+    if(!transparent||!visible)
+      throw Error('O filtro precisa ter elementos visíveis e fundo transparente.');
+    return format;
+  }finally{URL.revokeObjectURL(uri);}
+}
 
 // Rascunho local: a ordem é escolhida antes de qualquer gravação no servidor.
 let filterBatch=[];
@@ -1210,8 +1262,23 @@ function clearFilterBatch(){
 }
 function setFilterBatch(files){
   clearFilterBatch();
-  filterBatch=Array.from(files||[]).map(file=>({file,url:URL.createObjectURL(file)}));
+  filterBatch=Array.from(files||[]).map(file=>({file,url:URL.createObjectURL(file),format:null}));
   renderFilterBatch();
+  for(const item of filterBatch){
+    const preview=new Image();
+    preview.onload=()=>{
+      if(!filterBatch.includes(item))return;
+      item.format=detectFilterFormat(preview.naturalWidth,preview.naturalHeight)||
+        {label:'Proporção não suportada'};
+      renderFilterBatch();
+    };
+    preview.onerror=()=>{
+      if(!filterBatch.includes(item))return;
+      item.format={label:'PNG inválido'};
+      renderFilterBatch();
+    };
+    preview.src=item.url;
+  }
 }
 function renderFilterBatch(){
   const host=$('filterBatchPreview');
@@ -1226,6 +1293,7 @@ function renderFilterBatch(){
         <span class="filter-batch-number">${index+1}</span>
         <img src="${escapeHtml(item.url)}" alt="Prévia do filtro ${index+1}">
         <span class="filter-batch-filename" title="${escapeHtml(item.file.name)}">${escapeHtml(item.file.name)}</span>
+        <small class="filter-batch-format">${escapeHtml(item.format?.label||'Verificando formato…')}</small>
         <div class="filter-batch-actions">
           <button type="button" data-act="filter-batch-up" data-id="${index}" aria-label="Subir imagem ${index+1}" ${index===0?'disabled':''}>↑</button>
           <button type="button" data-act="filter-batch-down" data-id="${index}" aria-label="Descer imagem ${index+1}" ${index===filterBatch.length-1?'disabled':''}>↓</button>
@@ -1451,13 +1519,19 @@ function selectFilter(fid){
   });
   const img=$('cameraOverlay');
   const filter=app.filters.find(f=>f.id===fid);
+  applyCameraFilterFormat(FILTER_FORMATS.story);
   if(!filter||!img)return;
   img.classList.add('hidden');
   img.removeAttribute('src');
+  img.onload=()=>{
+    if(!img.isConnected||app.selectedFilter!==fid)return;
+    applyCameraFilterFormat(filterFormatOrLegacy(img.naturalWidth,img.naturalHeight));
+    img.classList.remove('hidden');
+  };
+  img.onerror=()=>{if(app.selectedFilter===fid)toast('Não foi possível mostrar este PNG.');};
   mediaUrl(filter).then(url=>{
     if(!img.isConnected||app.selectedFilter!==fid)return;
     img.src=url;
-    img.classList.remove('hidden');
   }).catch(error=>toast('Não foi possível carregar o filtro: '+errorMessage(error)));
 }
 
@@ -1529,16 +1603,19 @@ async function capture(){
     const source=gallery?gallery.img:video;
     if(!gallery&&(!video.videoWidth||!app.stream))throw new Error('A câmera parou. Ative-a novamente.');
     if(gallery&&!gallery.img.naturalWidth)throw new Error('Reabra a foto da galeria.');
+    // A proporção vem do próprio PNG, inclusive dos filtros cadastrados anteriormente.
+    const format=filterFormatOrLegacy(overlay.naturalWidth,overlay.naturalHeight);
     const canvas=document.createElement('canvas');
-    canvas.width=1080;canvas.height=1920;
+    canvas.width=format.width;canvas.height=format.height;
     const ctx=canvas.getContext('2d');
     if(!ctx)throw new Error('Não foi possível preparar a fotografia.');
-    drawSourceCover(ctx,source,1080,1920);
-    ctx.drawImage(overlay,0,0,1080,1920);
+    drawSourceCover(ctx,source,format.width,format.height);
+    ctx.drawImage(overlay,0,0,format.width,format.height);
     const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Não foi possível gerar a foto.')),'image/png'));
     const name='filtros-studio-'+Date.now()+'.png';
     clearCapturedPhoto();
-    app.captureData={blob,file:new File([blob],name,{type:'image/png'}),url:URL.createObjectURL(blob),name};
+    app.captureData={blob,file:new File([blob],name,{type:'image/png'}),url:URL.createObjectURL(blob),name,
+      width:format.width,height:format.height,format:format.id};
     stopCamera();
     app.page='preview';
     render();
