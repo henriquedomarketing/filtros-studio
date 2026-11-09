@@ -480,15 +480,9 @@ function cameraView(){
           ? `<img id="galleryBase" class="client-gallery-image" src="${escapeHtml(app.galleryPhoto.url)}" alt="Foto escolhida na galeria, recortada ao centro em formato Stories">`
           : '<video id="cameraVideo" autoplay playsinline muted></video>'}
         <img class="hidden" id="cameraOverlay" alt="Filtro sobre a foto">
-        <span class="client-framing-guide" aria-hidden="true">Arraste a foto · Faça zoom com dois dedos</span>
         ${fromGallery?'<button type="button" class="client-gallery-back" data-act="use-camera" aria-label="Voltar à câmera sem a foto importada"><span aria-hidden="true">←</span> Voltar à câmera</button>':''}
         ${fromGallery?'<span class="client-gallery-indicator">FOTO DA GALERIA</span>':''}
       </div>
-    </div>
-    <div class="client-framing-controls">
-      <label class="client-framing-zoom">Zoom <input id="photoFramingZoom" type="range" min="1" max="3" step="0.05" value="${app.photoFraming?.zoom||1}" aria-label="Ajustar zoom da fotografia"></label>
-      <span id="photoFramingZoomValue" class="client-framing-zoom-value">${(app.photoFraming?.zoom||1).toFixed(2).replace(/0$/,'')}×</span>
-      <button type="button" data-act="photo-framing-reset" class="client-framing-reset">↺ Centralizar</button>
     </div>
     <div class="client-photo-controls">
       <button type="button" data-act="${fromGallery?'use-camera':'flip-camera'}" class="client-control-secondary" aria-label="${fromGallery?'Voltar para câmera':'Alternar câmera'}" title="${fromGallery?'Voltar para câmera':'Alternar câmera'}"><span class="client-control-icon">${fromGallery?'←':'⟳'}</span><small>${fromGallery?'Voltar':'Alternar'}</small></button>
@@ -498,7 +492,7 @@ function cameraView(){
     </div>
     ${fromGallery?`<button type="button" class="client-gallery-finish" data-act="finish-gallery" aria-label="Concluir foto com filtro e abrir opções para salvar e compartilhar">
       <span class="client-gallery-finish-icon" aria-hidden="true">✓</span>
-      <span class="client-gallery-finish-copy"><strong>Salvar ou compartilhar</strong><small>Concluir foto com o filtro selecionado</small></span>
+      <span class="client-gallery-finish-copy"><strong>Ajustar foto</strong><small>Enquadrar com o filtro selecionado</small></span>
       <span class="client-gallery-finish-arrow" aria-hidden="true">›</span>
     </button>`:''}
     ${studioCredits('client-camera-credits')}
@@ -506,10 +500,21 @@ function cameraView(){
 }
 
 const PHOTO_TEXT_FONTS={
-  modern:{label:'Modern',css:'Arial,Helvetica,sans-serif',canvas:'Arial, sans-serif',weight:'600'},
-  classic:{label:'Classic',css:'Georgia,serif',canvas:'Georgia, serif',weight:'700'},
-  signature:{label:'Signature',css:'cursive',canvas:'cursive',weight:'400'},
-  editor:{label:'Editor',css:'Arial,Helvetica,sans-serif',canvas:'Arial, sans-serif',weight:'900'}
+  modern:{label:'Moderna',css:'Arial,Helvetica,sans-serif',canvas:'Arial,sans-serif',weight:'700'},
+  classic:{label:'Clássica',css:'Georgia,serif',canvas:'Georgia,serif',weight:'700'},
+  signature:{label:'Assinatura',css:'"Brush Script MT",cursive',canvas:'"Brush Script MT",cursive',weight:'400'},
+  editor:{label:'Editorial',css:'"Arial Black",Arial,sans-serif',canvas:'"Arial Black",Arial,sans-serif',weight:'900'},
+  minimal:{label:'Minimal',css:'"Helvetica Neue",Helvetica,sans-serif',canvas:'"Helvetica Neue",Helvetica,sans-serif',weight:'400'},
+  rounded:{label:'Suave',css:'"Trebuchet MS",Arial,sans-serif',canvas:'"Trebuchet MS",Arial,sans-serif',weight:'700'},
+  elegant:{label:'Elegante',css:'Palatino,"Palatino Linotype",serif',canvas:'Palatino,serif',weight:'400'},
+  serif:{label:'Serifada',css:'"Times New Roman",serif',canvas:'"Times New Roman",serif',weight:'700'},
+  bold:{label:'Impacto',css:'Impact,"Arial Narrow",sans-serif',canvas:'Impact,sans-serif',weight:'900'},
+  mono:{label:'Máquina',css:'"Courier New",monospace',canvas:'"Courier New",monospace',weight:'700'},
+  handwritten:{label:'Manuscrita',css:'"Snell Roundhand",cursive',canvas:'"Snell Roundhand",cursive',weight:'400'},
+  condensed:{label:'Condensada',css:'"Arial Narrow",Arial,sans-serif',canvas:'"Arial Narrow",Arial,sans-serif',weight:'700'},
+  retro:{label:'Retrô',css:'"American Typewriter","Courier New",serif',canvas:'"American Typewriter","Courier New",serif',weight:'700'},
+  soft:{label:'Leve',css:'Verdana,Arial,sans-serif',canvas:'Verdana,sans-serif',weight:'400'},
+  fashion:{label:'Fashion',css:'Didot,Baskerville,serif',canvas:'Didot,Baskerville,serif',weight:'700'}
 };
 const PHOTO_TEXT_COLORS=['#FFFFFF','#101828','#FFE16B','#FF4B68','#42C9FF','#1ADBA7','#B796FF'];
 const PHOTO_TEXT_STYLES=['plain','dark','light','outline'];
@@ -561,8 +566,8 @@ function photoEditorView(){
     </div>
     <div class="fs-edit-panel">
       <div class="fs-edit-actions">
-        <button type="button" class="fs-edit-add" data-act="text-add"><span aria-hidden="true">Aa</span> Adicionar texto</button>
-        <button type="button" class="fs-edit-action" data-act="text-edit" ${active?'':'disabled'}>Editar</button>
+        <button type="button" class="fs-edit-add" data-act="text-add"><span aria-hidden="true">Aa</span> Novo texto</button>
+        <button type="button" class="fs-edit-action" data-act="text-edit" ${active?'':'disabled'}>Escrever</button>
         <button type="button" class="fs-edit-action fs-edit-delete" data-act="text-delete" ${active?'':'disabled'} aria-label="Excluir texto selecionado">✕</button>
       </div>
       <div class="fs-edit-fonts" id="photoTextFonts" aria-label="Fontes do texto">${fonts}</div>
@@ -571,16 +576,11 @@ function photoEditorView(){
         <div class="fs-edit-colors" id="photoTextColors" aria-label="Cores do texto">${colors}</div>
       </div>
       <label class="fs-edit-size">Tamanho <input id="photoTextSize" type="range" min="48" max="160" step="4" value="${active?.size||92}" ${active?'':'disabled'} aria-label="Tamanho da letra"></label>
-      <p class="fs-edit-hint">Arraste o texto com o dedo para posicionar.</p>
+      <p class="fs-edit-hint">Arraste o texto para posicionar. Toque em Escrever para alterar.</p>
     </div>
     <div class="fs-edit-compose hidden" id="photoTextCompose">
-      <div class="fs-edit-compose-head"><strong>Seu texto</strong><button type="button" data-act="text-compose-done">Pronto</button></div>
-      <textarea id="photoTextInput" rows="3" maxlength="220" placeholder="Escreva sua mensagem..." aria-label="Escreva o texto da foto" autocomplete="off"></textarea>
-      <div class="fs-edit-compose-fonts" aria-label="Fontes enquanto escreve">${fonts}</div>
-      <div class="fs-edit-compose-options">
-        <div class="fs-edit-styles" aria-label="Estilos enquanto escreve">${styles}</div>
-        <div class="fs-edit-colors" aria-label="Cores enquanto escreve">${colors}</div>
-      </div>
+      <div class="fs-edit-compose-head"><strong>Escreva seu texto</strong><button type="button" data-act="text-compose-done">Pronto</button></div>
+      <textarea id="photoTextInput" rows="3" maxlength="220" placeholder="Digite aqui..." aria-label="Texto da foto" autocomplete="off"></textarea>
     </div>
   </section>`;
 }
@@ -709,7 +709,7 @@ function photoTextPointerUp(event){
   if(app.page!=='editor'||!drag||drag.pointerId!==event.pointerId)return;
   e.drag=null;
   photoTextRefreshLayers();
-  if(!drag.moved&&event.type!=='pointercancel')photoTextComposeOpen();
+  // Tocar seleciona o texto; a personalização permanece na tela de edição.
 }
 
 function photoTextWrap(ctx,text,maxWidth){
@@ -819,12 +819,8 @@ function previewView(){
     <div class="fs-result-picture" style="--photo-ratio:${app.captureData.width||1080} / ${app.captureData.height||1920}">
       <img src="${escapeHtml(app.captureData.url)}" alt="Foto pronta com filtro aplicado"></div>
     <div class="fs-result-buttons">
-      <button type="button" class="fs-result-premium" data-act="photo-edit"><span aria-hidden="true">✦ Aa</span><strong>Editar foto</strong></button>
+      <button type="button" class="fs-result-premium" data-act="photo-edit"><span aria-hidden="true">✦ Aa</span><strong>EDITAR FOTO</strong></button>
       <button type="button" class="fs-result-save" data-act="photo-save"><span aria-hidden="true">↓</span> Salvar foto</button>
-      <div class="fs-result-social">
-        <button type="button" data-act="photo-whatsapp"><span aria-hidden="true">✆</span> WhatsApp</button>
-        <button type="button" data-act="photo-instagram"><span aria-hidden="true">◎</span> Stories do Instagram</button>
-      </div>
       <button type="button" class="fs-result-retry" data-act="photo-retake">↻ Nova foto</button>
     </div>
   </section>`;
@@ -1934,7 +1930,6 @@ async function startCamera(facing='environment'){
       return;
     }
     app.stream=stream;video.srcObject=stream;await video.play();app.facing=facing;
-    syncPhotoFraming();
   }catch(error){
     if(requestId===app.cameraRequestId&&app.page==='camera'&&!app.galleryPhoto)
       toast('Autorize a câmera no Safari ou Chrome. '+errorMessage(error));
@@ -1951,13 +1946,11 @@ function selectFilter(fid){
   const filter=app.filters.find(f=>f.id===fid);
   applyCameraFilterFormat(FILTER_FORMATS.story);
   if(!filter||!img)return;
-  syncPhotoFraming();
   img.classList.add('hidden');
   img.removeAttribute('src');
   img.onload=()=>{
     if(!img.isConnected||app.selectedFilter!==fid)return;
     applyCameraFilterFormat(filterFormatOrLegacy(img.naturalWidth,img.naturalHeight));
-    syncPhotoFraming();
     img.classList.remove('hidden');
   };
   img.onerror=()=>{if(app.selectedFilter===fid)toast('Não foi possível mostrar este PNG.');};
@@ -2158,7 +2151,7 @@ async function capture(){
       finishButton.disabled=false;
       finishButton.removeAttribute('aria-busy');
       const title=finishButton.querySelector('strong');
-      if(title)title.textContent='Salvar ou compartilhar';
+      if(title)title.textContent='Ajustar foto';
     }
   }
 }
@@ -2302,7 +2295,7 @@ if(act==='open-client-menu'){setClientCameraMenu(true);return;}if(act==='close-c
   if(!f||f.category_id!==app.selectedCategory||
      (app.adminTest.active&&f.company_id!==app.adminTest.companyId))return;
   selectFilter(uid);return;
-}if(act==='activate-camera'){await startCamera();return;}if(act==='flip-camera'){await startCamera(app.facing==='user'?'environment':'user');return;}if(act==='use-camera'){resetCameraSession();return;}if(act==='pick-gallery'){$('galleryPhotoInput')?.click();return;}if(act==='capture'||act==='finish-gallery'){capture();return;}if(act==='photo-framing-reset'){resetPhotoFraming();return;}
+}if(act==='activate-camera'){await startCamera();return;}if(act==='flip-camera'){await startCamera(app.facing==='user'?'environment':'user');return;}if(act==='use-camera'){resetCameraSession();return;}if(act==='pick-gallery'){$('galleryPhotoInput')?.click();return;}if(act==='capture'||act==='finish-gallery'){capture();return;}
 if(act==='photo-edit'){photoTextOpen();return;}
 if(act==='text-add'){photoTextAdd();return;}
 if(act==='text-edit'){photoTextComposeOpen();return;}
@@ -2361,16 +2354,11 @@ window.addEventListener('resize',()=>{
 $('root').addEventListener('click',click);
 $('root').addEventListener('pointerdown',categoryOrderPointerDown);
 $('root').addEventListener('pointerdown',photoTextPointerDown);
-$('root').addEventListener('pointerdown',photoFramingGestureStart);
+
 $('root').addEventListener('input',photoTextInputChanged);
-$('root').addEventListener('input',event=>{if(event.target.id==='photoFramingZoom'&&app.page==='camera'){
-  if(!app.photoFraming)app.photoFraming=newPhotoFraming();
-  app.photoFraming.zoom=Number(event.target.value);syncPhotoFraming();
-}});
+
 document.addEventListener('pointermove',photoTextPointerMove,{passive:false});
-document.addEventListener('pointermove',photoFramingGestureMove,{passive:false});
-document.addEventListener('pointerup',photoFramingGestureEnd);
-document.addEventListener('pointercancel',photoFramingGestureEnd);
+
 document.addEventListener('pointerup',photoTextPointerUp);
 document.addEventListener('pointercancel',photoTextPointerUp);
 document.addEventListener('pointermove',categoryOrderPointerMove,{passive:false});
