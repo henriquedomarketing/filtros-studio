@@ -74,9 +74,9 @@ test('15 fontes disponíveis para personalizar depois de escrever',()=>{
   assert.match(fontSection,/fashion:/);
 });
 
-test('resultado tem botão dourado ADICIONA TEXTO e apenas Salvar/Nova foto',()=>{
+test('resultado tem botão dourado EDITAR FOTO e apenas Salvar/Nova foto',()=>{
   const result=between('function previewView(){','function supportContactMarkup(){');
-  assert.match(result,/ADICIONA TEXTO/);
+  assert.match(result,/EDITAR FOTO/);
   assert.match(result,/data-act="photo-save"/);
   assert.match(result,/data-act="photo-retake"/);
   assert.doesNotMatch(result,/data-act="photo-whatsapp"|data-act="photo-instagram"/);
@@ -89,6 +89,6 @@ test('cores, proporções e cache coerentes com a identidade Filtros Studio',()=
   assert.match(css,/\.fs-photo-editor,\.fs-framing-screen\{/);
   assert.match(css,/background-color:#001893!important/);
   assert.match(css,/fs-frame-stage\[data-format="feed"\]/);
-  assert.match(html,/app\.js\?v=20261109-eyedropper-fonts-v9/);
-  assert.match(html,/photo-editor\.css\?v=20261109-eyedropper-fonts-v9/);
+  assert.match(html,/app\.js\?v=20261109-premium-pinch-v10/);
+  assert.match(html,/photo-editor\.css\?v=20261109-premium-pinch-v10/);
 });
