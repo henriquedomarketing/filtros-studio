@@ -682,7 +682,7 @@ function photoEditorView(){
       <button type="button" data-act="text-finish" class="fs-edit-top-done">Concluir</button>
     </header>
     <div class="fs-edit-workspace">
-      <div class="fs-edit-stage" id="photoTextStage" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--photo-height:${photo.height||1920}">
+      <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
       </div>
@@ -1617,6 +1617,22 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 }
 @media(prefers-reduced-motion:reduce){
   .fs-edit-font,.fs-frame-stage{scroll-behavior:auto}
+}
+
+
+/* Dimensões reais preservadas no editor: Stories 9:16 e Feed 4:5, inclusive em iPhones estreitos. */
+.fs-edit-stage{
+  width:min(calc(100vw - 30px),calc(53dvh * .5625),420px)!important;
+  height:auto!important;
+  aspect-ratio:var(--photo-ratio,9/16)!important;
+  max-height:100%!important;
+}
+.fs-edit-stage[data-format="feed"]{
+  width:min(calc(100vw - 30px),calc(53dvh * .8),420px)!important;
+}
+@media(max-height:700px){
+  .fs-edit-stage{width:min(calc(100vw - 26px),calc(49dvh * .5625),390px)!important;height:auto!important}
+  .fs-edit-stage[data-format="feed"]{width:min(calc(100vw - 26px),calc(49dvh * .8),390px)!important}
 }
 `;
 function ensurePhotoEditorStyles(){
