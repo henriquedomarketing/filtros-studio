@@ -1560,13 +1560,11 @@ function cameraFramingDimensions(){
   return {frame,media,width:media?.naturalWidth||media?.videoWidth||0,
     height:media?.naturalHeight||media?.videoHeight||0};
 }
-function photoFramingBounds(sourceWidth,sourceHeight,frameWidth,frameHeight,zoom){
-  if(!sourceWidth||!sourceHeight||!frameWidth||!frameHeight)return {x:Math.max(0,(zoom-1)/2),y:Math.max(0,(zoom-1)/2)};
-  const cover=Math.max(frameWidth/sourceWidth,frameHeight/sourceHeight);
-  return {
-    x:Math.max(0,(sourceWidth*cover*zoom/frameWidth-1)/2),
-    y:Math.max(0,(sourceHeight*cover*zoom/frameHeight-1)/2)
-  };
+function photoFramingBounds(_sourceWidth,_sourceHeight,_frameWidth,_frameHeight,zoom){
+  // O browser aplica object-fit:cover ANTES do transform: pan respeita
+  // apenas a área já enquadrada, evitando qualquer borda vazia.
+  const limit=Math.max(0,(zoom-1)/2);
+  return {x:limit,y:limit};
 }
 function clampPhotoFraming(){
   const state=app.photoFraming;if(!state)return;
@@ -1633,14 +1631,15 @@ function drawFramedSource(ctx,source,width,height,framing){
   const sh=source.videoHeight||source.naturalHeight;
   if(!sw||!sh)throw Error('Não foi possível ler as dimensões da fotografia.');
   const zoom=Math.max(1,Math.min(3,framing.zoom||1));
-  const scale=Math.max(width/sw,height/sh)*zoom;
-  const cropW=width/scale,cropH=height/scale;
-  // Deslocamentos usam fração do visor, iguais à prévia CSS.
-  const maxDx=(sw/cropW-1)/2,maxDy=(sh/cropH-1)/2;
-  const dx=Math.max(-maxDx,Math.min(maxDx,framing.dx||0));
-  const dy=Math.max(-maxDy,Math.min(maxDy,framing.dy||0));
-  const sx=Math.max(0,Math.min(sw-cropW,(sw-cropW)/2-dx*cropW));
-  const sy=Math.max(0,Math.min(sh-cropH,(sh-cropH)/2-dy*cropH));
+  const cover=Math.max(width/sw,height/sh);
+  const originalCropW=width/cover,originalCropH=height/cover;
+  const cropW=originalCropW/zoom,cropH=originalCropH/zoom;
+  // Coincide com object-fit:cover seguido de translate() scale().
+  const limit=(zoom-1)/2;
+  const dx=Math.max(-limit,Math.min(limit,framing.dx||0));
+  const dy=Math.max(-limit,Math.min(limit,framing.dy||0));
+  const sx=(sw-originalCropW)/2+(originalCropW-cropW)/2-dx*cropW;
+  const sy=(sh-originalCropH)/2+(originalCropH-cropH)/2-dy*cropH;
   ctx.drawImage(source,sx,sy,cropW,cropH,0,0,width,height);
 }
 
