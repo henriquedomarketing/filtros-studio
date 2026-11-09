@@ -1789,6 +1789,119 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor:has(.fs-edit-compose:not(.hidden)) .fs-edit-panel{
   display:none!important;
 }
+
+
+/* Conta-gotas próprio para Safari iOS: cor extraída dos pixels da imagem final,
+   incluindo a moldura. O botão fica fixo ao lado da paleta rolável. */
+.fs-edit-eyedropper{
+  display:grid;place-items:center;
+  flex:0 0 37px;
+  width:37px;height:37px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.58);
+  border-radius:11px;
+  background:rgba(255,255,255,.22);
+  color:#fff;
+  cursor:pointer;
+}
+.fs-edit-eyedropper:disabled{opacity:.35;cursor:default}
+.fs-edit-eyedropper:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.fs-eye-overlay,.fs-eye-overlay *{box-sizing:border-box}
+.fs-eye-overlay{
+  position:absolute;inset:0;
+  z-index:35;
+  min-height:0;height:100dvh;
+  display:flex;flex-direction:column;
+  background-color:#001893;
+  background-image:var(--studio-surface-art,linear-gradient(140deg,#0020a1,#0b1772));
+  background-size:cover;
+  color:#fff;
+}
+.fs-eye-header{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  min-height:calc(62px + env(safe-area-inset-top,0px));
+  padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;
+  border-bottom:1px solid rgba(255,255,255,.22);
+  background:rgba(0,13,105,.3);
+}
+.fs-eye-header strong{font-size:15px;font-weight:800}
+.fs-eye-header button{
+  min-height:42px;padding:8px 12px;
+  border:1px solid rgba(255,255,255,.42);
+  border-radius:12px;
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  font-size:12px;
+  font-weight:750;
+}
+.fs-eye-header .fs-eye-confirm{
+  border-color:#fff;
+  background:#fff;
+  color:#001893;
+}
+.fs-eye-instruction{
+  margin:0;
+  padding:14px 12px 4px;
+  text-align:center;
+  font-size:13px;
+  line-height:1.3;
+  color:#e4eaff;
+}
+.fs-eye-workspace{
+  display:flex;flex:1;min-height:0;
+  justify-content:center;align-items:center;
+  padding:12px;
+}
+.fs-eye-stage{
+  position:relative;
+  width:min(calc(100vw - 30px),calc(64dvh * 0.5625),425px);
+  aspect-ratio:var(--photo-ratio,9/16);
+  overflow:hidden;
+  touch-action:none;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.52);
+  box-shadow:0 12px 30px rgba(0,0,50,.25);
+}
+.fs-eye-stage[style*="1080 / 1350"]{width:min(calc(100vw - 30px),calc(64dvh * 0.8),425px)}
+.fs-eye-stage img{
+  position:absolute;inset:0;
+  display:block;width:100%;height:100%;
+  object-fit:fill;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.fs-eye-marker{
+  position:absolute;
+  width:47px;height:47px;
+  display:block;
+  transform:translate(-50%,-50%);
+  border:4px solid #fff;
+  border-radius:50%;
+  background:var(--picked-color,#fff);
+  box-shadow:0 0 0 2px rgba(10,14,34,.7),0 3px 12px rgba(0,0,0,.6);
+  pointer-events:none;
+}
+.fs-eye-selected{
+  flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;gap:11px;
+  padding:13px 15px calc(22px + env(safe-area-inset-bottom,0px));
+  font-size:14px;font-weight:750;
+}
+.fs-eye-selected-swatch{
+  display:block;
+  height:29px;width:29px;
+  border:2px solid #fff;
+  border-radius:50%;
+}
+@media(max-width:365px){
+  .fs-edit-eyedropper{width:31px;height:31px;flex-basis:31px}
+  .fs-eye-instruction{font-size:12px}
+}
+@media(max-height:690px){
+  .fs-eye-stage{width:min(calc(100vw - 30px),calc(58dvh * 0.5625),400px)}
+  .fs-eye-stage[style*="1080 / 1350"]{width:min(calc(100vw - 30px),calc(58dvh * 0.8),400px)}
+}
 `;
 function ensurePhotoEditorStyles(){
   if(document.getElementById('fs-photo-editor-inline-style'))return;
