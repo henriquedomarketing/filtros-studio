@@ -77,5 +77,5 @@ test('Desenho em Canvas é compatível com navegadores sem roundRect',()=>{
 });
 test('Nova folha visual é carregada depois do tema principal e módulo ganha versão nova',()=>{
   assert.ok(html.indexOf('photo-editor.css')>html.indexOf('studio-unified-blue.css'));
-  assert.match(html,/app\.js\?v=20261109-texto-stories-v1/);
+  assert.match(html,/app\.js\?v=20261109-texto-stories-v2/);
 });
