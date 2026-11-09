@@ -101,8 +101,8 @@ test('Qualquer retorno da tela final deve limpar foto capturada e importada',()=
   const clearGalleryPhoto=()=>{calls.push('clearGalleryPhoto');app.galleryPhoto=null;};
   const render=()=>calls.push('render');
   const window={scrollTo:(x,y)=>calls.push(`scrollTo(${x},${y})`)};
-  const reset=new Function('app','stopCamera','clearCapturedPhoto','clearGalleryPhoto','render','window',
-    'return ('+resetSource[0]+')')(app,stopCamera,clearCapturedPhoto,clearGalleryPhoto,render,window);
+  const reset=new Function('app','stopCamera','clearCapturedPhoto','clearGalleryPhoto','render','window','resetPhotoFraming',
+    'return ('+resetSource[0]+')')(app,stopCamera,clearCapturedPhoto,clearGalleryPhoto,render,window,()=>{});
   reset();
   assert.equal(app.galleryPhoto,null,'Não deve reaproveitar foto da galeria');
   assert.equal(app.captureData,null,'Não deve reaproveitar arquivo de captura');
