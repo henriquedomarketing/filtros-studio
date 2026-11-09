@@ -34,8 +34,9 @@ test('Editor oferece fontes, cores, estilos e texto livre',()=>{
   assert.match(css,/touch-action:none/);
 });
 test('O texto é incorporado ao PNG 1080 por 1920 e o filtro original é preservado para reedição',()=>{
-  assert.match(exportCode,/canvas\.width=1080;canvas\.height=1920/);
-  assert.match(exportCode,/ctx\.drawImage\(image,0,0,1080,1920\)/);
+  assert.match(exportCode,/canvas\.width=photo\.width\|\|image\.naturalWidth\|\|1080/);
+  assert.match(exportCode,/canvas\.height=photo\.height\|\|image\.naturalHeight\|\|1920/);
+  assert.match(exportCode,/ctx\.drawImage\(image,0,0,canvas\.width,canvas\.height\)/);
   assert.match(exportCode,/photoTextDraw\(ctx,item\)/);
   assert.match(exportCode,/photo\.baseUrl\|\|photo\.url/);
   assert.match(exportCode,/photo\.file=new File\(\[blob\]/);
