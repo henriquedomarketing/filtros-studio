@@ -37,9 +37,9 @@ test('validação, lote e substituição aceitam as duas proporções PNG',()=>{
 
 test('a mesma proporção guia visor, captura e sobreposição sem esticar',()=>{
   assert.match(app,/applyCameraFilterFormat\(filterFormatOrLegacy\(img\.naturalWidth,img\.naturalHeight\)\)/);
-  assert.match(app,/canvas\.width=format\.width;canvas\.height=format\.height/);
-  assert.match(app,/drawFramedSource\(ctx,source,format\.width,format\.height,app\.photoFraming\)/);
-  assert.match(app,/ctx\.drawImage\(overlay,0,0,format\.width,format\.height\)/);
+  assert.match(app,/canvas\.width=d\.format\.width;canvas\.height=d\.format\.height/);
+  assert.match(app,/drawFramedSource\(ctx,source,canvas\.width,canvas\.height,d\)/);
+  assert.match(app,/ctx\.drawImage\(overlay,0,0,canvas\.width,canvas\.height\)/);
   assert.match(css,/\.client-viewfinder\[data-filter-format="feed"\]/);
   assert.match(css,/aspect-ratio:4\/5!important/);
 });
