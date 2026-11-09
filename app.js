@@ -32,7 +32,7 @@ const dateBR = d=>d?new Date(d+'T12:00:00').toLocaleDateString('pt-BR'):'—';
 const today=()=>new Date().toISOString().slice(0,10);
 const id=()=>crypto.randomUUID();
 function readAdminPrivacyPreference(){try{return localStorage.getItem('fs-admin-sensitive-hidden')==='1';}catch(_){return false;}}
-const app={ adminSensitiveHidden:readAdminPrivacyPreference(),user:null,profile:null,company:null,companies:[],categories:[],filters:[],invoices:[],settings:{},page:'dashboard', modal:null, selectedCategory:null,selectedFilter:null,stream:null,images:new Map(),processing:false,captureData:null,galleryPhoto:null,cameraRequestId:0,adminTest:{active:false,companyId:null,categoryId:null},categoryOrderCompanyId:null,orderSaving:false };
+const app={ adminSensitiveHidden:readAdminPrivacyPreference(),user:null,profile:null,company:null,companies:[],categories:[],filters:[],invoices:[],settings:{},page:'dashboard', modal:null, selectedCategory:null,selectedFilter:null,stream:null,images:new Map(),processing:false,captureData:null,galleryPhoto:null,cameraRequestId:0,photoFraming:null,adminTest:{active:false,companyId:null,categoryId:null},categoryOrderCompanyId:null,orderSaving:false };
 let toastTimer;
 const toast=(message)=>{const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),5000)};
 const errorMessage=error=>error?.message||'Não foi possível concluir esta operação.';
@@ -78,6 +78,7 @@ function resetCameraSession(categoryId=app.selectedCategory){
   stopCamera();
   clearCapturedPhoto();
   clearGalleryPhoto();
+  resetPhotoFraming();
   app.selectedCategory=categoryId;
   app.selectedFilter=app.filters.find(f=>f.category_id===categoryId&&f.active)?.id||null;
   app.facing='environment';
@@ -87,7 +88,7 @@ function resetCameraSession(categoryId=app.selectedCategory){
 }
 function backToCamera(){resetCameraSession();}
 function exitAdminTest(){
-  stopCamera();clearCapturedPhoto();clearGalleryPhoto();
+  stopCamera();clearCapturedPhoto();clearGalleryPhoto();resetPhotoFraming();
   app.adminTest.active=false;
   app.page='test-filters';
   app.selectedCategory=null;app.selectedFilter=null;
@@ -479,9 +480,15 @@ function cameraView(){
           ? `<img id="galleryBase" class="client-gallery-image" src="${escapeHtml(app.galleryPhoto.url)}" alt="Foto escolhida na galeria, recortada ao centro em formato Stories">`
           : '<video id="cameraVideo" autoplay playsinline muted></video>'}
         <img class="hidden" id="cameraOverlay" alt="Filtro sobre a foto">
+        <span class="client-framing-guide" aria-hidden="true">Arraste a foto · Faça zoom com dois dedos</span>
         ${fromGallery?'<button type="button" class="client-gallery-back" data-act="use-camera" aria-label="Voltar à câmera sem a foto importada"><span aria-hidden="true">←</span> Voltar à câmera</button>':''}
         ${fromGallery?'<span class="client-gallery-indicator">FOTO DA GALERIA</span>':''}
       </div>
+    </div>
+    <div class="client-framing-controls">
+      <label class="client-framing-zoom">Zoom <input id="photoFramingZoom" type="range" min="1" max="3" step="0.05" value="${app.photoFraming?.zoom||1}" aria-label="Ajustar zoom da fotografia"></label>
+      <span id="photoFramingZoomValue" class="client-framing-zoom-value">${(app.photoFraming?.zoom||1).toFixed(2).replace(/0$/,'')}×</span>
+      <button type="button" data-act="photo-framing-reset" class="client-framing-reset">↺ Centralizar</button>
     </div>
     <div class="client-photo-controls">
       <button type="button" data-act="${fromGallery?'use-camera':'flip-camera'}" class="client-control-secondary" aria-label="${fromGallery?'Voltar para câmera':'Alternar câmera'}" title="${fromGallery?'Voltar para câmera':'Alternar câmera'}"><span class="client-control-icon">${fromGallery?'←':'⟳'}</span><small>${fromGallery?'Voltar':'Alternar'}</small></button>
@@ -1505,6 +1512,7 @@ async function startCamera(facing='environment'){
       return;
     }
     app.stream=stream;video.srcObject=stream;await video.play();app.facing=facing;
+    syncPhotoFraming();
   }catch(error){
     if(requestId===app.cameraRequestId&&app.page==='camera'&&!app.galleryPhoto)
       toast('Autorize a câmera no Safari ou Chrome. '+errorMessage(error));
@@ -1521,11 +1529,13 @@ function selectFilter(fid){
   const filter=app.filters.find(f=>f.id===fid);
   applyCameraFilterFormat(FILTER_FORMATS.story);
   if(!filter||!img)return;
+  syncPhotoFraming();
   img.classList.add('hidden');
   img.removeAttribute('src');
   img.onload=()=>{
     if(!img.isConnected||app.selectedFilter!==fid)return;
     applyCameraFilterFormat(filterFormatOrLegacy(img.naturalWidth,img.naturalHeight));
+    syncPhotoFraming();
     img.classList.remove('hidden');
   };
   img.onerror=()=>{if(app.selectedFilter===fid)toast('Não foi possível mostrar este PNG.');};
@@ -1535,6 +1545,104 @@ function selectFilter(fid){
   }).catch(error=>toast('Não foi possível carregar o filtro: '+errorMessage(error)));
 }
 
+
+// Enquadramento independente da moldura PNG: zoom e deslocamento são relativos ao visor.
+function newPhotoFraming(){
+  return {zoom:1,dx:0,dy:0,pointers:new Map(),gesture:null};
+}
+function resetPhotoFraming(){
+  app.photoFraming=newPhotoFraming();
+  syncPhotoFraming();
+}
+function cameraFramingDimensions(){
+  const frame=document.querySelector('.client-viewfinder');
+  const media=frame?.querySelector('#galleryBase,#cameraVideo');
+  return {frame,media,width:media?.naturalWidth||media?.videoWidth||0,
+    height:media?.naturalHeight||media?.videoHeight||0};
+}
+function photoFramingBounds(sourceWidth,sourceHeight,frameWidth,frameHeight,zoom){
+  if(!sourceWidth||!sourceHeight||!frameWidth||!frameHeight)return {x:Math.max(0,(zoom-1)/2),y:Math.max(0,(zoom-1)/2)};
+  const cover=Math.max(frameWidth/sourceWidth,frameHeight/sourceHeight);
+  return {
+    x:Math.max(0,(sourceWidth*cover*zoom/frameWidth-1)/2),
+    y:Math.max(0,(sourceHeight*cover*zoom/frameHeight-1)/2)
+  };
+}
+function clampPhotoFraming(){
+  const state=app.photoFraming;if(!state)return;
+  state.zoom=Math.min(3,Math.max(1,Number(state.zoom)||1));
+  const {frame,width,height}=cameraFramingDimensions();
+  const bounds=photoFramingBounds(width,height,frame?.clientWidth||1080,frame?.clientHeight||1920,state.zoom);
+  state.dx=Math.min(bounds.x,Math.max(-bounds.x,Number(state.dx)||0));
+  state.dy=Math.min(bounds.y,Math.max(-bounds.y,Number(state.dy)||0));
+}
+function syncPhotoFraming(){
+  const state=app.photoFraming;if(!state)return;
+  clampPhotoFraming();
+  const media=document.querySelector('.client-viewfinder #galleryBase,.client-viewfinder #cameraVideo');
+  if(media)media.style.transform=`translate(${state.dx*100}%,${state.dy*100}%) scale(${state.zoom})`;
+  const range=$('photoFramingZoom'),label=$('photoFramingZoomValue');
+  if(range)range.value=String(state.zoom);
+  if(label)label.textContent=state.zoom.toFixed(2).replace(/0$/,'')+'×';
+}
+function photoFramingGestureStart(event){
+  if(app.page!=='camera'||app.processing)return;
+  const frame=event.target.closest?.('.client-viewfinder');
+  if(!frame||event.target.closest('button,input'))return;
+  if(!app.photoFraming)app.photoFraming=newPhotoFraming();
+  const state=app.photoFraming;
+  state.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  const points=[...state.pointers.values()].slice(0,2);
+  const center={x:points.reduce((t,p)=>t+p.x,0)/points.length,y:points.reduce((t,p)=>t+p.y,0)/points.length};
+  const distance=points.length===2?Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y):1;
+  state.gesture={center,distance,zoom:state.zoom,dx:state.dx,dy:state.dy};
+  try{frame.setPointerCapture(event.pointerId);}catch(_){}
+  event.preventDefault();
+}
+function photoFramingGestureMove(event){
+  const state=app.photoFraming;
+  if(app.page!=='camera'||!state?.pointers.has(event.pointerId)||!state.gesture)return;
+  state.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  const points=[...state.pointers.values()].slice(0,2);
+  const center={x:points.reduce((t,p)=>t+p.x,0)/points.length,y:points.reduce((t,p)=>t+p.y,0)/points.length};
+  const {frame}=cameraFramingDimensions();
+  if(!frame)return;
+  const gesture=state.gesture;
+  state.zoom=points.length===2?gesture.zoom*
+    (Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y)/Math.max(1,gesture.distance)):gesture.zoom;
+  state.dx=gesture.dx+(center.x-gesture.center.x)/frame.clientWidth;
+  state.dy=gesture.dy+(center.y-gesture.center.y)/frame.clientHeight;
+  syncPhotoFraming();
+  event.preventDefault();
+}
+function photoFramingGestureEnd(event){
+  const state=app.photoFraming;
+  if(!state?.pointers.has(event.pointerId))return;
+  state.pointers.delete(event.pointerId);
+  if(!state.pointers.size){state.gesture=null;return;}
+  const points=[...state.pointers.values()].slice(0,2);
+  const center={x:points.reduce((t,p)=>t+p.x,0)/points.length,y:points.reduce((t,p)=>t+p.y,0)/points.length};
+  state.gesture={center,distance:points.length===2?Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y):1,
+    zoom:state.zoom,dx:state.dx,dy:state.dy};
+}
+function drawFramedSource(ctx,source,width,height,framing){
+  if(!framing||framing.zoom===1&&framing.dx===0&&framing.dy===0){
+    drawSourceCover(ctx,source,width,height);return;
+  }
+  const sw=source.videoWidth||source.naturalWidth;
+  const sh=source.videoHeight||source.naturalHeight;
+  if(!sw||!sh)throw Error('Não foi possível ler as dimensões da fotografia.');
+  const zoom=Math.max(1,Math.min(3,framing.zoom||1));
+  const scale=Math.max(width/sw,height/sh)*zoom;
+  const cropW=width/scale,cropH=height/scale;
+  // Deslocamentos usam fração do visor, iguais à prévia CSS.
+  const maxDx=(sw/cropW-1)/2,maxDy=(sh/cropH-1)/2;
+  const dx=Math.max(-maxDx,Math.min(maxDx,framing.dx||0));
+  const dy=Math.max(-maxDy,Math.min(maxDy,framing.dy||0));
+  const sx=Math.max(0,Math.min(sw-cropW,(sw-cropW)/2-dx*cropW));
+  const sy=Math.max(0,Math.min(sh-cropH,(sh-cropH)/2-dy*cropH));
+  ctx.drawImage(source,sx,sy,cropW,cropH,0,0,width,height);
+}
 
 function drawSourceCover(ctx,source,width,height){
   const sw=source.videoWidth||source.naturalWidth;
@@ -1566,6 +1674,7 @@ async function loadGalleryPhoto(file){
     clearGalleryPhoto();
     app.galleryPhoto={url:uri,img,file};
     render();
+    syncPhotoFraming();
     window.scrollTo(0,0);
     toast('Foto carregada! Troque o filtro se quiser e toque em Salvar ou compartilhar.');
   }catch(error){
@@ -1609,7 +1718,7 @@ async function capture(){
     canvas.width=format.width;canvas.height=format.height;
     const ctx=canvas.getContext('2d');
     if(!ctx)throw new Error('Não foi possível preparar a fotografia.');
-    drawSourceCover(ctx,source,format.width,format.height);
+    drawFramedSource(ctx,source,format.width,format.height,app.photoFraming);
     ctx.drawImage(overlay,0,0,format.width,format.height);
     const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Não foi possível gerar a foto.')),'image/png'));
     const name='filtros-studio-'+Date.now()+'.png';
@@ -1772,7 +1881,8 @@ if(act==='open-client-menu'){setClientCameraMenu(true);return;}if(act==='close-c
   if(!f||f.category_id!==app.selectedCategory||
      (app.adminTest.active&&f.company_id!==app.adminTest.companyId))return;
   selectFilter(uid);return;
-}if(act==='activate-camera'){await startCamera();return;}if(act==='flip-camera'){await startCamera(app.facing==='user'?'environment':'user');return;}if(act==='use-camera'){resetCameraSession();return;}if(act==='pick-gallery'){$('galleryPhotoInput')?.click();return;}if(act==='capture'||act==='finish-gallery'){capture();return;}if(act==='photo-edit'){photoTextOpen();return;}
+}if(act==='activate-camera'){await startCamera();return;}if(act==='flip-camera'){await startCamera(app.facing==='user'?'environment':'user');return;}if(act==='use-camera'){resetCameraSession();return;}if(act==='pick-gallery'){$('galleryPhotoInput')?.click();return;}if(act==='capture'||act==='finish-gallery'){capture();return;}if(act==='photo-framing-reset'){resetPhotoFraming();return;}
+if(act==='photo-edit'){photoTextOpen();return;}
 if(act==='text-add'){photoTextAdd();return;}
 if(act==='text-edit'){photoTextComposeOpen();return;}
 if(act==='text-compose-done'){photoTextComposeDone();return;}
@@ -1830,8 +1940,16 @@ window.addEventListener('resize',()=>{
 $('root').addEventListener('click',click);
 $('root').addEventListener('pointerdown',categoryOrderPointerDown);
 $('root').addEventListener('pointerdown',photoTextPointerDown);
+$('root').addEventListener('pointerdown',photoFramingGestureStart);
 $('root').addEventListener('input',photoTextInputChanged);
+$('root').addEventListener('input',event=>{if(event.target.id==='photoFramingZoom'&&app.page==='camera'){
+  if(!app.photoFraming)app.photoFraming=newPhotoFraming();
+  app.photoFraming.zoom=Number(event.target.value);syncPhotoFraming();
+}});
 document.addEventListener('pointermove',photoTextPointerMove,{passive:false});
+document.addEventListener('pointermove',photoFramingGestureMove,{passive:false});
+document.addEventListener('pointerup',photoFramingGestureEnd);
+document.addEventListener('pointercancel',photoFramingGestureEnd);
 document.addEventListener('pointerup',photoTextPointerUp);
 document.addEventListener('pointercancel',photoTextPointerUp);
 document.addEventListener('pointermove',categoryOrderPointerMove,{passive:false});
