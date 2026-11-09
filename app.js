@@ -32,7 +32,7 @@ const dateBR = d=>d?new Date(d+'T12:00:00').toLocaleDateString('pt-BR'):'—';
 const today=()=>new Date().toISOString().slice(0,10);
 const id=()=>crypto.randomUUID();
 function readAdminPrivacyPreference(){try{return localStorage.getItem('fs-admin-sensitive-hidden')==='1';}catch(_){return false;}}
-const app={ adminSensitiveHidden:readAdminPrivacyPreference(),user:null,profile:null,company:null,companies:[],categories:[],filters:[],invoices:[],settings:{},page:'dashboard', modal:null, selectedCategory:null,selectedFilter:null,stream:null,images:new Map(),processing:false,captureData:null,galleryPhoto:null,cameraRequestId:0,photoFraming:null,adminTest:{active:false,companyId:null,categoryId:null},categoryOrderCompanyId:null,orderSaving:false };
+const app={ adminSensitiveHidden:readAdminPrivacyPreference(),user:null,profile:null,company:null,companies:[],categories:[],filters:[],invoices:[],settings:{},page:'dashboard', modal:null, selectedCategory:null,selectedFilter:null,stream:null,images:new Map(),processing:false,captureData:null,galleryPhoto:null,cameraRequestId:0,photoFraming:null,framingDraft:null,adminTest:{active:false,companyId:null,categoryId:null},categoryOrderCompanyId:null,orderSaving:false };
 let toastTimer;
 const toast=(message)=>{const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),5000)};
 const errorMessage=error=>error?.message||'Não foi possível concluir esta operação.';
@@ -71,6 +71,7 @@ function clearCapturedPhoto(){
   if(app.captureData?.baseUrl&&app.captureData.baseUrl!==app.captureData.url)URL.revokeObjectURL(app.captureData.baseUrl);
   app.captureData=null;
   app.photoEditor=null;
+  clearFramingDraft();
 }
 // Reentrada na câmera = nova sessão. Nunca reutilizar a foto anterior da galeria,
 // o arquivo exportado, a câmera frontal anterior ou o filtro escolhido na última captura.
@@ -497,6 +498,128 @@ function cameraView(){
     </button>`:''}
     ${studioCredits('client-camera-credits')}
   </section>`;
+}
+
+// Enquadramento DEPOIS da captura. A moldura fica estática e nunca é recortada.
+function clearFramingDraft(){
+  const draft=app.framingDraft;
+  if(draft?.ownsSourceUrl&&draft.sourceUrl)URL.revokeObjectURL(draft.sourceUrl);
+  app.framingDraft=null;
+}
+function framingView(){
+  const d=app.framingDraft;
+  if(!d)return '<p>Foto indisponível.</p>';
+  return `<section class="fs-framing-screen" aria-label="Enquadrar foto">
+    <header class="fs-frame-top">
+      <button type="button" data-act="framing-back" class="fs-frame-back">← Voltar</button>
+      <strong>Enquadrar foto</strong>
+      <button type="button" data-act="framing-finish" class="fs-frame-done">Concluir</button>
+    </header>
+    <div class="fs-frame-workspace">
+      <div class="fs-frame-stage" id="framingStage" style="--photo-ratio:${d.format.width} / ${d.format.height}">
+        <img id="framingSource" class="fs-frame-source" src="${escapeHtml(d.sourceUrl)}" alt="Foto para ajustar" draggable="false">
+        <img class="fs-frame-overlay" src="${escapeHtml(d.overlayUrl)}" alt="Moldura PNG aplicada" draggable="false">
+      </div>
+      <p class="fs-frame-hint">Arraste para posicionar · Dois dedos para dar zoom</p>
+    </div>
+  </section>`;
+}
+function clampFramingDraft(d){
+  d.zoom=Math.max(1,Math.min(3,Number(d.zoom)||1));
+  const cover=Math.max(d.format.width/d.sourceWidth,d.format.height/d.sourceHeight);
+  const scaledW=d.sourceWidth*cover*d.zoom/d.format.width;
+  const scaledH=d.sourceHeight*cover*d.zoom/d.format.height;
+  const maxX=Math.max(0,(scaledW-1)/2),maxY=Math.max(0,(scaledH-1)/2);
+  d.dx=Math.max(-maxX,Math.min(maxX,Number(d.dx)||0));
+  d.dy=Math.max(-maxY,Math.min(maxY,Number(d.dy)||0));
+}
+function syncFramingPreview(){
+  const d=app.framingDraft,stage=$('framingStage'),source=$('framingSource');
+  if(!d||!stage||!source)return;
+  clampFramingDraft(d);
+  const cover=Math.max(d.format.width/d.sourceWidth,d.format.height/d.sourceHeight);
+  source.style.width=(100*d.sourceWidth*cover*d.zoom/d.format.width)+'%';
+  source.style.height=(100*d.sourceHeight*cover*d.zoom/d.format.height)+'%';
+  source.style.transform=`translate(calc(-50% + ${d.dx*stage.clientWidth}px),calc(-50% + ${d.dy*stage.clientHeight}px))`;
+}
+function framingGestureSnapshot(d){
+  const points=[...d.pointers.values()].slice(0,2);
+  if(!points.length){d.gesture=null;return;}
+  const center={x:points.reduce((v,p)=>v+p.x,0)/points.length,
+    y:points.reduce((v,p)=>v+p.y,0)/points.length};
+  d.gesture={center,zoom:d.zoom,dx:d.dx,dy:d.dy,
+    distance:points.length===2?Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y):1};
+}
+function framingPointerDown(event){
+  if(app.page!=='framing'||app.framingDraft?.saving)return;
+  const stage=event.target.closest?.('#framingStage');
+  if(!stage)return;
+  const d=app.framingDraft;
+  d.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  framingGestureSnapshot(d);
+  try{stage.setPointerCapture(event.pointerId);}catch(_){}
+  event.preventDefault();
+}
+function framingPointerMove(event){
+  const d=app.framingDraft;
+  if(app.page!=='framing'||!d?.pointers.has(event.pointerId)||!d.gesture)return;
+  d.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  const points=[...d.pointers.values()].slice(0,2);
+  const center={x:points.reduce((v,p)=>v+p.x,0)/points.length,
+    y:points.reduce((v,p)=>v+p.y,0)/points.length};
+  const stage=$('framingStage');if(!stage)return;
+  const g=d.gesture;
+  d.zoom=points.length===2?g.zoom*Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y)/Math.max(1,g.distance):g.zoom;
+  d.dx=g.dx+(center.x-g.center.x)/Math.max(1,stage.clientWidth);
+  d.dy=g.dy+(center.y-g.center.y)/Math.max(1,stage.clientHeight);
+  syncFramingPreview();
+  event.preventDefault();
+}
+function framingPointerEnd(event){
+  const d=app.framingDraft;
+  if(!d?.pointers.has(event.pointerId))return;
+  d.pointers.delete(event.pointerId);
+  framingGestureSnapshot(d);
+}
+function cancelPhotoFraming(){
+  clearFramingDraft();
+  app.page='camera';
+  render();window.scrollTo(0,0);
+}
+async function finishPhotoFraming(){
+  const d=app.framingDraft;
+  if(!d||d.saving)return;
+  d.saving=true;
+  const button=document.querySelector('[data-act="framing-finish"]');
+  if(button){button.disabled=true;button.textContent='Preparando…';}
+  try{
+    const source=new Image(),overlay=new Image();
+    const load=(img,url)=>new Promise((resolve,reject)=>{
+      img.onload=resolve;
+      img.onerror=()=>reject(Error('Não foi possível carregar a fotografia.'));
+      img.src=url;
+      if(img.complete&&img.naturalWidth)resolve();
+    });
+    await Promise.all([load(source,d.sourceUrl),load(overlay,d.overlayUrl)]);
+    const canvas=document.createElement('canvas');
+    canvas.width=d.format.width;canvas.height=d.format.height;
+    const ctx=canvas.getContext('2d');
+    if(!ctx)throw Error('Não foi possível preparar sua foto.');
+    clampFramingDraft(d);
+    drawFramedSource(ctx,source,canvas.width,canvas.height,d);
+    ctx.drawImage(overlay,0,0,canvas.width,canvas.height);
+    const blob=await new Promise((resolve,reject)=>
+      canvas.toBlob(b=>b?resolve(b):reject(Error('Não foi possível gerar a imagem.')),'image/png'));
+    const name='filtros-studio-'+Date.now()+'.png';
+    clearCapturedPhoto();
+    app.captureData={blob,file:new File([blob],name,{type:'image/png'}),name,
+      url:URL.createObjectURL(blob),width:canvas.width,height:canvas.height,format:d.format.id};
+    app.page='preview';render();window.scrollTo(0,0);
+  }catch(error){
+    d.saving=false;
+    if(button?.isConnected){button.disabled=false;button.textContent='Concluir';}
+    toast(errorMessage(error));
+  }
 }
 
 const PHOTO_TEXT_FONTS={
@@ -1278,6 +1401,11 @@ function render(){
     stopCamera();clearCapturedPhoto();clearGalleryPhoto();
     $('root').innerHTML=pausedClientView();return;
   }
+  if(app.page==='framing'&&app.framingDraft){
+    $('root').innerHTML=framingView();
+    syncFramingPreview();
+    return;
+  }
   if(app.page==='editor'&&app.captureData&&app.photoEditor){
     $('root').innerHTML=photoEditorView();
     return;
@@ -2042,19 +2170,16 @@ function drawFramedSource(ctx,source,width,height,framing){
   if(!framing||framing.zoom===1&&framing.dx===0&&framing.dy===0){
     drawSourceCover(ctx,source,width,height);return;
   }
-  const sw=source.videoWidth||source.naturalWidth;
-  const sh=source.videoHeight||source.naturalHeight;
+  const sw=source.videoWidth||source.naturalWidth,sh=source.videoHeight||source.naturalHeight;
   if(!sw||!sh)throw Error('Não foi possível ler as dimensões da fotografia.');
   const zoom=Math.max(1,Math.min(3,framing.zoom||1));
-  const cover=Math.max(width/sw,height/sh);
-  const originalCropW=width/cover,originalCropH=height/cover;
-  const cropW=originalCropW/zoom,cropH=originalCropH/zoom;
-  // Coincide com object-fit:cover seguido de translate() scale().
-  const limit=(zoom-1)/2;
-  const dx=Math.max(-limit,Math.min(limit,framing.dx||0));
-  const dy=Math.max(-limit,Math.min(limit,framing.dy||0));
-  const sx=(sw-originalCropW)/2+(originalCropW-cropW)/2-dx*cropW;
-  const sy=(sh-originalCropH)/2+(originalCropH-cropH)/2-dy*cropH;
+  const cover=Math.max(width/sw,height/sh)*zoom;
+  const cropW=width/cover,cropH=height/cover;
+  const maxDx=(sw/cropW-1)/2,maxDy=(sh/cropH-1)/2;
+  const dx=Math.max(-maxDx,Math.min(maxDx,framing.dx||0));
+  const dy=Math.max(-maxDy,Math.min(maxDy,framing.dy||0));
+  const sx=Math.max(0,Math.min(sw-cropW,(sw-cropW)/2-dx*cropW));
+  const sy=Math.max(0,Math.min(sh-cropH,(sh-cropH)/2-dy*cropH));
   ctx.drawImage(source,sx,sy,cropW,cropH,0,0,width,height);
 }
 
@@ -2126,21 +2251,28 @@ async function capture(){
     const source=gallery?gallery.img:video;
     if(!gallery&&(!video.videoWidth||!app.stream))throw new Error('A câmera parou. Ative-a novamente.');
     if(gallery&&!gallery.img.naturalWidth)throw new Error('Reabra a foto da galeria.');
-    // A proporção vem do próprio PNG, inclusive dos filtros cadastrados anteriormente.
+    // Após a captura/importação, o usuário enquadra sem movimentar a moldura.
     const format=filterFormatOrLegacy(overlay.naturalWidth,overlay.naturalHeight);
-    const canvas=document.createElement('canvas');
-    canvas.width=format.width;canvas.height=format.height;
-    const ctx=canvas.getContext('2d');
-    if(!ctx)throw new Error('Não foi possível preparar a fotografia.');
-    drawFramedSource(ctx,source,format.width,format.height,app.photoFraming);
-    ctx.drawImage(overlay,0,0,format.width,format.height);
-    const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Não foi possível gerar a foto.')),'image/png'));
-    const name='filtros-studio-'+Date.now()+'.png';
+    const sourceWidth=source.videoWidth||source.naturalWidth;
+    const sourceHeight=source.videoHeight||source.naturalHeight;
+    let sourceUrl=gallery?.url||null,ownsSourceUrl=false;
+    if(!gallery){
+      const rawCanvas=document.createElement('canvas');
+      rawCanvas.width=sourceWidth;rawCanvas.height=sourceHeight;
+      const rawContext=rawCanvas.getContext('2d');
+      if(!rawContext)throw Error('Não foi possível congelar a fotografia.');
+      rawContext.drawImage(source,0,0,sourceWidth,sourceHeight);
+      const rawBlob=await new Promise((resolve,reject)=>
+        rawCanvas.toBlob(b=>b?resolve(b):reject(Error('Não foi possível preparar a fotografia.')),'image/jpeg',.94));
+      sourceUrl=URL.createObjectURL(rawBlob);
+      ownsSourceUrl=true;
+    }
     clearCapturedPhoto();
-    app.captureData={blob,file:new File([blob],name,{type:'image/png'}),url:URL.createObjectURL(blob),name,
-      width:format.width,height:format.height,format:format.id};
+    app.framingDraft={sourceUrl,ownsSourceUrl,overlayUrl:src,
+      sourceWidth,sourceHeight,format,zoom:1,dx:0,dy:0,
+      pointers:new Map(),gesture:null,saving:false};
     stopCamera();
-    app.page='preview';
+    app.page='framing';
     render();
     window.scrollTo(0,0);
   }catch(error){toast(errorMessage(error));}
@@ -2296,6 +2428,8 @@ if(act==='open-client-menu'){setClientCameraMenu(true);return;}if(act==='close-c
      (app.adminTest.active&&f.company_id!==app.adminTest.companyId))return;
   selectFilter(uid);return;
 }if(act==='activate-camera'){await startCamera();return;}if(act==='flip-camera'){await startCamera(app.facing==='user'?'environment':'user');return;}if(act==='use-camera'){resetCameraSession();return;}if(act==='pick-gallery'){$('galleryPhotoInput')?.click();return;}if(act==='capture'||act==='finish-gallery'){capture();return;}
+if(act==='framing-back'){cancelPhotoFraming();return;}
+if(act==='framing-finish'){void finishPhotoFraming();return;}
 if(act==='photo-edit'){photoTextOpen();return;}
 if(act==='text-add'){photoTextAdd();return;}
 if(act==='text-edit'){photoTextComposeOpen();return;}
@@ -2338,6 +2472,7 @@ function setAdminMobileMenu(open){
   else if(!document.querySelector('.overlay'))button?.focus();
 }
 document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&app.page==='framing'){cancelPhotoFraming();return;}
   if(event.key==='Escape'&&app.page==='editor'){
     if(app.photoEditor?.composing)photoTextComposeDone();
     else photoTextCancel();
@@ -2354,10 +2489,14 @@ window.addEventListener('resize',()=>{
 $('root').addEventListener('click',click);
 $('root').addEventListener('pointerdown',categoryOrderPointerDown);
 $('root').addEventListener('pointerdown',photoTextPointerDown);
+$('root').addEventListener('pointerdown',framingPointerDown);
 
 $('root').addEventListener('input',photoTextInputChanged);
 
 document.addEventListener('pointermove',photoTextPointerMove,{passive:false});
+document.addEventListener('pointermove',framingPointerMove,{passive:false});
+document.addEventListener('pointerup',framingPointerEnd);
+document.addEventListener('pointercancel',framingPointerEnd);
 
 document.addEventListener('pointerup',photoTextPointerUp);
 document.addEventListener('pointercancel',photoTextPointerUp);
