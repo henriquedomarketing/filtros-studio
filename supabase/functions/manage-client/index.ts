@@ -8,7 +8,7 @@ const cors = {
 };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
 const safeText = (value: unknown, max = 120) => typeof value === "string" ? value.trim().slice(0, max) : "";
-const usernamePattern = /^[a-z][a-z0-9_-]{2,31}$/;
+const usernamePattern = /^[a-z0-9][a-z0-9_-]{2,31}$/;
 const normalizeUsername = (value: unknown) => typeof value === "string" ? value.trim().toLowerCase() : "";
 const internalAuthEmail = (username: string) => `${username}@usuarios.filtros.studio`;
 
@@ -36,8 +36,8 @@ Deno.serve(async (req: Request) => {
   const username = normalizeUsername(body.username);
 
   if (action === "create") {
-    if (!name || name.length < 2 || !usernamePattern.test(username) || password.length < 8 || password.length > 128) {
-      return json({ error: "Informe empresa, usuário de 3 a 32 caracteres (letras, números, _ ou -) e senha de 8 a 128 caracteres." }, 400);
+    if (!name || name.length < 2 || !usernamePattern.test(username) || password.length < 6 || password.length > 128) {
+      return json({ error: "Informe empresa, usuário de 3 a 32 caracteres (letras, números, _ ou -) e senha de 6 a 128 caracteres." }, 400);
     }
     const rawFee = body.monthly_fee;
     const monthlyFee = rawFee === "" || rawFee == null ? 0 : Number(rawFee);
@@ -108,8 +108,8 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "reset_password") {
-    if (!companyId || password.length < 8 || password.length > 128)
-      return json({ error: "Informe a empresa e uma senha de 8 a 128 caracteres." }, 400);
+    if (!companyId || password.length < 6 || password.length > 128)
+      return json({ error: "Informe a empresa e uma senha de 6 a 128 caracteres." }, 400);
     const { data: profileRow } = await adminApi.from("profiles").select("id")
       .eq("company_id", companyId).eq("role", "client").maybeSingle();
     if (!profileRow) return json({ error: "Login do cliente não encontrado." }, 404);
