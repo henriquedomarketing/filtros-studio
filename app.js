@@ -574,7 +574,7 @@ async function manager(body){
 }
 function openModal(title,body,formId){app.modal={title,content:body,formId};render();}
 function clearFilterDraftUrl(){if(app.filterDraftUrl){URL.revokeObjectURL(app.filterDraftUrl);app.filterDraftUrl=null;}}
-function closeModal(){clearFilterDraftUrl();app.modal=null;render();}
+function closeModal(){clearFilterDraftUrl();clearFilterBatch();app.modal=null;render();}
 // Sem mensalidade, o cliente é gratuito/isento. Não criar vencimento nem cobrança.
 function clientBillingFromForm(values){
   const amountText=String(values.monthly_fee??'').trim().replace(',','.');
@@ -632,6 +632,7 @@ function categoryModal(cid){
 function invoiceModal(iid){const i=app.invoices.find(x=>x.id===iid);openModal(i?'Editar cobrança':'Nova cobrança',`<form class="form" id="invoiceForm">${select('company_id','Empresa',companyOptions(i?.company_id))}${field('amount','Valor (R$)',i?.amount??0,'number')}${field('due_date','Vencimento',i?.due_date||today(),'date')}${select('status','Situação',option('pending','Pendente',!i||i.status==='pending')+option('paid','Pago',i?.status==='paid')+option('canceled','Cancelado',i?.status==='canceled'))}${field('notes','Observações',i?.notes||'','text',false)}${endForm}</form>`,'invoiceForm');app.modal.recordId=i?.id||null;}
 
 function filterModal(){
+  clearFilterBatch();
   const content=`<form class="form" id="filterForm">
     ${select('company_id','Empresa',companyOptions())}
     <div class="field">
@@ -643,10 +644,11 @@ function filterModal(){
       <input id="filterNewCategory" name="new_category_name" type="text" maxlength="100" placeholder="Ex.: Bom Dia, Ofertas, Financiamento">
       <span class="muted">A nova categoria ficará disponível para os próximos filtros desta empresa.</span>
     </div>
-    ${field('name','Nome do filtro')}
-    ${field('sort_order','Ordem',0,'number')}
-    <div class="field"><label>PNG transparente (máximo 12 MB)</label><input type="file" name="file" accept="image/png,.png" required></div>
-    <p class="muted">Recomendado: imagem vertical 1080 × 1920, com transparência real.</p>
+    <div class="field"><label for="filterBatchFile">Filtros PNG (um ou vários)</label>
+      <input id="filterBatchFile" type="file" name="file" accept="image/png,.png" multiple required>
+      <small class="muted">Selecione quantos PNGs quiser, com até 12 MB cada. Formato recomendado: 1080 × 1920, com transparência.</small>
+    </div>
+    <div id="filterBatchPreview" class="filter-batch-preview" aria-live="polite"><p class="muted">Escolha os arquivos para organizar a ordem antes de salvar.</p></div>
     ${endForm}
   </form>`;
   openModal('Cadastrar filtro PNG',content,'filterForm');
@@ -780,45 +782,109 @@ function updateNewCategoryField(){
 }
 async function validatePNG(file){if(!file||file.type!=='image/png'||file.size>12582912)throw Error('Selecione um PNG válido de até 12 MB.');const uri=URL.createObjectURL(file);try{const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('PNG não reconhecido.'));img.src=uri;});const canvas=document.createElement('canvas');canvas.width=100;canvas.height=178;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,100,178);const pixels=ctx.getImageData(0,0,100,178).data;let transparent=false,visible=false;for(let i=3;i<pixels.length;i+=4){if(pixels[i]<240)transparent=true;if(pixels[i]>15)visible=true;if(transparent&&visible)break;}if(!transparent||!visible)throw Error('O filtro precisa ter elementos visíveis e fundo transparente.');}finally{URL.revokeObjectURL(uri);}}
 
+// Rascunho local: a ordem é escolhida antes de qualquer gravação no servidor.
+let filterBatch=[];
+function clearFilterBatch(){
+  for(const item of filterBatch)URL.revokeObjectURL(item.url);
+  filterBatch=[];
+}
+function setFilterBatch(files){
+  clearFilterBatch();
+  filterBatch=Array.from(files||[]).map(file=>({file,url:URL.createObjectURL(file)}));
+  renderFilterBatch();
+}
+function renderFilterBatch(){
+  const host=$('filterBatchPreview');
+  if(!host)return;
+  if(!filterBatch.length){
+    host.innerHTML='<p class="muted">Escolha os arquivos para organizar a ordem antes de salvar.</p>';
+    return;
+  }
+  host.innerHTML=`<p class="filter-batch-count">${filterBatch.length} ${filterBatch.length===1?'imagem selecionada':'imagens selecionadas'} · use as setas para definir a ordem.</p>
+    <div class="filter-batch-grid">${filterBatch.map((item,index)=>`
+      <div class="filter-batch-item">
+        <span class="filter-batch-number">${index+1}</span>
+        <img src="${escapeHtml(item.url)}" alt="Prévia do filtro ${index+1}">
+        <span class="filter-batch-filename" title="${escapeHtml(item.file.name)}">${escapeHtml(item.file.name)}</span>
+        <div class="filter-batch-actions">
+          <button type="button" data-act="filter-batch-up" data-id="${index}" aria-label="Subir imagem ${index+1}" ${index===0?'disabled':''}>↑</button>
+          <button type="button" data-act="filter-batch-down" data-id="${index}" aria-label="Descer imagem ${index+1}" ${index===filterBatch.length-1?'disabled':''}>↓</button>
+          <button type="button" data-act="filter-batch-remove" data-id="${index}" aria-label="Remover imagem ${index+1}">×</button>
+        </div>
+      </div>`).join('')}</div>`;
+}
+function moveFilterBatch(position,direction){
+  if(app.modal?.formId!=='filterForm')return;
+  const next=position+direction;
+  if(!Number.isInteger(position)||position<0||position>=filterBatch.length)return;
+  if(direction===null){
+    URL.revokeObjectURL(filterBatch[position].url);
+    filterBatch.splice(position,1);
+  }else if(next>=0&&next<filterBatch.length){
+    [filterBatch[position],filterBatch[next]]=[filterBatch[next],filterBatch[position]];
+  }
+  renderFilterBatch();
+}
 async function filterUpload(form){
-  const file=form.elements.file.files[0];
-  await validatePNG(file);
+  if(app.profile?.role!=='admin')throw Error('Apenas o administrador pode cadastrar filtros.');
+  const items=filterBatch.map(item=>item.file);
+  if(!items.length)throw Error('Selecione pelo menos um PNG.');
+  // Validar o lote completo antes de qualquer gravação.
+  for(let index=0;index<items.length;index++){
+    try{await validatePNG(items[index]);}
+    catch(error){throw Error(`Arquivo ${index+1} (${items[index].name}): ${error.message}`);}
+  }
   const companyId=form.elements.company_id.value;
   let categoryId=form.elements.category_id.value;
   if(!app.companies.some(c=>c.id===companyId))throw Error('Selecione uma empresa válida.');
   let createdCategoryId=null;
-  let path=null;
+  const createdFilters=[];
+  const uploadedPaths=[];
   try{
     if(categoryId==='__new__'){
       const name=form.elements.new_category_name.value.trim();
       if(!name||name.length>100)throw Error('Informe o nome da nova categoria (até 100 caracteres).');
-      // Nunca criar categoria em empresa diferente daquela escolhida para o PNG.
       const {data,error}=await api.from('categories')
-        .insert({company_id:companyId,name})
-        .select('id').single();
+        .insert({company_id:companyId,name}).select('id').single();
       if(error)throw error;
       createdCategoryId=data.id;
       categoryId=data.id;
     }else if(!app.categories.some(c=>c.id===categoryId&&c.company_id===companyId)){
       throw Error('Escolha uma categoria válida para esta empresa.');
     }
-    path=`${companyId}/${id()}.png`;
-    const {error:uploadError}=await api.storage.from('company-filters')
-      .upload(path,file,{contentType:'image/png',upsert:false});
-    if(uploadError)throw uploadError;
-    const payload={company_id:companyId,category_id:categoryId,
-      name:form.elements.name.value.trim(),sort_order:Number(form.elements.sort_order.value),storage_path:path};
-    const {error}=await api.from('filters').insert(payload);
-    if(error)throw error;
+    const existing=app.filters.filter(f=>f.company_id===companyId&&f.category_id===categoryId);
+    const nextOrder=existing.reduce((max,f)=>Math.max(max,Number(f.sort_order)||0),-1)+1;
+    for(let index=0;index<items.length;index++){
+      const file=items[index];
+      const path=`${companyId}/${id()}.png`;
+      const {error:uploadError}=await api.storage.from('company-filters')
+        .upload(path,file,{contentType:'image/png',upsert:false});
+      if(uploadError)throw Error(`Falha no upload de ${file.name}: ${uploadError.message}`);
+      uploadedPaths.push(path);
+      const name=file.name.replace(/\.png$/i,'').trim().slice(0,120)||`Filtro ${index+1}`;
+      const payload={company_id:companyId,category_id:categoryId,name,
+        sort_order:nextOrder+index,storage_path:path};
+      const {data,error}=await api.from('filters').insert(payload).select('id').single();
+      if(error)throw Error(`Falha ao cadastrar ${file.name}: ${error.message}`);
+      createdFilters.push(data.id);
+    }
   }catch(error){
-    if(path)await api.storage.from('company-filters').remove([path]);
+    // Reverter apenas os registros e arquivos criados por este lote.
+    if(createdFilters.length){
+      const {error:rollbackError}=await api.from('filters').delete().in('id',createdFilters);
+      if(rollbackError)console.warn('Falha ao reverter registros do lote:',rollbackError.message);
+    }
+    if(uploadedPaths.length){
+      const {error:storageError}=await api.storage.from('company-filters').remove(uploadedPaths);
+      if(storageError)console.warn('Falha ao limpar PNGs do lote:',storageError.message);
+    }
     if(createdCategoryId){
-      // O envio falhou. Remover apenas a categoria recém-criada e vazia.
       const {count}=await api.from('filters').select('id',{count:'exact',head:true}).eq('category_id',createdCategoryId);
       if(count===0)await api.from('categories').delete().eq('id',createdCategoryId);
     }
     throw error;
   }
+  clearFilterBatch();
 }
 async function validateCompanyLogo(file){
   if(!file)return;
@@ -915,7 +981,7 @@ async function handleForm(event){event.preventDefault();const form=event.target;
       throw new Error('Cliente cadastrado, mas a personalização ficou pendente: '+errorMessage(error)+'. Abra Editar para reenviar a logo.');
     }
   }
-}if(form.id==='categoryForm'){const p={company_id:values.company_id,name:values.name.trim()};const q=app.modal.recordId?api.from('categories').update(p).eq('id',app.modal.recordId):api.from('categories').insert(p);const {error}=await q;if(error)throw error;}if(form.id==='invoiceForm'){const p={company_id:values.company_id,amount:Number(values.amount),due_date:values.due_date,status:values.status,paid_at:values.status==='paid'?new Date().toISOString():null,notes:values.notes||null};const q=app.modal.recordId?api.from('invoices').update(p).eq('id',app.modal.recordId):api.from('invoices').insert(p);const {error}=await q;if(error)throw error;}if(form.id==='filterForm')await filterUpload(form);if(form.id==='editFilterForm')await saveFilterChanges(form);if(form.id==='passwordForm')await manager({action:'reset_password',company_id:app.modal.recordId,password:values.password});if(form.id==='settingsForm'){const support=String(values.supportWhatsapp||'').trim();const digits=support.replace(/\D/g,'');if(support&&!(digits.length===10||digits.length===11||digits.length===12&&digits.startsWith('55')||digits.length===13&&digits.startsWith('55')))throw new Error('Informe um WhatsApp com DDD válido, como (44) 99999-9999.');const branding={...app.settings.branding,appName:values.appName,supportWhatsapp:support};const {error}=await api.from('app_settings').upsert({key:'branding',value:branding});if(error)throw error;}clearFilterDraftUrl();app.modal=null;await loadData();toast('Alterações salvas com sucesso.');}catch(error){toast(errorMessage(error))}finally{if(button?.isConnected)button.disabled=false;}}
+}if(form.id==='categoryForm'){const p={company_id:values.company_id,name:values.name.trim()};const q=app.modal.recordId?api.from('categories').update(p).eq('id',app.modal.recordId):api.from('categories').insert(p);const {error}=await q;if(error)throw error;}if(form.id==='invoiceForm'){const p={company_id:values.company_id,amount:Number(values.amount),due_date:values.due_date,status:values.status,paid_at:values.status==='paid'?new Date().toISOString():null,notes:values.notes||null};const q=app.modal.recordId?api.from('invoices').update(p).eq('id',app.modal.recordId):api.from('invoices').insert(p);const {error}=await q;if(error)throw error;}if(form.id==='filterForm')await filterUpload(form);if(form.id==='editFilterForm')await saveFilterChanges(form);if(form.id==='passwordForm')await manager({action:'reset_password',company_id:app.modal.recordId,password:values.password});if(form.id==='settingsForm'){const support=String(values.supportWhatsapp||'').trim();const digits=support.replace(/\D/g,'');if(support&&!(digits.length===10||digits.length===11||digits.length===12&&digits.startsWith('55')||digits.length===13&&digits.startsWith('55')))throw new Error('Informe um WhatsApp com DDD válido, como (44) 99999-9999.');const branding={...app.settings.branding,appName:values.appName,supportWhatsapp:support};const {error}=await api.from('app_settings').upsert({key:'branding',value:branding});if(error)throw error;}clearFilterDraftUrl();clearFilterBatch();app.modal=null;await loadData();toast('Alterações salvas com sucesso.');}catch(error){toast(errorMessage(error))}finally{if(button?.isConnected)button.disabled=false;}}
 async function mediaUrl(filter){if(app.images.has(filter.id))return app.images.get(filter.id);const {data,error}=await api.storage.from('company-filters').download(filter.storage_path);if(error)throw error;const uri=URL.createObjectURL(data);app.images.set(filter.id,uri);return uri;}
 async function hydrateImages(){const imgs=document.querySelectorAll('[data-img]');for(const element of imgs){const filter=app.filters.find(f=>f.id===element.dataset.img);if(!filter)continue;mediaUrl(filter).then(url=>{if(element.isConnected&&element.dataset.img===filter.id)element.src=url}).catch(()=>{if(element.isConnected)element.alt='PNG indisponível';});}}
 async function startCamera(facing='environment'){
@@ -1156,7 +1222,9 @@ if(act==='open-client-menu'){setClientCameraMenu(true);return;}if(act==='close-c
   return;
 }if(act==='category-move-up'||act==='category-move-down'){
   await moveCategoryByButton(uid,act==='category-move-up'?-1:1);return;
-}if(act==='close-modal'){closeModal();return;}if(act==='add-client'||act==='edit-client'){companyModal(act==='edit-client'?uid:null);return;}if(act==='add-category'||act==='edit-category'){categoryModal(act==='edit-category'?uid:null);return;}if(act==='add-invoice'||act==='edit-invoice'){invoiceModal(act==='edit-invoice'?uid:null);return;}if(act==='add-filter'){filterModal();return;}if(act==='view-filter'){editFilterModal(uid);return;}if(act==='toggle-filter-preview-bg'){
+}if(act==='close-modal'){closeModal();return;}if(act==='add-client'||act==='edit-client'){companyModal(act==='edit-client'?uid:null);return;}if(act==='add-category'||act==='edit-category'){categoryModal(act==='edit-category'?uid:null);return;}if(act==='add-invoice'||act==='edit-invoice'){invoiceModal(act==='edit-invoice'?uid:null);return;}if(act==='filter-batch-up'||act==='filter-batch-down'||act==='filter-batch-remove'){
+  moveFilterBatch(Number(uid),act==='filter-batch-remove'?null:act==='filter-batch-up'?-1:1);return;
+}if(act==='add-filter'){filterModal();return;}if(act==='view-filter'){editFilterModal(uid);return;}if(act==='toggle-filter-preview-bg'){
   const preview=$('filterEditorPreview');if(!preview)return;
   const dark=preview.classList.toggle('is-dark');
   target.setAttribute('aria-pressed',String(dark));
@@ -1252,7 +1320,7 @@ $('root').addEventListener('change',event=>{
       render();return;
     }
   }
-if(app.modal?.formId==='filterForm'){if(event.target.id==='f_company_id')updateCategoryOptions();if(event.target.id==='filterCategory')updateNewCategoryField();}if(event.target.id==='editFilterFile'){
+if(app.modal?.formId==='filterForm'){if(event.target.id==='filterBatchFile')setFilterBatch(event.target.files);if(event.target.id==='f_company_id')updateCategoryOptions();if(event.target.id==='filterCategory')updateNewCategoryField();}if(event.target.id==='editFilterFile'){
   previewReplacementFilter(event.target.files?.[0]||null);return;
 }
 if(event.target.id==='galleryPhotoInput'){const file=event.target.files?.[0];event.target.value='';if(file)loadGalleryPhoto(file);}});
