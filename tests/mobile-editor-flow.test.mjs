@@ -74,9 +74,9 @@ test('15 fontes disponíveis para personalizar depois de escrever',()=>{
   assert.match(fontSection,/fashion:/);
 });
 
-test('resultado tem botão dourado EDITAR FOTO e apenas Salvar/Nova foto',()=>{
+test('resultado tem botão dourado ADICIONA TEXTO e apenas Salvar/Nova foto',()=>{
   const result=between('function previewView(){','function supportContactMarkup(){');
-  assert.match(result,/EDITAR FOTO/);
+  assert.match(result,/ADICIONA TEXTO/);
   assert.match(result,/data-act="photo-save"/);
   assert.match(result,/data-act="photo-retake"/);
   assert.doesNotMatch(result,/data-act="photo-whatsapp"|data-act="photo-instagram"/);
