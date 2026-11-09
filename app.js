@@ -131,19 +131,19 @@ function recoveryMarkup(){
     <p class="muted">Defina uma senha exclusiva para acessar sua conta. Não compartilhe sua senha com ninguém.</p>
     ${passwordRecoveryError?`<div class="auth-error" role="alert">${escapeHtml(passwordRecoveryError)}</div>`:''}
     ${passwordRecoveryAuthorized?`<form class="form" id="passwordRecoveryForm">
-      <div class="field"><label for="recoveryPassword">Nova senha</label><input id="recoveryPassword" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></div>
-      <div class="field"><label for="recoveryConfirm">Confirmar nova senha</label><input id="recoveryConfirm" name="confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></div>
+      <div class="field"><label for="recoveryPassword">Nova senha</label><input id="recoveryPassword" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required></div>
+      <div class="field"><label for="recoveryConfirm">Confirmar nova senha</label><input id="recoveryConfirm" name="confirmation" type="password" autocomplete="new-password" minlength="6" maxlength="128" required></div>
       <button class="btn btn-primary btn-full" type="submit">Salvar nova senha</button>
       <div id="authError" class="auth-error" role="alert"></div>
     </form>`:'<p class="muted">A alteração de senha pelo aplicativo é exclusiva do administrador.</p>'}
-    <p class="muted">Use pelo menos 8 caracteres. A alteração só funciona com um link de recuperação válido.</p>
+    <p class="muted">Use pelo menos 6 caracteres. A alteração só funciona com um link de recuperação válido.</p>
   </div>${studioCredits('studio-credits-auth')}</div>`;
 }
 async function submitPasswordRecovery(form){
   const errorNode=$('authError');
   const password=form.elements.password.value;
   const confirmation=form.elements.confirmation.value;
-  if(password.length<8||password.length>128)throw Error('A nova senha deve ter de 8 a 128 caracteres.');
+  if(password.length<6||password.length>128)throw Error('A nova senha deve ter de 6 a 128 caracteres.');
   if(password!==confirmation)throw Error('As senhas informadas são diferentes.');
   const {data:{session},error:sessionError}=await api.auth.getSession();
   if(sessionError||!session)throw Error('Link expirado ou inválido. Solicite outro e-mail de recuperação.');
