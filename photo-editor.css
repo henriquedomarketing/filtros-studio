@@ -659,3 +659,8 @@
   .fs-edit-stage{width:min(calc(100vw - 26px),calc(49dvh * .5625),390px)!important;height:auto!important}
   .fs-edit-stage[data-format="feed"]{width:min(calc(100vw - 26px),calc(49dvh * .8),390px)!important}
 }
+
+/* Enquanto o teclado estiver aberto, nenhuma personalização ocupa a tela. */
+.fs-photo-editor:has(.fs-edit-compose:not(.hidden)) .fs-edit-panel{
+  display:none!important;
+}
