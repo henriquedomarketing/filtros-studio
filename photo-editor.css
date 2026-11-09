@@ -267,3 +267,22 @@
   .fs-edit-hint{display:none}
   .fs-edit-stage{width:min(calc(100vw - 16px),calc((100dvh - 275px)*0.5625),420px)}
 }
+
+/* Opções disponíveis também enquanto o teclado estiver aberto. */
+.fs-edit-compose-fonts{
+  display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;
+  padding:11px 0 8px;
+}
+.fs-edit-compose-fonts::-webkit-scrollbar{display:none}
+.fs-edit-compose-fonts .fs-edit-font{min-height:32px;padding:6px 10px;font-size:12px!important}
+.fs-edit-compose-options{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;
+  padding-top:3px;
+}
+.fs-edit-compose-options .fs-edit-style{height:30px;width:30px;min-width:30px}
+.fs-edit-compose-options .fs-edit-color{height:23px;width:23px;flex-basis:23px}
+@media(max-height:690px){
+  .fs-edit-compose{top:calc(62px + env(safe-area-inset-top,0px));padding:10px}
+  .fs-edit-compose textarea{min-height:62px;max-height:90px}
+  .fs-edit-compose-fonts{padding:6px 0 4px}
+}
