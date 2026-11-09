@@ -542,7 +542,7 @@ function loginAuthEmail(identifier){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))throw new Error('Informe seu e-mail de administrador corretamente.');
     return value;
   }
-  return normalizeClientUsername(value)+'@usuarios.filtros.studio';
+  // Alias do administrador: a senha nunca é armazenada no frontend.\n  if(value==='adm')return 'entreemcontato.br@gmail.com';\n  return normalizeClientUsername(value)+'@usuarios.filtros.studio';
 }
 async function authSubmit(form){
   if(logoutPending){
