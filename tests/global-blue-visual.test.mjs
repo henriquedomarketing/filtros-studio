@@ -39,7 +39,7 @@ test('photo capture/gallery/preview preserve the original video and PNG overlay'
   assert.match(css,/\.client-viewfinder img#cameraOverlay\{object-fit:fill!important\}/);
   assert.doesNotMatch(css,/#cameraOverlay[^\{]*\{[^}]*filter:/);
   assert.match(app,/function previewView\(\)/);
-  for(const action of ['photo-share','photo-instagram','photo-whatsapp','photo-save','photo-retake','photo-change-filter'])
+  for(const action of ['photo-edit','photo-instagram','photo-whatsapp','photo-save','photo-retake'])
     assert.match(app,new RegExp('data-act="'+action+'"'));
 });
 test('admin dashboard, client management and finance share the official blue background',()=>{
