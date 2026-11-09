@@ -583,7 +583,7 @@
 }
 .fs-frame-stage{
   position:relative;flex:0 0 auto;
-  width:min(calc(100vw - 30px),calc(64dvh * .5625),430px);
+  width:min(calc(100vw - 30px),36dvh,430px);
   aspect-ratio:var(--photo-ratio,9/16);
   border:1px solid rgba(255,255,255,.65);
   border-radius:16px;
@@ -595,7 +595,7 @@
   -webkit-user-select:none;
 }
 .fs-frame-stage[data-format="feed"]{
-  width:min(calc(100vw - 30px),calc(64dvh * .8),430px);
+  width:min(calc(100vw - 30px),51.2dvh,430px);
 }
 .fs-frame-source{
   display:block;
@@ -631,8 +631,8 @@
   .fs-edit-stage{height:min(49dvh,430px)!important}
   .fs-edit-panel{gap:6px!important;padding-top:7px!important}
   .fs-edit-hint{display:none}
-  .fs-frame-stage{width:min(calc(100vw - 30px),calc(60dvh * .5625),410px)}
-  .fs-frame-stage[data-format="feed"]{width:min(calc(100vw - 30px),calc(60dvh * .8),410px)}
+  .fs-frame-stage{width:min(calc(100vw - 30px),33.75dvh,410px)}
+  .fs-frame-stage[data-format="feed"]{width:min(calc(100vw - 30px),48dvh,410px)}
 }
 @media(max-width:370px){
   .fs-edit-panel{padding-left:9px!important;padding-right:9px!important}
@@ -647,17 +647,17 @@
 
 /* Dimensões reais preservadas no editor: Stories 9:16 e Feed 4:5, inclusive em iPhones estreitos. */
 .fs-edit-stage{
-  width:min(calc(100vw - 30px),calc(53dvh * .5625),420px)!important;
+  width:min(calc(100vw - 30px),29.8125dvh,420px)!important;
   height:auto!important;
   aspect-ratio:var(--photo-ratio,9/16)!important;
   max-height:100%!important;
 }
 .fs-edit-stage[data-format="feed"]{
-  width:min(calc(100vw - 30px),calc(53dvh * .8),420px)!important;
+  width:min(calc(100vw - 30px),42.4dvh,420px)!important;
 }
 @media(max-height:700px){
-  .fs-edit-stage{width:min(calc(100vw - 26px),calc(49dvh * .5625),390px)!important;height:auto!important}
-  .fs-edit-stage[data-format="feed"]{width:min(calc(100vw - 26px),calc(49dvh * .8),390px)!important}
+  .fs-edit-stage{width:min(calc(100vw - 26px),27.5625dvh,390px)!important;height:auto!important}
+  .fs-edit-stage[data-format="feed"]{width:min(calc(100vw - 26px),39.2dvh,390px)!important}
 }
 
 /* Enquanto o teclado estiver aberto, nenhuma personalização ocupa a tela. */
