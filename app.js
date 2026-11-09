@@ -66,7 +66,12 @@ function clearGalleryPhoto(){
   if(app.galleryPhoto?.url)URL.revokeObjectURL(app.galleryPhoto.url);
   app.galleryPhoto=null;
 }
-function clearCapturedPhoto(){if(app.captureData?.url)URL.revokeObjectURL(app.captureData.url);app.captureData=null;}
+function clearCapturedPhoto(){
+  if(app.captureData?.url)URL.revokeObjectURL(app.captureData.url);
+  if(app.captureData?.baseUrl&&app.captureData.baseUrl!==app.captureData.url)URL.revokeObjectURL(app.captureData.baseUrl);
+  app.captureData=null;
+  app.photoEditor=null;
+}
 // Reentrada na câmera = nova sessão. Nunca reutilizar a foto anterior da galeria,
 // o arquivo exportado, a câmera frontal anterior ou o filtro escolhido na última captura.
 function resetCameraSession(categoryId=app.selectedCategory){
@@ -766,28 +771,19 @@ async function photoTextFinish(){
 
 function previewView(){
   if(!app.captureData)return '<div class="client-empty">Não há fotografia disponível.</div>';
-  return `<section class="client-result" aria-label="Resultado da fotografia">
-    <div class="client-result-heading"><span class="client-eyebrow">FOTO FINALIZADA · 1080 × 1920</span>
-      <h1>Sua foto ficou pronta! <span aria-hidden="true">✨</span></h1>
-      <p>Confira o resultado com o filtro aplicado e escolha como deseja usar.</p>
-    </div>
-    <figure class="client-result-preview"><img src="${escapeHtml(app.captureData.url)}" alt="Prévia da foto capturada com o filtro aplicado"><figcaption>Pronta para publicar nos Stories</figcaption></figure>
-    <div class="client-result-actions">
-      <button type="button" class="client-result-btn client-result-share" data-act="photo-share"><span aria-hidden="true">↗</span> Compartilhar foto</button>
-      <div class="client-result-grid">
-        <button type="button" class="client-result-btn client-result-instagram" data-act="photo-instagram"><span aria-hidden="true">◎</span> Instagram Stories</button>
-        <button type="button" class="client-result-btn client-result-whatsapp" data-act="photo-whatsapp"><span aria-hidden="true">✆</span> WhatsApp</button>
+  return `<section class="fs-result-compact" aria-label="Foto pronta para compartilhar">
+    <div class="fs-result-picture"><img src="${escapeHtml(app.captureData.url)}" alt="Foto pronta com filtro aplicado"></div>
+    <div class="fs-result-buttons">
+      <button type="button" class="fs-result-premium" data-act="photo-edit"><span aria-hidden="true">✦ Aa</span><strong>Editar foto</strong></button>
+      <button type="button" class="fs-result-save" data-act="photo-save"><span aria-hidden="true">↓</span> Salvar foto</button>
+      <div class="fs-result-social">
+        <button type="button" data-act="photo-whatsapp"><span aria-hidden="true">✆</span> WhatsApp</button>
+        <button type="button" data-act="photo-instagram"><span aria-hidden="true">◎</span> Stories do Instagram</button>
       </div>
-      <button type="button" class="client-result-btn client-result-save" data-act="photo-save"><span aria-hidden="true">↓</span> Salvar no celular</button>
-      <div class="client-result-secondary">
-        <button type="button" data-act="photo-retake">↻ Nova foto</button>
-        <button type="button" data-act="photo-change-filter">◉ Trocar filtro</button>
-      </div>
+      <button type="button" class="fs-result-retry" data-act="photo-retake">↻ Nova foto</button>
     </div>
-    <p class="client-result-note">Instagram e WhatsApp dependem das opções disponíveis no compartilhamento do seu celular. No iPhone, use <b>Salvar Imagem</b> ou <b>Salvar em Arquivos</b> para guardar a foto.</p>
   </section>`;
 }
-
 function supportContactMarkup(){
   const phone=String(app.settings?.branding?.supportWhatsapp||'').trim();
   const digits=phone.replace(/\D/g,'');
@@ -819,6 +815,10 @@ function render(){
   if(app.profile.role!=='admin'&&(app.company?.access_paused||app.company?.active===false)){
     stopCamera();clearCapturedPhoto();clearGalleryPhoto();
     $('root').innerHTML=pausedClientView();return;
+  }
+  if(app.page==='editor'&&app.captureData&&app.photoEditor){
+    $('root').innerHTML=photoEditorView();
+    return;
   }
   const admin=app.profile.role==='admin';
   const testing=admin&&app.adminTest.active&&['camera','preview'].includes(app.page);
@@ -1682,7 +1682,25 @@ if(act==='open-client-menu'){setClientCameraMenu(true);return;}if(act==='close-c
   if(!f||f.category_id!==app.selectedCategory||
      (app.adminTest.active&&f.company_id!==app.adminTest.companyId))return;
   selectFilter(uid);return;
-}if(act==='activate-camera'){await startCamera();return;}if(act==='flip-camera'){await startCamera(app.facing==='user'?'environment':'user');return;}if(act==='use-camera'){resetCameraSession();return;}if(act==='pick-gallery'){$('galleryPhotoInput')?.click();return;}if(act==='capture'||act==='finish-gallery'){capture();return;}if(act==='photo-share'){shareCapturedPhoto();return;}if(act==='photo-instagram'){shareCapturedPhoto('instagram');return;}if(act==='photo-whatsapp'){shareCapturedPhoto('whatsapp');return;}if(act==='photo-save'){saveCapturedPhoto();return;}if(act==='photo-back'||act==='photo-retake'||act==='photo-change-filter'){backToCamera();return;}}catch(error){toast(errorMessage(error));}}
+}if(act==='activate-camera'){await startCamera();return;}if(act==='flip-camera'){await startCamera(app.facing==='user'?'environment':'user');return;}if(act==='use-camera'){resetCameraSession();return;}if(act==='pick-gallery'){$('galleryPhotoInput')?.click();return;}if(act==='capture'||act==='finish-gallery'){capture();return;}if(act==='photo-edit'){photoTextOpen();return;}
+if(act==='text-add'){photoTextAdd();return;}
+if(act==='text-edit'){photoTextComposeOpen();return;}
+if(act==='text-compose-done'){photoTextComposeDone();return;}
+if(act==='text-cancel'){photoTextCancel();return;}
+if(act==='text-finish'){void photoTextFinish();return;}
+if(act==='text-delete'){
+  const editor=app.photoEditor,selected=photoTextActive();
+  if(editor&&selected){
+    editor.texts=editor.texts.filter(item=>item.id!==selected.id);
+    editor.selectedId=editor.texts.at(-1)?.id||null;
+    photoTextRefreshLayers();photoTextRefreshControls();
+  }
+  return;
+}
+if(act==='text-font'||act==='text-style'||act==='text-color'){
+  photoTextChange(act.slice(5),uid);return;
+}
+if(act==='photo-share'){shareCapturedPhoto();return;}if(act==='photo-instagram'){shareCapturedPhoto('instagram');return;}if(act==='photo-whatsapp'){shareCapturedPhoto('whatsapp');return;}if(act==='photo-save'){saveCapturedPhoto();return;}if(act==='photo-back'||act==='photo-retake'||act==='photo-change-filter'){backToCamera();return;}}catch(error){toast(errorMessage(error));}}
 function setClientCameraMenu(open){
   const root=document.querySelector('.client-app.is-camera');
   const drawer=$('clientCameraDrawer');
@@ -1706,6 +1724,11 @@ function setAdminMobileMenu(open){
   else if(!document.querySelector('.overlay'))button?.focus();
 }
 document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&app.page==='editor'){
+    if(app.photoEditor?.composing)photoTextComposeDone();
+    else photoTextCancel();
+    return;
+  }
   if(event.key==='Escape'&&$('adminLayout')?.classList.contains('admin-menu-open'))setAdminMobileMenu(false);
   if(event.key==='Escape'&&app.modal?.formId==='editFilterForm')closeModal();
   if(event.key==='Escape'&&document.querySelector('.client-camera-menu-open'))setClientCameraMenu(false);
@@ -1716,6 +1739,11 @@ window.addEventListener('resize',()=>{
 
 $('root').addEventListener('click',click);
 $('root').addEventListener('pointerdown',categoryOrderPointerDown);
+$('root').addEventListener('pointerdown',photoTextPointerDown);
+$('root').addEventListener('input',photoTextInputChanged);
+document.addEventListener('pointermove',photoTextPointerMove,{passive:false});
+document.addEventListener('pointerup',photoTextPointerUp);
+document.addEventListener('pointercancel',photoTextPointerUp);
 document.addEventListener('pointermove',categoryOrderPointerMove,{passive:false});
 document.addEventListener('pointerup',event=>{void categoryOrderPointerEnd(event);});
 document.addEventListener('pointercancel',event=>{void categoryOrderPointerEnd(event,true);});
