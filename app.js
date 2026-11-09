@@ -658,7 +658,7 @@ function photoTextLayer(item){
     data-photo-text="${escapeHtml(item.id)}" role="button" tabindex="0"
     aria-label="Mover ou editar o texto ${escapeHtml(item.text||'novo')}"
     style="left:${(item.x*100).toFixed(2)}%;top:${(item.y*100).toFixed(2)}%;font-size:${size}cqw;
-    font-family:${font.css};font-weight:${font.weight};color:${escapeHtml(color)}">
+    font-family:${escapeHtml(font.css)};font-weight:${font.weight};color:${escapeHtml(color)}">
     <span>${escapeHtml(item.text||'Seu texto').replace(/\n/g,'<br>')}</span>
   </div>`;
 }
@@ -666,7 +666,7 @@ function photoTextLayer(item){
 function photoEditorView(){
   const photo=app.captureData, editor=app.photoEditor, active=photoTextActive();
   const fonts=Object.entries(PHOTO_TEXT_FONTS).map(([key,font])=>
-    `<button type="button" class="fs-edit-font ${active?.font===key?'chosen':''}" data-act="text-font" data-id="${key}" ${active?'':'disabled'} style="font-family:${font.css};font-weight:${font.weight}">${font.label}</button>`
+    `<button type="button" class="fs-edit-font ${active?.font===key?'chosen':''}" data-act="text-font" data-id="${key}" ${active?'':'disabled'} style="font-family:${escapeHtml(font.css)};font-weight:${font.weight}">${font.label}</button>`
   ).join('');
   const styles=[['plain','Aa'],['dark','▣'],['light','▤'],['outline','Ⓐ']].map(([key,label])=>
     `<button type="button" class="fs-edit-style ${active?.style===key?'chosen':''}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Estilo ${key}">${label}</button>`
