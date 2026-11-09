@@ -9,7 +9,7 @@ const cors = {
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
 const safeText = (value: unknown, max = 120) => typeof value === "string" ? value.trim().slice(0, max) : "";
 const usernamePattern = /^[a-z0-9][a-z0-9_-]{2,31}$/;
-const normalizeUsername = (value: unknown) => typeof value === "string" ? value.trim().toLowerCase() : "";
+const normalizeUsername = (value: unknown) => typeof value === "string" ? value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "").trim() : "";
 const internalAuthEmail = (username: string) => `${username}@usuarios.filtros.studio`;
 
 Deno.serve(async (req: Request) => {
