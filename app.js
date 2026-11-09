@@ -606,8 +606,11 @@ async function init(){
 }
 const clientUsernamePattern=/^[a-z0-9][a-z0-9_-]{2,31}$/;
 function normalizeClientUsername(value){
-  const username=String(value||'').trim().toLowerCase();
-  if(!clientUsernamePattern.test(username))throw new Error('Use um nome de usuário de 3 a 32 caracteres, contendo letras, números, _ ou -.');
+  // O login ignora maiúsculas, acentos e espaços; não altera a senha.
+  // IDs canônicos permanecem compatíveis com contas já cadastradas.
+  const username=String(value||'').normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,'').trim();
+  if(!clientUsernamePattern.test(username))throw new Error('Use um nome de usuário de 3 a 32 caracteres, contendo letras, números, _ ou -. Espaços e acentos são ignorados.');
   return username;
 }
 function loginAuthEmail(identifier){
@@ -672,7 +675,7 @@ function companyModal(cid){
   const logoInfo=c?.logo_path?`<span class="brand-form-current-logo">${brandImg(c,'brand-form-logo-img')}<small>Logo atual da empresa</small></span>`:'';
   const frm=`<form class="form" id="clientForm">
     ${field('name','Nome da empresa',c?.name)}
-    ${field('username','Nome de usuário (sem e-mail)',c?.login_username||'','text',true,3)}<p class="username-hint">Use 3 a 32 caracteres: letras, números, _ ou -. Ex.: p4veiculos ou 123</p>
+    ${field('username','Nome de usuário (sem e-mail)',c?.login_username||'','text',true,3)}<p class="username-hint">Use 3 a 32 caracteres. Maiúsculas, acentos e espaços não fazem diferença. Ex.: WB Motors ou 123</p>
     ${!c?field('password','Senha inicial (mínimo 6 caracteres)','','password',true,6):''}
     <div class="branding-form-section">
       <strong>Identidade visual da empresa</strong>
