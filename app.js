@@ -424,7 +424,8 @@ function testFilters(){
     </div>`;
 }
 function finance(){const pending=app.invoices.filter(x=>x.status==='pending'),paid=app.invoices.filter(x=>x.status==='paid'),late=pending.filter(x=>x.due_date<today());return header('COBRANÇAS','Financeiro','Mensalidades sincronizadas com os clientes e cobranças manuais; sem integração bancária.',button('Nova cobrança','add-invoice'))+`<div class="stats">${stat('A receber',brl(pending.reduce((s,x)=>s+Number(x.amount),0)),pending.length+' cobranças abertas')}${stat('Recebido',brl(paid.reduce((s,x)=>s+Number(x.amount),0)),paid.length+' pagamentos registrados')}${stat('Atrasado',brl(late.reduce((s,x)=>s+Number(x.amount),0)),late.length+' cobranças vencidas')}${stat('Empresas',app.companies.length,'Clientes cadastrados')}</div><div class="card">${table(['CLIENTE','TIPO','VENCIMENTO','VALOR','STATUS','AÇÕES'],app.invoices.map(x=>`<tr><td><b>${escapeHtml(companyName(x.company_id))}</b></td><td>${x.origin==='monthly'?'Mensalidade':'Manual'}</td><td>${sensitiveValue(dateBR(x.due_date))}</td><td>${sensitiveValue(brl(x.amount))}</td><td>${badge(dueStatus(x))}</td><td><div class="actions">${action('toggle-paid',x.id,x.status==='paid'?'Reabrir':'Marcar pago')}${x.origin==='monthly'?action('edit-client',x.company_id,'Editar mensalidade'):action('edit-invoice',x.id,'Editar')+action('remove-invoice',x.id,'Excluir','danger')}</div></td></tr>`).join(''))}</div>`}
-function settings(){const branding=app.settings.branding||{};return header('PERSONALIZAÇÃO','Configurações','Altere o nome da plataforma e o WhatsApp de suporte.')+`<div class="card"><form id="settingsForm" class="form">${field('appName','Nome da plataforma',branding.appName||'Filtros Studio')}${field('supportWhatsapp','WhatsApp de suporte',branding.supportWhatsapp||'', 'tel',false)}<p class="settings-support-hint">Informe o DDD e o número do suporte. Esse contato aparecerá automaticamente para todos os clientes com acesso pausado. Exemplo: (44) 99999-9999. Não é necessário editar cada cliente.</p><button type="submit" class="btn btn-primary">Salvar configurações</button></form><p class="note">O limite de 100 clientes é aplicado pelo banco. As senhas ficam no Supabase Auth e os PNGs em um armazenamento privado.</p></div>`}
+function settings(){const branding=app.settings.branding||{};return header('PERSONALIZAÇÃO','Configurações','Altere o nome da plataforma e o WhatsApp de suporte.')+`<div class="card"><form id="settingsForm" class="form">${field('appName','Nome da plataforma',branding.appName||'Filtros Studio')}${field('supportWhatsapp','WhatsApp de suporte',branding.supportWhatsapp||'', 'tel',false)}<p class="settings-support-hint">Informe o DDD e o número do suporte. Esse contato aparecerá automaticamente para todos os clientes com acesso pausado. Exemplo: (44) 99999-9999. Não é necessário editar cada cliente.</p><button type="submit" class="btn btn-primary">Salvar configurações</button></form><p class="note">O limite de 100 clientes é aplicado pelo banco. As senhas ficam no Supabase Auth e os PNGs em um armazenamento privado.</p></div>
+  <div class="card"><div class="toolbar"><div><h2>Segurança da conta administradora</h2><p class="muted">Altere sua própria senha sem receber e-mails. A mudança vale para o login ADM e para o e-mail desta conta.</p></div><button type="button" class="btn" data-act="admin-change-password">Alterar minha senha</button></div></div>`}
 function clientCategories(){
   return `<section class="client-home">
     <div class="client-home-heading">
@@ -732,6 +733,41 @@ function filterModal(){
   </form>`;
   openModal('Cadastrar filtro PNG',content,'filterForm');
   updateCategoryOptions();
+}
+function adminPasswordModal(){
+  if(app.profile?.role!=='admin')return;
+  const email=app.user?.email||'sua conta administrativa';
+  openModal('Alterar minha senha',`<form class="form" id="adminPasswordForm">
+    <p class="muted">Conta: ${escapeHtml(email)}. A nova senha também será usada pelo login ADM.</p>
+    <div class="field"><label for="adminCurrentPassword">Senha atual</label><input id="adminCurrentPassword" name="current_password" type="password" autocomplete="current-password" required></div>
+    <div class="field"><label for="adminNewPassword">Nova senha (mínimo 8 caracteres)</label><input id="adminNewPassword" name="new_password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></div>
+    <div class="field"><label for="adminConfirmPassword">Confirme a nova senha</label><input id="adminConfirmPassword" name="confirm_password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></div>
+    <p class="muted">Esta alteração afeta apenas sua conta de administrador. Os acessos dos clientes não serão modificados.</p>
+    <button class="btn btn-primary" type="submit">Salvar nova senha</button>
+    <button class="btn" type="button" data-act="close-modal">Cancelar</button>
+  </form>`,'adminPasswordForm');
+}
+async function updateAdminPassword(form){
+  if(app.profile?.role!=='admin'||!app.user?.id)throw Error('Acesso exclusivo do administrador.');
+  const previous=form.elements.current_password.value;
+  const next=form.elements.new_password.value;
+  const confirmation=form.elements.confirm_password.value;
+  if(!previous)throw Error('Informe a senha atual.');
+  if(next.length<8||next.length>128)throw Error('A nova senha deve ter de 8 a 128 caracteres.');
+  if(next!==confirmation)throw Error('A confirmação não corresponde à nova senha.');
+  if(next===previous)throw Error('Escolha uma senha diferente da atual.');
+  const {data:current,error:userError}=await api.auth.getUser();
+  if(userError||!current?.user||current.user.id!==app.user.id)throw Error('Sessão inválida. Entre novamente no painel.');
+  const {data:profile,error:profileError}=await api.from('profiles').select('role').eq('id',current.user.id).single();
+  if(profileError||profile?.role!=='admin')throw Error('Acesso exclusivo do administrador.');
+  // A autenticação atual é confirmada pelo próprio Supabase Auth, sem armazenar a senha.
+  const {data:verified,error:signInError}=await api.auth.signInWithPassword({
+    email:current.user.email,password:previous
+  });
+  if(signInError||verified?.user?.id!==current.user.id)throw Error('Senha atual incorreta.');
+  const {error:changeError}=await api.auth.updateUser({password:next});
+  if(changeError)throw changeError;
+  form.reset();
 }
 function editFilterModal(filterId){
   if(app.profile?.role!=='admin')return;
@@ -1045,6 +1081,17 @@ async function handleForm(event){event.preventDefault();const form=event.target;
     finally{if(button?.isConnected)button.disabled=false;}
     return;
   }
+  if(form.id==='adminPasswordForm'){
+    const button=form.querySelector('button[type=submit]');
+    if(button)button.disabled=true;
+    try{
+      await updateAdminPassword(form);
+      closeModal();
+      toast('Senha do administrador atualizada com sucesso.');
+    }catch(error){toast(errorMessage(error));}
+    finally{if(button?.isConnected)button.disabled=false;}
+    return;
+  }
   const values=Object.fromEntries(new FormData(form));const button=form.querySelector('button[type=submit]');if(button)button.disabled=true;try{if(form.id==='authForm')return await authSubmit(form);if(form.id==='clientForm'){
   const logo=values.logo instanceof File&&values.logo.size>0?values.logo:null;
   await validateCompanyLogo(logo);
@@ -1318,7 +1365,7 @@ if(act==='open-client-menu'){setClientCameraMenu(true);return;}if(act==='close-c
   target.setAttribute('aria-pressed',String(dark));
   target.textContent=dark?'◐ Ver em fundo quadriculado':'◐ Ver em fundo escuro';
   return;
-}if(act==='reset-password'){openModal('Alterar senha do cliente',`<form class="form" id="passwordForm">${field('password','Nova senha (mínimo 6 caracteres)','','password',true,6)}${endForm}</form>`,'passwordForm');app.modal.recordId=uid;render();return;}if(act==='remove-client'){if(confirm('Excluir a empresa, seu login, categorias e PNGs? Esta ação é irreversível.')){await manager({action:'delete',company_id:uid});await refresh();}return;}if(act==='remove-category'){if(confirm('Excluir esta categoria? Os filtros vinculados também serão excluídos.')){
+}if(act==='admin-change-password'){adminPasswordModal();return;}if(act==='reset-password'){openModal('Alterar senha do cliente',`<form class="form" id="passwordForm">${field('password','Nova senha (mínimo 6 caracteres)','','password',true,6)}${endForm}</form>`,'passwordForm');app.modal.recordId=uid;render();return;}if(act==='remove-client'){if(confirm('Excluir a empresa, seu login, categorias e PNGs? Esta ação é irreversível.')){await manager({action:'delete',company_id:uid});await refresh();}return;}if(act==='remove-category'){if(confirm('Excluir esta categoria? Os filtros vinculados também serão excluídos.')){
   const paths=app.filters.filter(f=>f.category_id===uid).map(f=>f.storage_path).filter(Boolean);
   const {error}=await api.from('categories').delete().eq('id',uid);
   if(error)throw error;
