@@ -101,25 +101,36 @@ const recoveryHash=new URLSearchParams(recoveryUrl.hash.replace(/^#/,''));
 let passwordRecoveryActive=recoveryUrl.searchParams.get('type')==='recovery'||
   recoveryHash.get('type')==='recovery'||recoveryUrl.searchParams.has('code');
 let passwordRecoveryError='';
+let passwordRecoveryAuthorized=false;
 api.auth.onAuthStateChange((event)=>{
   if(event==='PASSWORD_RECOVERY'){
     passwordRecoveryActive=true;
+    passwordRecoveryAuthorized=false;
     setExplicitLogout(false);
     render();
   }
 });
+async function verifyAdminRecovery(){
+  const {data:{session},error}=await api.auth.getSession();
+  if(error||!session)throw Error('Link expirado ou inválido. Solicite outro e-mail de recuperação.');
+  const {data:profile,error:profileError}=await api.from('profiles')
+    .select('role').eq('id',session.user.id).maybeSingle();
+  if(profileError||profile?.role!=='admin')
+    throw Error('Recuperação de senha nesta tela exclusiva do administrador. Contate o suporte.');
+  passwordRecoveryAuthorized=true;
+}
 function recoveryMarkup(){
   return `<div class="auth-layout"><div class="auth-card">
     <div class="brand"><span class="brand-mark fs-logo-mark"><img src="./assets/filtros-studio-mark.svg" alt="" aria-hidden="true"></span><span>Filtros<small>STUDIO</small></span></div>
     <h1>Criar nova senha</h1>
     <p class="muted">Defina uma senha exclusiva para acessar sua conta. Não compartilhe sua senha com ninguém.</p>
     ${passwordRecoveryError?`<div class="auth-error" role="alert">${escapeHtml(passwordRecoveryError)}</div>`:''}
-    <form class="form" id="passwordRecoveryForm">
+    ${passwordRecoveryAuthorized?`<form class="form" id="passwordRecoveryForm">
       <div class="field"><label for="recoveryPassword">Nova senha</label><input id="recoveryPassword" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></div>
       <div class="field"><label for="recoveryConfirm">Confirmar nova senha</label><input id="recoveryConfirm" name="confirmation" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></div>
       <button class="btn btn-primary btn-full" type="submit">Salvar nova senha</button>
       <div id="authError" class="auth-error" role="alert"></div>
-    </form>
+    </form>`:'<p class="muted">A alteração de senha pelo aplicativo é exclusiva do administrador.</p>'}
     <p class="muted">Use pelo menos 12 caracteres. A alteração só funciona com um link de recuperação válido.</p>
   </div>${studioCredits('studio-credits-auth')}</div>`;
 }
@@ -131,6 +142,7 @@ async function submitPasswordRecovery(form){
   if(password!==confirmation)throw Error('As senhas informadas são diferentes.');
   const {data:{session},error:sessionError}=await api.auth.getSession();
   if(sessionError||!session)throw Error('Link expirado ou inválido. Solicite outro e-mail de recuperação.');
+  await verifyAdminRecovery();
   const {error}=await api.auth.updateUser({password});
   if(error)throw error;
   passwordRecoveryActive=false;
@@ -571,8 +583,8 @@ async function init(){
   // O link de recuperação tem prioridade sobre o logout local e o painel normal.
   if(passwordRecoveryActive){
     setExplicitLogout(false);
-    const {data:{session},error}=await api.auth.getSession();
-    if(error||!session)passwordRecoveryError='Link expirado ou inválido. Solicite um novo e-mail de recuperação.';
+    try{await verifyAdminRecovery();}
+    catch(error){passwordRecoveryError=error.message;}
     render();
     return;
   }
@@ -587,10 +599,10 @@ async function init(){
   if(app.user){try{await loadData()}catch(error){toast(errorMessage(error));$('root').innerHTML=waiting()}}
   else render();
 }
-const clientUsernamePattern=/^[a-z][a-z0-9_-]{2,31}$/;
+const clientUsernamePattern=/^[a-z0-9][a-z0-9_-]{2,31}$/;
 function normalizeClientUsername(value){
   const username=String(value||'').trim().toLowerCase();
-  if(!clientUsernamePattern.test(username))throw new Error('Use um nome de usuário de 3 a 32 caracteres, começando com uma letra e contendo apenas letras, números, _ ou -.');
+  if(!clientUsernamePattern.test(username))throw new Error('Use um nome de usuário de 3 a 32 caracteres, contendo letras, números, _ ou -.');
   return username;
 }
 function loginAuthEmail(identifier){
@@ -655,8 +667,8 @@ function companyModal(cid){
   const logoInfo=c?.logo_path?`<span class="brand-form-current-logo">${brandImg(c,'brand-form-logo-img')}<small>Logo atual da empresa</small></span>`:'';
   const frm=`<form class="form" id="clientForm">
     ${field('name','Nome da empresa',c?.name)}
-    ${field('username','Nome de usuário (sem e-mail)',c?.login_username||'','text',true,3)}<p class="username-hint">Use 3 a 32 caracteres, começando com uma letra. Aceita números, _ e -. Ex.: p4veiculos</p>
-    ${!c?field('password','Senha inicial (8 caracteres ou mais)','','password',true,8):''}
+    ${field('username','Nome de usuário (sem e-mail)',c?.login_username||'','text',true,3)}<p class="username-hint">Use 3 a 32 caracteres: letras, números, _ ou -. Ex.: p4veiculos ou 123</p>
+    ${!c?field('password','Senha inicial (mínimo 6 caracteres)','','password',true,6):''}
     <div class="branding-form-section">
       <strong>Identidade visual da empresa</strong>
       <p>Envie a logo original em PNG, no formato que tiver (quadrado, horizontal ou vertical). A imagem manterá a proporção original, sem corte nem distorção. O visual do aplicativo seguirá sempre a identidade oficial do Filtros Studio.</p>
@@ -1298,7 +1310,7 @@ if(act==='open-client-menu'){setClientCameraMenu(true);return;}if(act==='close-c
   target.setAttribute('aria-pressed',String(dark));
   target.textContent=dark?'◐ Ver em fundo quadriculado':'◐ Ver em fundo escuro';
   return;
-}if(act==='reset-password'){openModal('Alterar senha do cliente',`<form class="form" id="passwordForm">${field('password','Nova senha (mínimo 8 caracteres)','','password',true,8)}${endForm}</form>`,'passwordForm');app.modal.recordId=uid;render();return;}if(act==='remove-client'){if(confirm('Excluir a empresa, seu login, categorias e PNGs? Esta ação é irreversível.')){await manager({action:'delete',company_id:uid});await refresh();}return;}if(act==='remove-category'){if(confirm('Excluir esta categoria? Os filtros vinculados também serão excluídos.')){
+}if(act==='reset-password'){openModal('Alterar senha do cliente',`<form class="form" id="passwordForm">${field('password','Nova senha (mínimo 6 caracteres)','','password',true,6)}${endForm}</form>`,'passwordForm');app.modal.recordId=uid;render();return;}if(act==='remove-client'){if(confirm('Excluir a empresa, seu login, categorias e PNGs? Esta ação é irreversível.')){await manager({action:'delete',company_id:uid});await refresh();}return;}if(act==='remove-category'){if(confirm('Excluir esta categoria? Os filtros vinculados também serão excluídos.')){
   const paths=app.filters.filter(f=>f.category_id===uid).map(f=>f.storage_path).filter(Boolean);
   const {error}=await api.from('categories').delete().eq('id',uid);
   if(error)throw error;
