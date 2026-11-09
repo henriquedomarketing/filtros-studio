@@ -472,6 +472,298 @@ function cameraView(){
   </section>`;
 }
 
+const PHOTO_TEXT_FONTS={
+  modern:{label:'Modern',css:'Arial,Helvetica,sans-serif',canvas:'Arial, sans-serif',weight:'600'},
+  classic:{label:'Classic',css:'Georgia,serif',canvas:'Georgia, serif',weight:'700'},
+  signature:{label:'Signature',css:'cursive',canvas:'cursive',weight:'400'},
+  editor:{label:'Editor',css:'Arial,Helvetica,sans-serif',canvas:'Arial, sans-serif',weight:'900'}
+};
+const PHOTO_TEXT_COLORS=['#FFFFFF','#101828','#FFE16B','#FF4B68','#42C9FF','#1ADBA7','#B796FF'];
+const PHOTO_TEXT_STYLES=['plain','dark','light','outline'];
+
+function photoTextFont(item){
+  return PHOTO_TEXT_FONTS[item?.font]||PHOTO_TEXT_FONTS.modern;
+}
+
+function photoTextActive(){
+  return app.photoEditor?.texts.find(item=>item.id===app.photoEditor.selectedId)||null;
+}
+
+function photoTextLayer(item){
+  const font=photoTextFont(item);
+  const color=item.style==='light'?'#121928':item.color;
+  const size=(item.size/10.8).toFixed(3);
+  return `<div class="fs-edit-text fs-edit-text-${escapeHtml(item.style)} ${app.photoEditor?.selectedId===item.id?'selected':''}"
+    data-photo-text="${escapeHtml(item.id)}" role="button" tabindex="0"
+    aria-label="Mover ou editar o texto ${escapeHtml(item.text||'novo')}"
+    style="left:${(item.x*100).toFixed(2)}%;top:${(item.y*100).toFixed(2)}%;font-size:${size}cqw;
+    font-family:${font.css};font-weight:${font.weight};color:${escapeHtml(color)}">
+    <span>${escapeHtml(item.text||'Seu texto').replace(/\n/g,'<br>')}</span>
+  </div>`;
+}
+
+function photoEditorView(){
+  const photo=app.captureData, editor=app.photoEditor, active=photoTextActive();
+  const fonts=Object.entries(PHOTO_TEXT_FONTS).map(([key,font])=>
+    `<button type="button" class="fs-edit-font ${active?.font===key?'chosen':''}" data-act="text-font" data-id="${key}" ${active?'':'disabled'} style="font-family:${font.css};font-weight:${font.weight}">${font.label}</button>`
+  ).join('');
+  const styles=[['plain','Aa'],['dark','▣'],['light','▤'],['outline','Ⓐ']].map(([key,label])=>
+    `<button type="button" class="fs-edit-style ${active?.style===key?'chosen':''}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Estilo ${key}">${label}</button>`
+  ).join('');
+  const colors=PHOTO_TEXT_COLORS.map(color=>
+    `<button type="button" class="fs-edit-color ${active?.color===color?'chosen':''}" data-act="text-color" data-id="${color}"
+      aria-label="Cor ${color}" ${active?'':'disabled'} style="--swatch:${color}"></button>`
+  ).join('');
+  return `<section class="fs-photo-editor" aria-label="Editor de texto para foto">
+    <header class="fs-edit-top">
+      <button type="button" data-act="text-cancel" class="fs-edit-top-back">← <span>Voltar</span></button>
+      <span class="fs-edit-top-title">Editar foto</span>
+      <button type="button" data-act="text-finish" class="fs-edit-top-done">Concluir</button>
+    </header>
+    <div class="fs-edit-workspace">
+      <div class="fs-edit-stage" id="photoTextStage">
+        <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
+        <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
+      </div>
+    </div>
+    <div class="fs-edit-panel">
+      <div class="fs-edit-actions">
+        <button type="button" class="fs-edit-add" data-act="text-add"><span aria-hidden="true">Aa</span> Adicionar texto</button>
+        <button type="button" class="fs-edit-action" data-act="text-edit" ${active?'':'disabled'}>Editar</button>
+        <button type="button" class="fs-edit-action fs-edit-delete" data-act="text-delete" ${active?'':'disabled'} aria-label="Excluir texto selecionado">✕</button>
+      </div>
+      <div class="fs-edit-fonts" id="photoTextFonts" aria-label="Fontes do texto">${fonts}</div>
+      <div class="fs-edit-style-colors">
+        <div class="fs-edit-styles" id="photoTextStyles" aria-label="Estilos de texto">${styles}</div>
+        <div class="fs-edit-colors" id="photoTextColors" aria-label="Cores do texto">${colors}</div>
+      </div>
+      <label class="fs-edit-size">Tamanho <input id="photoTextSize" type="range" min="48" max="160" step="4" value="${active?.size||92}" ${active?'':'disabled'} aria-label="Tamanho da letra"></label>
+      <p class="fs-edit-hint">Arraste o texto com o dedo para posicionar.</p>
+    </div>
+    <div class="fs-edit-compose hidden" id="photoTextCompose">
+      <div class="fs-edit-compose-head"><strong>Seu texto</strong><button type="button" data-act="text-compose-done">Pronto</button></div>
+      <textarea id="photoTextInput" rows="3" maxlength="220" placeholder="Escreva sua mensagem..." aria-label="Escreva o texto da foto" autocomplete="off"></textarea>
+    </div>
+  </section>`;
+}
+
+function photoTextOpen(){
+  if(!app.captureData)return;
+  const photo=app.captureData;
+  if(!photo.baseBlob){photo.baseBlob=photo.blob;photo.baseUrl=photo.url;}
+  const texts=(photo.texts||[]).map(item=>({...item}));
+  app.photoEditor={texts,selectedId:texts.at(-1)?.id||null,composing:false,drag:null,saving:false};
+  app.page='editor';
+  render();
+  if(!texts.length)photoTextAdd();
+}
+
+function photoTextAdd(){
+  const e=app.photoEditor;
+  if(!e)return;
+  const item={id:id(),text:'',x:.5,y:.48,size:92,font:'classic',color:'#FFFFFF',style:'plain'};
+  e.texts.push(item);e.selectedId=item.id;
+  photoTextRefreshLayers();
+  photoTextRefreshControls();
+  photoTextComposeOpen();
+}
+
+function photoTextRefreshLayers(){
+  const host=$('photoTextLayers'),e=app.photoEditor;
+  if(host&&e)host.innerHTML=e.texts.map(photoTextLayer).join('');
+}
+
+function photoTextRefreshControls(){
+  const active=photoTextActive();
+  document.querySelectorAll('.fs-edit-font,.fs-edit-style,.fs-edit-color').forEach(el=>{
+    const chosen=!!active&&(el.dataset.id===active.font||el.dataset.id===active.style||el.dataset.id===active.color);
+    el.classList.toggle('chosen',chosen);
+    el.disabled=!active;
+    el.setAttribute('aria-pressed',String(chosen));
+  });
+  const slider=$('photoTextSize');
+  if(slider){slider.disabled=!active;if(active)slider.value=String(active.size);}
+  document.querySelectorAll('[data-act="text-edit"],[data-act="text-delete"]').forEach(el=>el.disabled=!active);
+}
+
+function photoTextComposeOpen(){
+  if(!app.photoEditor)return;
+  const item=photoTextActive();
+  if(!item)return;
+  app.photoEditor.composing=true;
+  const host=$('photoTextCompose'),field=$('photoTextInput');
+  if(host)host.classList.remove('hidden');
+  if(field){field.value=item.text;field.focus();field.setSelectionRange(field.value.length,field.value.length);}
+}
+
+function photoTextComposeDone(){
+  const e=app.photoEditor;
+  if(!e)return;
+  const active=photoTextActive();
+  if(active&&!active.text.trim()){
+    e.texts=e.texts.filter(item=>item.id!==active.id);
+    e.selectedId=e.texts.at(-1)?.id||null;
+  }
+  e.composing=false;
+  $('photoTextCompose')?.classList.add('hidden');
+  photoTextRefreshLayers();photoTextRefreshControls();
+}
+
+function photoTextCancel(){
+  if(!app.photoEditor)return;
+  app.photoEditor=null;
+  app.page='preview';render();
+}
+
+function photoTextChange(kind,value){
+  const active=photoTextActive();
+  if(!active)return;
+  if(kind==='font'&&PHOTO_TEXT_FONTS[value])active.font=value;
+  if(kind==='style'&&PHOTO_TEXT_STYLES.includes(value))active.style=value;
+  if(kind==='color'&&PHOTO_TEXT_COLORS.includes(value))active.color=value;
+  photoTextRefreshLayers();photoTextRefreshControls();
+}
+
+function photoTextInputChanged(event){
+  if(app.page!=='editor'||!app.photoEditor)return;
+  const active=photoTextActive();
+  if(!active)return;
+  if(event.target.id==='photoTextInput'){
+    active.text=event.target.value.slice(0,220);
+    photoTextRefreshLayers();
+  }else if(event.target.id==='photoTextSize'){
+    active.size=Math.max(48,Math.min(160,Number(event.target.value)||92));
+    photoTextRefreshLayers();
+  }
+}
+
+function photoTextPointerDown(event){
+  if(app.page!=='editor'||app.photoEditor?.composing)return;
+  const el=event.target.closest('[data-photo-text]');
+  if(!el)return;
+  const e=app.photoEditor,item=e.texts.find(x=>x.id===el.dataset.photoText);
+  if(!item)return;
+  e.selectedId=item.id;
+  e.drag={pointerId:event.pointerId,id:item.id,startX:event.clientX,startY:event.clientY,x:item.x,y:item.y,moved:false};
+  try{el.setPointerCapture(event.pointerId);}catch(_){}
+  event.preventDefault();
+  photoTextRefreshControls();
+}
+
+function photoTextPointerMove(event){
+  const e=app.photoEditor,drag=e?.drag;
+  if(app.page!=='editor'||!drag||drag.pointerId!==event.pointerId)return;
+  const stage=$('photoTextStage'),item=e.texts.find(x=>x.id===drag.id);
+  if(!stage||!item)return;
+  const rect=stage.getBoundingClientRect();
+  const dx=event.clientX-drag.startX,dy=event.clientY-drag.startY;
+  if(Math.abs(dx)+Math.abs(dy)>5)drag.moved=true;
+  item.x=Math.max(.07,Math.min(.93,drag.x+dx/rect.width));
+  item.y=Math.max(.05,Math.min(.95,drag.y+dy/rect.height));
+  const el=[...document.querySelectorAll('[data-photo-text]')].find(x=>x.dataset.photoText===item.id);
+  if(el){el.style.left=(item.x*100).toFixed(2)+'%';el.style.top=(item.y*100).toFixed(2)+'%';}
+  event.preventDefault();
+}
+
+function photoTextPointerUp(event){
+  const e=app.photoEditor,drag=e?.drag;
+  if(app.page!=='editor'||!drag||drag.pointerId!==event.pointerId)return;
+  e.drag=null;
+  photoTextRefreshLayers();
+  if(!drag.moved&&event.type!=='pointercancel')photoTextComposeOpen();
+}
+
+function photoTextWrap(ctx,text,maxWidth){
+  const lines=[];
+  for(const paragraph of String(text||'').split('\n')){
+    if(!paragraph){lines.push('');continue;}
+    let line='';
+    for(const word of paragraph.split(/\s+/)){
+      const candidate=line?line+' '+word:word;
+      if(ctx.measureText(candidate).width<=maxWidth){line=candidate;continue;}
+      if(line){lines.push(line);line='';}
+      let fragment='';
+      for(const letter of word){
+        if(fragment&&ctx.measureText(fragment+letter).width>maxWidth){lines.push(fragment);fragment='';}
+        fragment+=letter;
+      }
+      line=fragment;
+    }
+    lines.push(line);
+  }
+  return lines.slice(0,12);
+}
+
+function photoTextDraw(ctx,item){
+  if(!item.text?.trim())return;
+  const font=photoTextFont(item),size=Number(item.size)||92;
+  ctx.save();
+  ctx.font=`${font.weight} ${size}px ${font.canvas}`;
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
+  const lines=photoTextWrap(ctx,item.text,920);
+  const step=size*1.22,pad=size*.26;
+  const width=Math.min(1010,Math.max(...lines.map(line=>ctx.measureText(line).width),size)+pad*2);
+  const height=lines.length*step+pad*2;
+  const x=Math.max(width/2,Math.min(1080-width/2,item.x*1080));
+  const y=Math.max(height/2,Math.min(1920-height/2,item.y*1920));
+  if(item.style==='dark'||item.style==='light'){
+    ctx.beginPath();
+    ctx.roundRect(x-width/2,y-height/2,width,height,size*.22);
+    ctx.fillStyle=item.style==='dark'?'rgba(0,0,0,.78)':'rgba(255,255,255,.92)';
+    ctx.fill();
+  }
+  ctx.font=`${font.weight} ${size}px ${font.canvas}`;
+  lines.forEach((line,index)=>{
+    const ly=y+(index-(lines.length-1)/2)*step;
+    if(item.style==='outline'){
+      ctx.strokeStyle='rgba(0,0,0,.90)';ctx.lineWidth=Math.max(5,size*.12);ctx.strokeText(line,x,ly);
+    }else if(item.style==='plain'){
+      ctx.shadowColor='rgba(0,0,0,.63)';ctx.shadowBlur=size*.15;ctx.shadowOffsetY=size*.04;
+    }
+    ctx.fillStyle=item.style==='light'?'#121928':item.color;
+    ctx.fillText(line,x,ly);
+    ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  });
+  ctx.restore();
+}
+
+async function photoTextFinish(){
+  const editor=app.photoEditor,photo=app.captureData;
+  if(!editor||!photo||editor.saving)return;
+  if(editor.composing)photoTextComposeDone();
+  editor.saving=true;
+  const done=document.querySelector('[data-act="text-finish"]');
+  if(done){done.disabled=true;done.textContent='Preparando...';}
+  try{
+    const image=new Image();
+    image.src=photo.baseUrl||photo.url;
+    await new Promise((resolve,reject)=>{
+      if(image.complete&&image.naturalWidth){resolve();return;}
+      image.onload=resolve;image.onerror=()=>reject(Error('Não foi possível abrir sua foto para editar.'));
+    });
+    const canvas=document.createElement('canvas');
+    canvas.width=1080;canvas.height=1920;
+    const ctx=canvas.getContext('2d');
+    if(!ctx)throw Error('Não foi possível criar a foto editada.');
+    ctx.drawImage(image,0,0,1080,1920);
+    const texts=editor.texts.filter(item=>item.text.trim()).map(item=>({...item}));
+    for(const item of texts)photoTextDraw(ctx,item);
+    const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Não foi possível salvar a edição.')),'image/png'));
+    const oldUrl=photo.url;
+    photo.blob=blob;
+    photo.file=new File([blob],photo.name,{type:'image/png'});
+    photo.url=URL.createObjectURL(blob);
+    photo.texts=texts;
+    if(oldUrl!==photo.baseUrl)URL.revokeObjectURL(oldUrl);
+    app.photoEditor=null;app.page='preview';render();
+    toast('Edição aplicada! A foto está pronta para salvar ou compartilhar.');
+  }catch(error){
+    editor.saving=false;
+    if(done?.isConnected){done.disabled=false;done.textContent='Concluir';}
+    toast(errorMessage(error));
+  }
+}
+
 function previewView(){
   if(!app.captureData)return '<div class="client-empty">Não há fotografia disponível.</div>';
   return `<section class="client-result" aria-label="Resultado da fotografia">
