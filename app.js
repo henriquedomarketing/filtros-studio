@@ -676,11 +676,7 @@ function photoEditorView(){
   const colors=PHOTO_TEXT_COLORS.map(color=>
     `<button type="button" class="fs-edit-color ${active?.color===color?'chosen':''}" data-act="text-color" data-id="${color}"
       aria-label="Cor ${color}" ${active?'':'disabled'} style="--swatch:${color}"></button>`
-  ).join('')+`<button type="button" class="fs-edit-eyedropper" data-act="text-eyedropper" aria-label="Conta-gotas: escolher cor da foto ou moldura" title="Conta-gotas" ${active?'':'disabled'}>
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="m15 5 4 4M14.2 6.2l3.6 3.6M8 13l8-8a2.4 2.4 0 0 1 3.4 3.4l-8 8-4.5 1 1.1-4.4Z"/>
-      <path d="M6 18.5 4 20h4"/>
-    </svg></button>`;
+  ).join('');
   return `<section class="fs-photo-editor" aria-label="Editor de texto para foto">
     <header class="fs-edit-top">
       <button type="button" data-act="text-cancel" class="fs-edit-top-back">← <span>Voltar</span></button>
@@ -703,6 +699,12 @@ function photoEditorView(){
       <div class="fs-edit-style-colors">
         <div class="fs-edit-styles" id="photoTextStyles" aria-label="Estilos de texto">${styles}</div>
         <div class="fs-edit-colors" id="photoTextColors" aria-label="Cores do texto">${colors}</div>
+        <button type="button" class="fs-edit-eyedropper" data-act="text-eyedropper" aria-label="Conta-gotas: escolher cor da foto ou moldura" title="Conta-gotas" ${active?'':'disabled'}>
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m15 5 4 4M14.2 6.2l3.6 3.6M8 13l8-8a2.4 2.4 0 0 1 3.4 3.4l-8 8-4.5 1 1.1-4.4Z"/>
+            <path d="M6 18.5 4 20h4"/>
+          </svg>
+        </button>
       </div>
       <label class="fs-edit-size">Tamanho <input id="photoTextSize" type="range" min="48" max="160" step="4" value="${active?.size||92}" ${active?'':'disabled'} aria-label="Tamanho da letra"></label>
       <p class="fs-edit-hint">Arraste o texto para posicionar. Toque em Escrever para alterar.</p>
@@ -862,7 +864,7 @@ function photoTextRefreshControls(){
   });
   const slider=$('photoTextSize');
   if(slider){slider.disabled=!active;if(active)slider.value=String(active.size);}
-  document.querySelectorAll('[data-act="text-edit"],[data-act="text-delete"]').forEach(el=>el.disabled=!active);
+  document.querySelectorAll('[data-act="text-edit"],[data-act="text-delete"],[data-act="text-eyedropper"]').forEach(el=>el.disabled=!active);
 }
 
 function photoTextComposeOpen(){
