@@ -548,6 +548,11 @@ function photoEditorView(){
     <div class="fs-edit-compose hidden" id="photoTextCompose">
       <div class="fs-edit-compose-head"><strong>Seu texto</strong><button type="button" data-act="text-compose-done">Pronto</button></div>
       <textarea id="photoTextInput" rows="3" maxlength="220" placeholder="Escreva sua mensagem..." aria-label="Escreva o texto da foto" autocomplete="off"></textarea>
+      <div class="fs-edit-compose-fonts" aria-label="Fontes enquanto escreve">${fonts}</div>
+      <div class="fs-edit-compose-options">
+        <div class="fs-edit-styles" aria-label="Estilos enquanto escreve">${styles}</div>
+        <div class="fs-edit-colors" aria-label="Cores enquanto escreve">${colors}</div>
+      </div>
     </div>
   </section>`;
 }
@@ -713,7 +718,15 @@ function photoTextDraw(ctx,item){
   const y=Math.max(height/2,Math.min(1920-height/2,item.y*1920));
   if(item.style==='dark'||item.style==='light'){
     ctx.beginPath();
-    ctx.roundRect(x-width/2,y-height/2,width,height,size*.22);
+    if(typeof ctx.roundRect==='function')ctx.roundRect(x-width/2,y-height/2,width,height,size*.22);
+    else{
+      const l=x-width/2,t=y-height/2,r=Math.min(size*.22,width/2,height/2);
+      ctx.moveTo(l+r,t);ctx.lineTo(l+width-r,t);
+      ctx.quadraticCurveTo(l+width,t,l+width,t+r);ctx.lineTo(l+width,t+height-r);
+      ctx.quadraticCurveTo(l+width,t+height,l+width-r,t+height);
+      ctx.lineTo(l+r,t+height);ctx.quadraticCurveTo(l,t+height,l,t+height-r);
+      ctx.lineTo(l,t+r);ctx.quadraticCurveTo(l,t,l+r,t);ctx.closePath();
+    }
     ctx.fillStyle=item.style==='dark'?'rgba(0,0,0,.78)':'rgba(255,255,255,.92)';
     ctx.fill();
   }
