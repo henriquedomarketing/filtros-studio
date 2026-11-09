@@ -849,9 +849,23 @@ function photoTextAdd(){
   photoTextComposeOpen();
 }
 
+function photoTextSyncPixels(){
+  const editor=app.photoEditor,stage=$('photoTextStage');
+  if(!editor||!stage)return;
+  const width=stage.getBoundingClientRect().width;
+  if(!width)return;
+  const factor=width/1080;
+  for(const item of editor.texts){
+    const el=[...stage.querySelectorAll('[data-photo-text]')].find(x=>x.dataset.photoText===item.id);
+    if(el)el.style.fontSize=(Math.max(1,Number(item.size)||92)*factor).toFixed(2)+'px';
+  }
+}
 function photoTextRefreshLayers(){
   const host=$('photoTextLayers'),e=app.photoEditor;
-  if(host&&e)host.innerHTML=e.texts.map(photoTextLayer).join('');
+  if(host&&e){
+    host.innerHTML=e.texts.map(photoTextLayer).join('');
+    photoTextSyncPixels();
+  }
 }
 
 function photoTextRefreshControls(){
@@ -1009,7 +1023,7 @@ function photoTextPointerMove(event){
   if(el){
     el.style.left=(item.x*100).toFixed(2)+'%';
     el.style.top=(item.y*100).toFixed(2)+'%';
-    el.style.fontSize=(item.size/10.8).toFixed(3)+'cqw';
+    el.style.fontSize=(item.size/1080*stage.getBoundingClientRect().width).toFixed(2)+'px';
   }
   const slider=$('photoTextSize');
   if(slider)slider.value=String(item.size);
@@ -1948,6 +1962,91 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
   .fs-eye-stage{width:min(calc(100vw - 30px),calc(58dvh * 0.5625),400px)}
   .fs-eye-stage[style*="1080 / 1350"]{width:min(calc(100vw - 30px),calc(58dvh * 0.8),400px)}
 }
+
+
+/* Premium discreto: coroa e brilho dourado, sem remover a identidade azul. */
+.client-app.is-preview .fs-result-buttons .fs-result-premium{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  background:linear-gradient(115deg,#fff0bf 0%,#efca78 28%,#d8a944 60%,#ffebb2 100%)!important;
+  border:1px solid #fff4c9!important;
+  box-shadow:0 6px 22px rgba(47,26,0,.24),inset 0 1px 0 rgba(255,255,255,.8)!important;
+  color:#231a0b!important;
+}
+.client-app.is-preview .fs-result-premium .fs-premium-crown{
+  font-size:22px!important;
+  font-weight:400!important;
+  position:relative;
+  z-index:1;
+  line-height:1;
+}
+.client-app.is-preview .fs-result-premium strong{
+  position:relative;
+  z-index:1;
+  color:#231a0b!important;
+  letter-spacing:.8px;
+}
+.client-app.is-preview .fs-result-premium::after{
+  content:"";
+  position:absolute;
+  inset:-75% auto -75% -65%;
+  width:42%;
+  transform:skewX(-24deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.56),transparent);
+  pointer-events:none;
+  animation:fs-premium-sheen 5s ease-in-out infinite;
+}
+@keyframes fs-premium-sheen{
+  0%,64%{left:-65%}
+  89%,100%{left:130%}
+}
+
+/* Todos os comandos de confirmação do fluxo de edição compartilham o mesmo dourado. */
+.fs-edit-top .fs-edit-top-done,
+.fs-frame-top .fs-frame-done,
+.fs-eye-header .fs-eye-confirm,
+.fs-edit-compose-head button{
+  color:#241a0b!important;
+  background:linear-gradient(120deg,#fff0bf 0%,#e6bf66 48%,#f8dc97 100%)!important;
+  border:1px solid #fff0be!important;
+  box-shadow:0 3px 9px rgba(38,23,0,.18),inset 0 1px 0 rgba(255,255,255,.62)!important;
+  font-weight:800!important;
+}
+.fs-edit-top .fs-edit-top-done:active,
+.fs-frame-top .fs-frame-done:active,
+.fs-eye-header .fs-eye-confirm:active,
+.fs-edit-compose-head button:active{
+  filter:brightness(.94);
+}
+.fs-edit-top .fs-edit-top-done:focus-visible,
+.fs-frame-top .fs-frame-done:focus-visible,
+.fs-eye-header .fs-eye-confirm:focus-visible,
+.fs-edit-compose-head button:focus-visible{
+  outline:2px solid #fff;
+  outline-offset:3px;
+}
+/* A moldura e a foto não capturam toques: apenas o texto selecionado se move. */
+.fs-edit-stage,.fs-edit-layers{
+  touch-action:none;
+  overscroll-behavior:contain;
+}
+.fs-edit-text{
+  touch-action:none;
+  -webkit-touch-callout:none;
+  cursor:grab;
+}
+.fs-edit-text.selected{
+  outline:1px dashed rgba(255,236,167,.95);
+  outline-offset:2px;
+}
+@media(prefers-reduced-motion:reduce){
+  .client-app.is-preview .fs-result-premium::after{animation:none}
+}
 `;
 function ensurePhotoEditorStyles(){
   if(document.getElementById('fs-photo-editor-inline-style'))return;
@@ -1974,6 +2073,7 @@ function render(){
   }
   if(app.page==='editor'&&app.captureData&&app.photoEditor){
     $('root').innerHTML=photoEditorView();
+    photoTextSyncPixels();
     return;
   }
   const admin=app.profile.role==='admin';
@@ -3074,6 +3174,8 @@ document.addEventListener('pointercancel',framingPointerEnd);
 
 document.addEventListener('pointerup',photoTextPointerUp);
 document.addEventListener('pointercancel',photoTextPointerUp);
+window.addEventListener('resize',photoTextSyncPixels,{passive:true});
+window.visualViewport?.addEventListener('resize',photoTextSyncPixels,{passive:true});
 document.addEventListener('pointermove',categoryOrderPointerMove,{passive:false});
 document.addEventListener('pointerup',event=>{void categoryOrderPointerEnd(event);});
 document.addEventListener('pointercancel',event=>{void categoryOrderPointerEnd(event,true);});
