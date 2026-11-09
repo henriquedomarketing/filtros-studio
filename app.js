@@ -107,7 +107,12 @@ api.auth.onAuthStateChange((event)=>{
     passwordRecoveryActive=true;
     passwordRecoveryAuthorized=false;
     setExplicitLogout(false);
-    render();
+    // Consultar autorização após o callback da SDK, sem bloquear o Auth.
+    queueMicrotask(async()=>{
+      try{await verifyAdminRecovery();passwordRecoveryError='';}
+      catch(error){passwordRecoveryError=error.message;}
+      render();
+    });
   }
 });
 async function verifyAdminRecovery(){
