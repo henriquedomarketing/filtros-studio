@@ -63,7 +63,7 @@ test('A página oferece foto da galeria e mantém troca de filtros',()=>{
   assert.match(source,/data-act="choose-filter"/);
   assert.match(source,/async function loadGalleryPhoto\(/);
   assert.match(source,/const source=gallery\?gallery\.img:video/);
-  assert.match(source,/ctx\.drawImage\(overlay,0,0,1080,1920\)/);
+  assert.match(source,/ctx\.drawImage\(overlay,0,0,format\.width,format\.height\)/);
 });
 
 test('Tela de resultado oferece Voltar, sem botão de sair',()=>{
