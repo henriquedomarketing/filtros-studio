@@ -643,3 +643,19 @@
 @media(prefers-reduced-motion:reduce){
   .fs-edit-font,.fs-frame-stage{scroll-behavior:auto}
 }
+
+
+/* Dimensões reais preservadas no editor: Stories 9:16 e Feed 4:5, inclusive em iPhones estreitos. */
+.fs-edit-stage{
+  width:min(calc(100vw - 30px),calc(53dvh * .5625),420px)!important;
+  height:auto!important;
+  aspect-ratio:var(--photo-ratio,9/16)!important;
+  max-height:100%!important;
+}
+.fs-edit-stage[data-format="feed"]{
+  width:min(calc(100vw - 30px),calc(53dvh * .8),420px)!important;
+}
+@media(max-height:700px){
+  .fs-edit-stage{width:min(calc(100vw - 26px),calc(49dvh * .5625),390px)!important;height:auto!important}
+  .fs-edit-stage[data-format="feed"]{width:min(calc(100vw - 26px),calc(49dvh * .8),390px)!important}
+}
