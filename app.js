@@ -623,21 +623,23 @@ async function finishPhotoFraming(){
 }
 
 const PHOTO_TEXT_FONTS={
-  modern:{label:'Moderna',css:'Arial,Helvetica,sans-serif',canvas:'Arial,sans-serif',weight:'700'},
-  classic:{label:'Clássica',css:'Georgia,serif',canvas:'Georgia,serif',weight:'700'},
-  signature:{label:'Assinatura',css:'"Brush Script MT",cursive',canvas:'"Brush Script MT",cursive',weight:'400'},
-  editor:{label:'Editorial',css:'"Arial Black",Arial,sans-serif',canvas:'"Arial Black",Arial,sans-serif',weight:'900'},
-  minimal:{label:'Minimal',css:'"Helvetica Neue",Helvetica,sans-serif',canvas:'"Helvetica Neue",Helvetica,sans-serif',weight:'400'},
-  rounded:{label:'Suave',css:'"Trebuchet MS",Arial,sans-serif',canvas:'"Trebuchet MS",Arial,sans-serif',weight:'700'},
-  elegant:{label:'Elegante',css:'Palatino,"Palatino Linotype",serif',canvas:'Palatino,serif',weight:'400'},
-  serif:{label:'Serifada',css:'"Times New Roman",serif',canvas:'"Times New Roman",serif',weight:'700'},
-  bold:{label:'Impacto',css:'Impact,"Arial Narrow",sans-serif',canvas:'Impact,sans-serif',weight:'900'},
-  mono:{label:'Máquina',css:'"Courier New",monospace',canvas:'"Courier New",monospace',weight:'700'},
-  handwritten:{label:'Manuscrita',css:'"Snell Roundhand",cursive',canvas:'"Snell Roundhand",cursive',weight:'400'},
-  condensed:{label:'Condensada',css:'"Arial Narrow",Arial,sans-serif',canvas:'"Arial Narrow",Arial,sans-serif',weight:'700'},
-  retro:{label:'Retrô',css:'"American Typewriter","Courier New",serif',canvas:'"American Typewriter","Courier New",serif',weight:'700'},
-  soft:{label:'Leve',css:'Verdana,Arial,sans-serif',canvas:'Verdana,sans-serif',weight:'400'},
-  fashion:{label:'Fashion',css:'Didot,Baskerville,serif',canvas:'Didot,Baskerville,serif',weight:'700'}
+  // Alternativas livres inspiradas nos estilos de texto do Instagram.
+  // Todas usam fontes web reais, não dependem das fontes instaladas no iPhone.
+  modern:{label:'Modern',family:'Inter',css:'"Inter",Arial,sans-serif',canvas:'"Inter",Arial,sans-serif',weight:'700'},
+  classic:{label:'Classic',family:'Playfair Display',css:'"Playfair Display",Georgia,serif',canvas:'"Playfair Display",Georgia,serif',weight:'700'},
+  signature:{label:'Signature',family:'Great Vibes',css:'"Great Vibes",cursive',canvas:'"Great Vibes",cursive',weight:'400'},
+  editor:{label:'Editor',family:'DM Mono',css:'"DM Mono",monospace',canvas:'"DM Mono",monospace',weight:'500'},
+  minimal:{label:'Poster',family:'Anton',css:'"Anton",Impact,sans-serif',canvas:'"Anton",Impact,sans-serif',weight:'400'},
+  rounded:{label:'Bubble',family:'Fredoka',css:'"Fredoka",sans-serif',canvas:'"Fredoka",sans-serif',weight:'700'},
+  elegant:{label:'Elegant',family:'Bodoni Moda',css:'"Bodoni Moda",serif',canvas:'"Bodoni Moda",serif',weight:'700'},
+  serif:{label:'Literature',family:'Libre Baskerville',css:'"Libre Baskerville",Georgia,serif',canvas:'"Libre Baskerville",Georgia,serif',weight:'700'},
+  bold:{label:'Strong',family:'Barlow Condensed',css:'"Barlow Condensed",sans-serif',canvas:'"Barlow Condensed",sans-serif',weight:'800'},
+  mono:{label:'Typewriter',family:'Special Elite',css:'"Special Elite",monospace',canvas:'"Special Elite",monospace',weight:'400'},
+  handwritten:{label:'Meme',family:'Bangers',css:'"Bangers",cursive',canvas:'"Bangers",cursive',weight:'400'},
+  condensed:{label:'Squeeze',family:'Oswald',css:'"Oswald",sans-serif',canvas:'"Oswald",sans-serif',weight:'700'},
+  retro:{label:'Deco',family:'Abril Fatface',css:'"Abril Fatface",serif',canvas:'"Abril Fatface",serif',weight:'400'},
+  soft:{label:'Directional',family:'Rajdhani',css:'"Rajdhani",sans-serif',canvas:'"Rajdhani",sans-serif',weight:'700'},
+  fashion:{label:'Arcade',family:'Press Start 2P',css:'"Press Start 2P",monospace',canvas:'"Press Start 2P",monospace',weight:'400'}
 };
 const PHOTO_TEXT_COLORS=['#FFFFFF','#101828','#FFE16B','#FF4B68','#42C9FF','#1ADBA7','#B796FF'];
 const PHOTO_TEXT_STYLES=['plain','dark','light','outline'];
@@ -689,7 +691,7 @@ function photoEditorView(){
     </div>
     <div class="fs-edit-panel">
       <div class="fs-edit-actions">
-        <button type="button" class="fs-edit-add" data-act="text-add"><span aria-hidden="true">Aa</span> Novo texto</button>
+        <button type="button" class="fs-edit-add" data-act="text-add">ADICIONA TEXTO</button>
         <button type="button" class="fs-edit-action" data-act="text-edit" ${active?'':'disabled'}>Escrever</button>
         <button type="button" class="fs-edit-action fs-edit-delete" data-act="text-delete" ${active?'':'disabled'} aria-label="Excluir texto selecionado">✕</button>
       </div>
@@ -777,10 +779,37 @@ function photoTextCancel(){
   app.page='preview';render();
 }
 
+// Antes de aplicar ou exportar, a fonte web deve estar carregada de verdade.
+async function loadPhotoTextFont(item){
+  const font=photoTextFont(item);
+  if(!document.fonts?.load)throw Error('Seu navegador não suporta o carregamento destas fontes.');
+  const declaration=`${font.weight} 28px "${font.family}"`;
+  const faces=await document.fonts.load(declaration,item.text||'Bom dia ÁÉÍÓÚ');
+  if(!faces.some(face=>face.status==='loaded'))
+    throw Error('Não foi possível carregar a fonte. Confira sua conexão e tente novamente.');
+}
+async function choosePhotoTextFont(value){
+  const selected=photoTextActive();
+  const font=PHOTO_TEXT_FONTS[value];
+  if(!selected||!font)return;
+  const selectedId=selected.id;
+  const buttons=[...document.querySelectorAll('[data-act="text-font"]')];
+  buttons.forEach(button=>button.disabled=true);
+  try{
+    await loadPhotoTextFont({...selected,font:value});
+    if(app.page!=='editor'||photoTextActive()?.id!==selectedId)return;
+    selected.font=value;
+    photoTextRefreshLayers();photoTextRefreshControls();
+  }catch(error){
+    toast(errorMessage(error));
+  }finally{
+    if(app.page==='editor')photoTextRefreshControls();
+  }
+}
 function photoTextChange(kind,value){
   const active=photoTextActive();
   if(!active)return;
-  if(kind==='font'&&PHOTO_TEXT_FONTS[value])active.font=value;
+  if(kind==='font'){void choosePhotoTextFont(value);return;}
   if(kind==='style'&&PHOTO_TEXT_STYLES.includes(value))active.style=value;
   if(kind==='color'&&PHOTO_TEXT_COLORS.includes(value))active.color=value;
   photoTextRefreshLayers();photoTextRefreshControls();
@@ -919,6 +948,9 @@ async function photoTextFinish(){
     if(!ctx)throw Error('Não foi possível criar a foto editada.');
     ctx.drawImage(image,0,0,canvas.width,canvas.height);
     const texts=editor.texts.filter(item=>item.text.trim()).map(item=>({...item}));
+    // Aguarda cada tipografia antes de renderizar no Canvas. Sem isso o Safari
+    // pode salvar com uma fonte padrão diferente da escolhida na tela.
+    for(const item of texts)await loadPhotoTextFont(item);
     for(const item of texts)photoTextDraw(ctx,item);
     const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Não foi possível salvar a edição.')),'image/png'));
     const oldUrl=photo.url;
@@ -942,7 +974,7 @@ function previewView(){
     <div class="fs-result-picture" style="--photo-ratio:${app.captureData.width||1080} / ${app.captureData.height||1920}">
       <img src="${escapeHtml(app.captureData.url)}" alt="Foto pronta com filtro aplicado"></div>
     <div class="fs-result-buttons">
-      <button type="button" class="fs-result-premium" data-act="photo-edit"><span aria-hidden="true">✦ Aa</span><strong>EDITAR FOTO</strong></button>
+      <button type="button" class="fs-result-premium" data-act="photo-edit"><strong>ADICIONA TEXTO</strong></button>
       <button type="button" class="fs-result-save" data-act="photo-save"><span aria-hidden="true">↓</span> Salvar foto</button>
       <button type="button" class="fs-result-retry" data-act="photo-retake">↻ Nova foto</button>
     </div>
