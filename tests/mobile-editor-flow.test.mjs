@@ -89,6 +89,6 @@ test('cores, proporções e cache coerentes com a identidade Filtros Studio',()=
   assert.match(css,/\.fs-photo-editor,\.fs-framing-screen\{/);
   assert.match(css,/background-color:#001893!important/);
   assert.match(css,/fs-frame-stage\[data-format="feed"\]/);
-  assert.match(html,/app\.js\?v=20261109-editor-frame-v8/);
-  assert.match(html,/photo-editor\.css\?v=20261109-editor-frame-v8/);
+  assert.match(html,/app\.js\?v=20261109-eyedropper-fonts-v9/);
+  assert.match(html,/photo-editor\.css\?v=20261109-eyedropper-fonts-v9/);
 });
