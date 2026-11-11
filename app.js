@@ -2437,6 +2437,60 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 @media(prefers-reduced-motion:reduce){
   .fs-photo-editor .fs-simple-panel .fs-simple-tools .fs-simple-tool{transition:none}
 }
+
+
+/* Botão de texto acima da foto (v13): cabeçalho → adicionar → foto → ferramentas. */
+.fs-photo-editor .fs-editor-add-top{
+  flex:0 0 auto;
+  padding:12px 16px 3px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.fs-photo-editor .fs-editor-add-top .fs-edit-add-top{
+  appearance:none;
+  width:min(100%,460px);
+  min-height:49px;
+  padding:11px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(255,255,255,.95);
+  border-radius:14px;
+  background:linear-gradient(180deg,#fff 0%,#f1f5ff 100%);
+  box-shadow:0 5px 18px rgba(0,8,70,.17),inset 0 1px #fff;
+  color:#082783;
+  font-size:15px;
+  font-weight:800;
+  line-height:1.25;
+  letter-spacing:.05px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.fs-photo-editor .fs-editor-add-top .fs-edit-add-top:active{
+  transform:scale(.992);
+  filter:brightness(.98);
+}
+.fs-photo-editor .fs-editor-add-top .fs-edit-add-top:focus-visible{
+  outline:3px solid #f5d482;
+  outline-offset:3px;
+}
+.fs-photo-editor .fs-simple-panel.fs-simple-empty{
+  display:none!important;
+}
+.fs-photo-editor .fs-editor-add-top + .fs-edit-workspace{
+  min-height:0;
+}
+@media(max-height:690px){
+  .fs-photo-editor .fs-editor-add-top{
+    padding:7px 12px 2px;
+  }
+  .fs-photo-editor .fs-editor-add-top .fs-edit-add-top{
+    min-height:44px;
+    font-size:14px;
+  }
+}
 `;
 function ensurePhotoEditorStyles(){
   if(document.getElementById('fs-photo-editor-inline-style'))return;
