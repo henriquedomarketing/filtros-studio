@@ -692,21 +692,25 @@ function photoEditorView(){
     <div class="fs-edit-panel fs-simple-panel" aria-label="Ferramentas de texto">
       <div class="fs-edit-actions fs-simple-primary">
         <button type="button" class="fs-edit-add" data-act="text-add">＋ Adicionar texto</button>
-        ${active?.text?.trim()?`<button type="button" class="fs-edit-action fs-simple-rewrite" data-act="text-edit">Editar texto</button>`:''}
       </div>
       ${editor.texts.some(item=>item.text.trim())?`
-      <div class="fs-simple-tools" role="group" aria-label="Personalizar texto selecionado">
-        <button type="button" class="fs-simple-tool ${editor.tool==='font'?'chosen':''}" data-act="text-tool" data-id="font" ${active?'':'disabled'} aria-expanded="${editor.tool==='font'}">Fonte</button>
-        <button type="button" class="fs-simple-tool ${editor.tool==='color'?'chosen':''}" data-act="text-tool" data-id="color" ${active?'':'disabled'} aria-expanded="${editor.tool==='color'}">Cor</button>
-        <button type="button" class="fs-simple-tool ${editor.tool==='style'?'chosen':''}" data-act="text-tool" data-id="style" ${active?'':'disabled'} aria-expanded="${editor.tool==='style'}">Estilo</button>
-        <button type="button" class="fs-simple-tool fs-simple-delete" data-act="text-delete" ${active?'':'disabled'}>Apagar</button>
+      <div class="fs-simple-tools" role="group" aria-label="Ferramentas de edição">
+        <button type="button" class="fs-simple-tool ${editor.tool==='text'?'chosen':''}" data-act="text-tool" data-id="text" ${active?'':'disabled'} aria-pressed="${editor.tool==='text'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M12 7v13M8 20h8M8 4h8"/></svg><span>Texto</span>
+        </button>
+        <button type="button" class="fs-simple-tool ${editor.tool==='color'?'chosen':''}" data-act="text-tool" data-id="color" ${active?'':'disabled'} aria-pressed="${editor.tool==='color'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-2.8 4.1-6 7.7-6 11a6 6 0 0 0 12 0c0-3.3-3.2-6.9-6-11Z"/><path d="M9 15a3 3 0 0 0 3 3"/></svg><span>Cor</span>
+        </button>
+        <button type="button" class="fs-simple-tool ${editor.tool==='size'?'chosen':''}" data-act="text-tool" data-id="size" ${active?'':'disabled'} aria-pressed="${editor.tool==='size'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M4 15v5h5M20 15v5h-5"/><path d="M8 12h8"/></svg><span>Tamanho</span>
+        </button>
+        <button type="button" class="fs-simple-tool ${editor.tool==='style'?'chosen':''}" data-act="text-tool" data-id="style" ${active?'':'disabled'} aria-pressed="${editor.tool==='style'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3ZM19 17l.6 1.4L21 19l-1.4.6L19 21l-.6-1.4L17 19l1.4-.6L19 17Z"/></svg><span>Estilo</span>
+        </button>
       </div>
-      ${editor.tool==='font'?`<div class="fs-simple-font-panel fs-simple-options">
-        <div class="fs-edit-fonts" id="photoTextFonts" aria-label="Escolha a fonte">${fonts}</div>
-        <div class="fs-simple-size-actions" role="group" aria-label="Ajustar tamanho do texto">
-          <button type="button" data-act="text-smaller" ${active?'':'disabled'}>− Menor</button>
-          <button type="button" data-act="text-larger" ${active?'':'disabled'}>Maior +</button>
-        </div>
+      ${editor.tool==='text'?`<div class="fs-simple-text-panel fs-simple-options" role="group" aria-label="Ações do texto">
+        <button type="button" class="fs-simple-option-button" data-act="text-edit" ${active?'':'disabled'}>Editar texto</button>
+        <button type="button" class="fs-simple-option-button fs-simple-remove-button" data-act="text-delete" ${active?'':'disabled'}>Apagar texto</button>
       </div>`:''}
       ${editor.tool==='color'?`<div class="fs-simple-color-options fs-simple-options">
         <div class="fs-edit-colors" id="photoTextColors" aria-label="Escolha a cor">${colors}</div>
@@ -717,7 +721,15 @@ function photoEditorView(){
           </svg>
         </button>
       </div>`:''}
-      ${editor.tool==='style'?`<div class="fs-edit-styles fs-simple-style-options fs-simple-options" id="photoTextStyles" aria-label="Escolha o estilo">${styles}</div>`:''}
+      ${editor.tool==='size'?`<div class="fs-simple-size-panel fs-simple-options" role="group" aria-label="Ajustar tamanho">
+        <button type="button" class="fs-simple-option-button" data-act="text-smaller" ${active?'':'disabled'} aria-label="Diminuir tamanho do texto"><span aria-hidden="true">A−</span> Menor</button>
+        <input id="photoTextSize" type="range" min="4" max="600" step="1" value="${active?.size||80}" ${active?'':'disabled'} aria-label="Tamanho do texto">
+        <button type="button" class="fs-simple-option-button" data-act="text-larger" ${active?'':'disabled'} aria-label="Aumentar tamanho do texto">Maior <span aria-hidden="true">A+</span></button>
+      </div>`:''}
+      ${editor.tool==='style'?`<div class="fs-simple-style-panel fs-simple-options">
+        <div class="fs-edit-fonts" id="photoTextFonts" aria-label="Escolha a fonte">${fonts}</div>
+        <div class="fs-edit-styles fs-simple-style-options" id="photoTextStyles" aria-label="Escolha o efeito">${styles}</div>
+      </div>`:''}
       <p class="fs-edit-hint">1 dedo move · 2 dedos ajustam</p>
       `:''}
     </div>
@@ -888,7 +900,8 @@ function photoTextRefreshControls(){
     el.disabled=!active;
     el.setAttribute('aria-pressed',String(chosen));
   });
-  document.querySelectorAll('[data-act="text-edit"],[data-act="text-delete"],[data-act="text-eyedropper"],[data-act="text-tool"]').forEach(el=>el.disabled=!active);
+  document.querySelectorAll('[data-act="text-edit"],[data-act="text-delete"],[data-act="text-eyedropper"],[data-act="text-tool"],[data-act="text-smaller"],[data-act="text-larger"]').forEach(el=>el.disabled=!active);
+  const slider=$('photoTextSize');if(slider&&active)slider.value=String(active.size);
 }
 
 function photoTextComposeOpen(){
@@ -964,6 +977,9 @@ function photoTextInputChanged(event){
   if(event.target.id==='photoTextInput'){
     active.text=event.target.value.slice(0,220);
     photoTextRefreshLayers();
+  }else if(event.target.id==='photoTextSize'){
+    active.size=Math.max(4,Math.min(600,Number(event.target.value)||4));
+    photoTextRefreshLayers();
   }
 }
 
@@ -987,8 +1003,8 @@ function photoTextGestureTransform(start,current,rect){
   const scale=start.distance===1?1:
     current.distance/Math.max(1,start.distance);
   return {
-    x:Math.max(.07,Math.min(.93,start.x+(current.center.x-start.center.x)/Math.max(1,rect.width))),
-    y:Math.max(.05,Math.min(.95,start.y+(current.center.y-start.center.y)/Math.max(1,rect.height))),
+    x:Math.max(-.20,Math.min(1.20,start.x+(current.center.x-start.center.x)/Math.max(1,rect.width))),
+    y:Math.max(-.20,Math.min(1.20,start.y+(current.center.y-start.center.y)/Math.max(1,rect.height))),
     size:Math.max(4,Math.min(600,Math.round(start.size*scale)))
   };
 }
@@ -1079,8 +1095,10 @@ function photoTextDraw(ctx,item){
   const width=Math.min(1010,Math.max(...lines.map(line=>ctx.measureText(line).width),size)+pad*2);
   const height=lines.length*step+pad*2;
   const canvasWidth=ctx.canvas?.width||1080,canvasHeight=ctx.canvas?.height||1920;
-  const x=Math.max(width/2,Math.min(canvasWidth-width/2,item.x*canvasWidth));
-  const y=Math.max(height/2,Math.min(canvasHeight-height/2,item.y*canvasHeight));
+  // Sem limitar o centro ao interior da foto: o Canvas recorta apenas a parte externa.
+  // A posição gravada é exatamente a posição arrastada, inclusive junto às bordas.
+  const x=item.x*canvasWidth;
+  const y=item.y*canvasHeight;
   if(item.style==='dark'||item.style==='light'){
     ctx.beginPath();
     if(typeof ctx.roundRect==='function')ctx.roundRect(x-width/2,y-height/2,width,height,size*.22);
@@ -3276,7 +3294,7 @@ if(act==='text-eyedropper'){void openPhotoEyedropper();return;}
 if(act==='eye-cancel'){cancelPhotoEyedropper();return;}
 if(act==='eye-use-color'){usePhotoEyedropperColor();return;}
 if(act==='text-tool'){
-  if(!app.photoEditor||!['font','color','style'].includes(uid))return;
+  if(!app.photoEditor||!['text','color','size','style'].includes(uid))return;
   app.photoEditor.tool=app.photoEditor.tool===uid?null:uid;
   render();return;
 }
@@ -3285,6 +3303,7 @@ if(act==='text-smaller'||act==='text-larger'){
   if(!item)return;
   item.size=Math.max(4,Math.min(600,Math.round(item.size*(act==='text-smaller'?.75:1.25))));
   photoTextRefreshLayers();
+  photoTextRefreshControls();
   return;
 }
 if(act==='text-add'){photoTextAdd();return;}
