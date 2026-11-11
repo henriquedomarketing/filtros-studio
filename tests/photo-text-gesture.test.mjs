@@ -42,11 +42,11 @@ test('dois dedos aumentam e diminuem, preservando o posicionamento',()=>{
 test('limites evitam escala extrema, números inválidos e imagem movida',()=>{
   const start={center:{x:100,y:100},distance:100,x:.5,y:.5,size:100};
   const large=transform(start,{center:{x:999,y:-999},distance:900},{width:300,height:500});
-  assert.equal(large.size,320);
+  assert.equal(large.size,600);
   assert.equal(large.x,.93);
   assert.equal(large.y,.05);
   const tiny=transform(start,{center:{x:0,y:0},distance:1},{width:300,height:500});
-  assert.equal(tiny.size,36);
+  assert.equal(tiny.size,4);
   const pointer=app.slice(app.indexOf('function photoTextPointerDown('),app.indexOf('function photoTextWrap('));
   assert.match(pointer,/editor\.drag\.pointers\.size>=2/);
   assert.match(pointer,/stage\.setPointerCapture\(event\.pointerId\)/);
@@ -70,7 +70,7 @@ test('botão dourado mostra coroa e EDITAR FOTO, com brilho reduzível',()=>{
   assert.match(css,/@keyframes fs-premium-sheen/);
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/animation:none/);
-  assert.match(html,/app\.js\?v=20261109-premium-pinch-v10/);
+  assert.match(html,/app\.js\?v=20261111-simple-editor-v11/);
 });
 
 test('confirmações do editor usam o dourado premium',()=>{
