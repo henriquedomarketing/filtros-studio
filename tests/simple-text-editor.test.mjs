@@ -37,30 +37,35 @@ test('após escrever, mostra somente quatro opções grandes e nenhuma aba abert
   const html=makeView([{id:'t1',text:'Bom dia',size:80,font:'modern',color:'#FFFFFF',style:'plain'}],null);
   const buttons=(html.match(/class="fs-simple-tool(?: [^"]*)?"/g)||[]).length;
   assert.equal(buttons,4);
-  assert.match(html,/data-id="font"/);
+  assert.match(html,/data-id="text"/);
+  assert.match(html,/data-id="size"/);
   assert.match(html,/data-id="color"/);
   assert.match(html,/data-id="style"/);
-  assert.match(html,/data-act="text-delete"/);
+  assert.doesNotMatch(html,/data-act="text-delete"/);
   assert.doesNotMatch(html,/data-act="text-font"/);
   assert.doesNotMatch(html,/data-act="text-color"/);
   assert.doesNotMatch(html,/data-act="text-style"/);
 });
 
-test('aba Fonte apresenta fontes e botões de tamanho, sem expor outras opções',()=>{
-  const html=makeView([{id:'t1',text:'Bom dia',size:80,font:'modern',color:'#FFFFFF',style:'plain'}],'font');
-  assert.match(html,/data-act="text-font"/);
+test('aba Tamanho mostra controles dedicados sem expor fontes ou cores',()=>{
+  const html=makeView([{id:'t1',text:'Bom dia',size:80,font:'modern',color:'#FFFFFF',style:'plain'}],'size');
+  assert.doesNotMatch(html,/data-act="text-font"/);
   assert.match(html,/data-act="text-smaller"/);
   assert.match(html,/data-act="text-larger"/);
-  assert.doesNotMatch(html,/id="photoTextSize"/);
+  assert.match(html,/id="photoTextSize"/);
   assert.doesNotMatch(html,/data-act="text-color"/);
 });
-test('abas Cor e Estilo são independentes',()=>{
+test('abas Texto, Cor e Estilo são independentes',()=>{
   const text=[{id:'t1',text:'Bom dia',size:80,font:'modern',color:'#FFFFFF',style:'plain'}];
-  const color=makeView(text,'color'),style=makeView(text,'style');
+  const color=makeView(text,'color'),style=makeView(text,'style'),editing=makeView(text,'text');
+  assert.match(editing,/data-act="text-edit"/);
+  assert.match(editing,/data-act="text-delete"/);
+  assert.doesNotMatch(editing,/data-act="text-color"/);
   assert.match(color,/data-act="text-eyedropper"/);
   assert.match(color,/data-act="text-color"/);
   assert.doesNotMatch(color,/data-act="text-style"/);
   assert.match(style,/data-act="text-style"/);
+  assert.match(style,/data-act="text-font"/);
   assert.doesNotMatch(style,/data-act="text-color"/);
 });
 
@@ -78,4 +83,5 @@ test('pinça e botões podem reduzir até 4px, sem interferir no enquadramento',
   assert.match(app,/function photoTextPointerMove\(event\)/);
   assert.match(css,/\.fs-photo-editor \.fs-edit-text\{/);
   assert.match(css,/min-width:36px/);
+  assert.match(app,/Math\.max\(-\.20,Math\.min\(1\.20,start\.y/);
 });
