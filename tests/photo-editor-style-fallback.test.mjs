@@ -27,6 +27,6 @@ test('Edição móvel possui foto enquadrada, controles e campo legível',()=>{
   assert.match(js,/\$\('photoTextInput'\)\?\.blur\(\)/);
 });
 test('Versões do CSS e JavaScript foram renovadas para evitar cache antigo',()=>{
-  assert.match(html,/photo-editor\.css\?v=20261109-premium-pinch-v10/);
-  assert.match(html,/app\.js\?v=20261109-premium-pinch-v10/);
+  assert.match(html,/photo-editor\.css\?v=20261111-simple-editor-v11/);
+  assert.match(html,/app\.js\?v=20261111-simple-editor-v11/);
 });
