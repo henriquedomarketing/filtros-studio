@@ -862,3 +862,173 @@
 @media(prefers-reduced-motion:reduce){
   .client-app.is-preview .fs-result-premium::after{animation:none}
 }
+
+
+/* Editor simplificado v11: um passo por vez e alvos de toque confortáveis. */
+.fs-photo-editor .fs-simple-panel{
+  padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px))!important;
+  gap:10px!important;
+  width:100%;
+}
+.fs-photo-editor .fs-simple-primary{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  align-items:stretch;
+  gap:9px;
+}
+.fs-photo-editor .fs-simple-primary:has(.fs-simple-rewrite){
+  grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);
+}
+.fs-photo-editor .fs-simple-primary button{
+  width:100%;
+  min-height:52px;
+  padding:10px 8px;
+  border-radius:14px;
+  font-size:14px;
+  font-weight:800;
+  text-align:center;
+  white-space:normal;
+}
+.fs-photo-editor .fs-simple-primary .fs-edit-add{
+  color:#061889!important;
+  background:#fff!important;
+  border-color:#fff!important;
+}
+.fs-photo-editor .fs-simple-primary .fs-simple-rewrite{
+  color:#fff!important;
+  background:rgba(255,255,255,.17)!important;
+  border:1px solid rgba(255,255,255,.5)!important;
+}
+.fs-photo-editor .fs-simple-tools{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  width:100%;
+}
+.fs-photo-editor .fs-simple-tool{
+  min-width:0;
+  min-height:50px;
+  padding:9px 4px;
+  border:1px solid rgba(255,255,255,.43);
+  border-radius:13px;
+  font-size:14px;
+  line-height:1.2;
+  font-weight:800;
+  color:#fff;
+  background:rgba(255,255,255,.13);
+}
+.fs-photo-editor .fs-simple-tool.chosen{
+  color:#11151f!important;
+  background:linear-gradient(120deg,#fff0bf 0%,#e6bf66 60%,#f4daa0 100%)!important;
+  border-color:#fff1c0!important;
+}
+.fs-photo-editor .fs-simple-tool.fs-simple-delete{
+  border-color:rgba(255,255,255,.35);
+}
+.fs-photo-editor .fs-simple-options{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  gap:9px;
+  animation:fs-simple-appear .16s ease-out;
+}
+@keyframes fs-simple-appear{
+  from{opacity:.6;transform:translateY(-3px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.fs-photo-editor .fs-simple-font-panel .fs-edit-fonts{
+  display:flex;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  width:100%;
+  gap:8px;
+  padding:3px 0;
+}
+.fs-photo-editor .fs-simple-font-panel .fs-edit-font{
+  min-height:44px!important;
+  min-width:75px;
+  padding:10px 12px!important;
+  font-size:14px!important;
+  border-radius:12px;
+}
+.fs-photo-editor .fs-simple-size-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+.fs-photo-editor .fs-simple-size-actions button{
+  min-height:48px;
+  padding:9px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.43);
+  background:rgba(255,255,255,.14);
+  color:#fff;
+  font-size:14px;
+  font-weight:800;
+}
+.fs-photo-editor .fs-simple-color-options{
+  flex-direction:row;
+  align-items:center;
+}
+.fs-photo-editor .fs-simple-color-options .fs-edit-colors{
+  justify-content:flex-start;
+  flex:1;
+  min-width:0;
+  gap:10px;
+  padding:7px 4px;
+}
+.fs-photo-editor .fs-simple-color-options .fs-edit-color{
+  width:35px;height:35px;flex-basis:35px;
+}
+.fs-photo-editor .fs-simple-color-options .fs-edit-eyedropper{
+  width:47px;height:47px;flex-basis:47px;
+}
+.fs-photo-editor .fs-simple-style-options{
+  flex-direction:row;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:9px;
+}
+.fs-photo-editor .fs-simple-style-options .fs-edit-style{
+  width:58px;height:48px;min-width:58px;
+  font-size:21px!important;
+  border-radius:12px;
+}
+.fs-photo-editor .fs-simple-panel .fs-edit-hint{
+  color:#f0f4ff!important;
+  font-size:12px!important;
+  font-weight:600;
+  margin:0;
+  text-align:center;
+  letter-spacing:.1px;
+}
+.fs-photo-editor .fs-simple-panel button:focus-visible{
+  outline:3px solid #f5d482!important;
+  outline-offset:2px;
+}
+.fs-photo-editor .fs-edit-text{
+  /* Quando o texto é minúsculo, o alvo continua acessível com o dedo. */
+  min-width:36px;
+  min-height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.fs-photo-editor .fs-edit-text span{max-width:100%;white-space:pre-wrap}
+@media(max-width:375px){
+  .fs-photo-editor .fs-simple-panel{padding-left:9px!important;padding-right:9px!important}
+  .fs-photo-editor .fs-simple-tools{gap:5px}
+  .fs-photo-editor .fs-simple-tool{font-size:12px;min-height:46px;padding:7px 2px}
+  .fs-photo-editor .fs-simple-primary button{font-size:13px;min-height:49px}
+}
+@media(max-height:690px){
+  .fs-photo-editor .fs-simple-panel{gap:6px!important;padding-top:7px!important}
+  .fs-photo-editor .fs-simple-primary button{min-height:44px}
+  .fs-photo-editor .fs-simple-tool{min-height:43px}
+  .fs-photo-editor .fs-simple-panel .fs-edit-hint{display:block!important;font-size:11px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .fs-photo-editor .fs-simple-options{animation:none}
+}
