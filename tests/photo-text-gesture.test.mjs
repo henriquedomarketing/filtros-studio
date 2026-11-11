@@ -78,7 +78,7 @@ test('botão dourado mostra coroa e EDITAR FOTO, com brilho reduzível',()=>{
   assert.match(css,/@keyframes fs-premium-sheen/);
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/animation:none/);
-  assert.match(html,/app\.js\?v=20261111-editor-edge-v12/);
+  assert.match(html,/app\.js\?v=20261111-add-text-above-v13/);
 });
 
 test('confirmações do editor usam o dourado premium',()=>{
