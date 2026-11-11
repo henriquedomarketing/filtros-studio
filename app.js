@@ -701,7 +701,13 @@ function photoEditorView(){
         <button type="button" class="fs-simple-tool ${editor.tool==='style'?'chosen':''}" data-act="text-tool" data-id="style" ${active?'':'disabled'} aria-expanded="${editor.tool==='style'}">Estilo</button>
         <button type="button" class="fs-simple-tool fs-simple-delete" data-act="text-delete" ${active?'':'disabled'}>Apagar</button>
       </div>
-      ${editor.tool==='font'?`<div class="fs-edit-fonts fs-simple-options" id="photoTextFonts" aria-label="Escolha a fonte">${fonts}</div>`:''}
+      ${editor.tool==='font'?`<div class="fs-simple-font-panel fs-simple-options">
+        <div class="fs-edit-fonts" id="photoTextFonts" aria-label="Escolha a fonte">${fonts}</div>
+        <div class="fs-simple-size-actions" role="group" aria-label="Ajustar tamanho do texto">
+          <button type="button" data-act="text-smaller" ${active?'':'disabled'}>− Menor</button>
+          <button type="button" data-act="text-larger" ${active?'':'disabled'}>Maior +</button>
+        </div>
+      </div>`:''}
       ${editor.tool==='color'?`<div class="fs-simple-color-options fs-simple-options">
         <div class="fs-edit-colors" id="photoTextColors" aria-label="Escolha a cor">${colors}</div>
         <button type="button" class="fs-edit-eyedropper" data-act="text-eyedropper" aria-label="Conta-gotas: escolher cor da foto ou moldura" title="Conta-gotas" ${active?'':'disabled'}>
@@ -3103,6 +3109,13 @@ if(act==='text-tool'){
   if(!app.photoEditor||!['font','color','style'].includes(uid))return;
   app.photoEditor.tool=app.photoEditor.tool===uid?null:uid;
   render();return;
+}
+if(act==='text-smaller'||act==='text-larger'){
+  const item=photoTextActive();
+  if(!item)return;
+  item.size=Math.max(4,Math.min(600,Math.round(item.size*(act==='text-smaller'?.75:1.25))));
+  photoTextRefreshLayers();
+  return;
 }
 if(act==='text-add'){photoTextAdd();return;}
 if(act==='text-edit'){photoTextComposeOpen();return;}
