@@ -24,6 +24,28 @@ function makeView(texts,tool){
   return view();
 }
 
+test('Adicionar texto aparece acima da foto, nunca duplicado no rodapé',()=>{
+  const html=makeView([],null);
+  const button=html.indexOf('data-act="text-add"');
+  const image=html.indexOf('id="photoTextStage"');
+  const toolbar=html.indexOf('aria-label="Ferramentas de texto"');
+  assert.ok(button>0&&button<image,'Botão deve aparecer antes da foto');
+  assert.ok(image<toolbar,'Painel inferior vem depois da foto');
+  assert.equal((html.match(/data-act="text-add"/g)||[]).length,1);
+  assert.match(html,/fs-simple-empty/);
+  assert.match(css,/\.fs-photo-editor \.fs-simple-panel\.fs-simple-empty\{/);
+  assert.match(css,/display:none!important/);
+});
+
+test('botão superior permanece e as ferramentas aparecem após escrever',()=>{
+  const html=makeView([{id:'t1',text:'Bom dia',size:80,font:'modern',color:'#FFFFFF',style:'plain'}],null);
+  assert.equal((html.match(/data-act="text-add"/g)||[]).length,1);
+  assert.ok(html.indexOf('data-act="text-add"')<html.indexOf('id="photoTextStage"'));
+  assert.doesNotMatch(html,/fs-simple-empty/);
+  assert.match(html,/data-id="text"/);
+  assert.match(html,/data-id="size"/);
+});
+
 test('editor começa apenas com Adicionar texto, sem controles pequenos',()=>{
   const html=makeView([],null);
   assert.match(html,/data-act="text-add"/);
