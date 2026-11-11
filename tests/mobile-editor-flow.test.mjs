@@ -63,7 +63,10 @@ test('editor mantém somente o campo de escrita, com opções após Pronto',()=>
   assert.doesNotMatch(compose,/fs-edit-compose-fonts|fs-edit-compose-options/);
   assert.match(view,/fs-edit-fonts/);
   assert.match(view,/fs-edit-colors/);
-  assert.match(view,/id="photoTextSize"/);
+  assert.doesNotMatch(view,/id="photoTextSize"/);
+  assert.match(view,/data-act="text-tool"/);
+  assert.match(view,/data-act="text-smaller"/);
+  assert.match(view,/data-act="text-larger"/);
 });
 
 test('15 fontes disponíveis para personalizar depois de escrever',()=>{
@@ -89,6 +92,6 @@ test('cores, proporções e cache coerentes com a identidade Filtros Studio',()=
   assert.match(css,/\.fs-photo-editor,\.fs-framing-screen\{/);
   assert.match(css,/background-color:#001893!important/);
   assert.match(css,/fs-frame-stage\[data-format="feed"\]/);
-  assert.match(html,/app\.js\?v=20261109-premium-pinch-v10/);
-  assert.match(html,/photo-editor\.css\?v=20261109-premium-pinch-v10/);
+  assert.match(html,/app\.js\?v=20261111-simple-editor-v11/);
+  assert.match(html,/photo-editor\.css\?v=20261111-simple-editor-v11/);
 });
