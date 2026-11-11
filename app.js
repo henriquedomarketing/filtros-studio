@@ -689,25 +689,31 @@ function photoEditorView(){
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
       </div>
     </div>
-    <div class="fs-edit-panel">
-      <div class="fs-edit-actions">
-        <button type="button" class="fs-edit-add" data-act="text-add">ADICIONA TEXTO</button>
-        <button type="button" class="fs-edit-action" data-act="text-edit" ${active?'':'disabled'}>Escrever</button>
-        <button type="button" class="fs-edit-action fs-edit-delete" data-act="text-delete" ${active?'':'disabled'} aria-label="Excluir texto selecionado">✕</button>
+    <div class="fs-edit-panel fs-simple-panel" aria-label="Ferramentas de texto">
+      <div class="fs-edit-actions fs-simple-primary">
+        <button type="button" class="fs-edit-add" data-act="text-add">＋ Adicionar texto</button>
+        ${active?.text?.trim()?`<button type="button" class="fs-edit-action fs-simple-rewrite" data-act="text-edit">Editar texto</button>`:''}
       </div>
-      <div class="fs-edit-fonts" id="photoTextFonts" aria-label="Fontes do texto">${fonts}</div>
-      <div class="fs-edit-style-colors">
-        <div class="fs-edit-styles" id="photoTextStyles" aria-label="Estilos de texto">${styles}</div>
-        <div class="fs-edit-colors" id="photoTextColors" aria-label="Cores do texto">${colors}</div>
+      ${editor.texts.some(item=>item.text.trim())?`
+      <div class="fs-simple-tools" role="group" aria-label="Personalizar texto selecionado">
+        <button type="button" class="fs-simple-tool ${editor.tool==='font'?'chosen':''}" data-act="text-tool" data-id="font" ${active?'':'disabled'} aria-expanded="${editor.tool==='font'}">Fonte</button>
+        <button type="button" class="fs-simple-tool ${editor.tool==='color'?'chosen':''}" data-act="text-tool" data-id="color" ${active?'':'disabled'} aria-expanded="${editor.tool==='color'}">Cor</button>
+        <button type="button" class="fs-simple-tool ${editor.tool==='style'?'chosen':''}" data-act="text-tool" data-id="style" ${active?'':'disabled'} aria-expanded="${editor.tool==='style'}">Estilo</button>
+        <button type="button" class="fs-simple-tool fs-simple-delete" data-act="text-delete" ${active?'':'disabled'}>Apagar</button>
+      </div>
+      ${editor.tool==='font'?`<div class="fs-edit-fonts fs-simple-options" id="photoTextFonts" aria-label="Escolha a fonte">${fonts}</div>`:''}
+      ${editor.tool==='color'?`<div class="fs-simple-color-options fs-simple-options">
+        <div class="fs-edit-colors" id="photoTextColors" aria-label="Escolha a cor">${colors}</div>
         <button type="button" class="fs-edit-eyedropper" data-act="text-eyedropper" aria-label="Conta-gotas: escolher cor da foto ou moldura" title="Conta-gotas" ${active?'':'disabled'}>
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="m15 5 4 4M14.2 6.2l3.6 3.6M8 13l8-8a2.4 2.4 0 0 1 3.4 3.4l-8 8-4.5 1 1.1-4.4Z"/>
             <path d="M6 18.5 4 20h4"/>
           </svg>
         </button>
-      </div>
-      <label class="fs-edit-size">Tamanho <input id="photoTextSize" type="range" min="36" max="320" step="4" value="${active?.size||92}" ${active?'':'disabled'} aria-label="Tamanho da letra"></label>
-      <p class="fs-edit-hint">Arraste com um dedo · Ajuste o tamanho com dois dedos</p>
+      </div>`:''}
+      ${editor.tool==='style'?`<div class="fs-edit-styles fs-simple-style-options fs-simple-options" id="photoTextStyles" aria-label="Escolha o estilo">${styles}</div>`:''}
+      <p class="fs-edit-hint">1 dedo move · 2 dedos ajustam</p>
+      `:''}
     </div>
     <div class="fs-edit-compose hidden" id="photoTextCompose">
       <div class="fs-edit-compose-head"><strong>Escreva seu texto</strong><button type="button" data-act="text-compose-done">Pronto</button></div>
@@ -833,17 +839,17 @@ function photoTextOpen(){
   const photo=app.captureData;
   if(!photo.baseBlob){photo.baseBlob=photo.blob;photo.baseUrl=photo.url;}
   const texts=(photo.texts||[]).map(item=>({...item}));
-  app.photoEditor={texts,selectedId:texts.at(-1)?.id||null,composing:false,drag:null,saving:false,eyedropper:null};
+  app.photoEditor={texts,selectedId:texts.at(-1)?.id||null,composing:false,drag:null,saving:false,eyedropper:null,tool:null};
   app.page='editor';
   render();
-  if(!texts.length)photoTextAdd();
+  // O editor inicia limpo: o usuário escolhe quando adicionar texto.
 }
 
 function photoTextAdd(){
   const e=app.photoEditor;
   if(!e)return;
-  const item={id:id(),text:'',x:.5,y:.48,size:92,font:'classic',color:'#FFFFFF',style:'plain'};
-  e.texts.push(item);e.selectedId=item.id;
+  const item={id:id(),text:'',x:.5,y:.48,size:80,font:'modern',color:'#FFFFFF',style:'plain'};
+  e.texts.push(item);e.selectedId=item.id;e.tool=null;
   photoTextRefreshLayers();
   photoTextRefreshControls();
   photoTextComposeOpen();
@@ -876,9 +882,7 @@ function photoTextRefreshControls(){
     el.disabled=!active;
     el.setAttribute('aria-pressed',String(chosen));
   });
-  const slider=$('photoTextSize');
-  if(slider){slider.disabled=!active;if(active)slider.value=String(active.size);}
-  document.querySelectorAll('[data-act="text-edit"],[data-act="text-delete"],[data-act="text-eyedropper"]').forEach(el=>el.disabled=!active);
+  document.querySelectorAll('[data-act="text-edit"],[data-act="text-delete"],[data-act="text-eyedropper"],[data-act="text-tool"]').forEach(el=>el.disabled=!active);
 }
 
 function photoTextComposeOpen(){
@@ -902,7 +906,7 @@ function photoTextComposeDone(){
   e.composing=false;
   $('photoTextInput')?.blur();
   $('photoTextCompose')?.classList.add('hidden');
-  photoTextRefreshLayers();photoTextRefreshControls();
+  render();
 }
 
 function photoTextCancel(){
@@ -954,9 +958,6 @@ function photoTextInputChanged(event){
   if(event.target.id==='photoTextInput'){
     active.text=event.target.value.slice(0,220);
     photoTextRefreshLayers();
-  }else if(event.target.id==='photoTextSize'){
-    active.size=Math.max(36,Math.min(320,Number(event.target.value)||92));
-    photoTextRefreshLayers();
   }
 }
 
@@ -982,7 +983,7 @@ function photoTextGestureTransform(start,current,rect){
   return {
     x:Math.max(.07,Math.min(.93,start.x+(current.center.x-start.center.x)/Math.max(1,rect.width))),
     y:Math.max(.05,Math.min(.95,start.y+(current.center.y-start.center.y)/Math.max(1,rect.height))),
-    size:Math.max(36,Math.min(320,Math.round(start.size*scale)))
+    size:Math.max(4,Math.min(600,Math.round(start.size*scale)))
   };
 }
 function photoTextPointerDown(event){
@@ -1025,8 +1026,6 @@ function photoTextPointerMove(event){
     el.style.top=(item.y*100).toFixed(2)+'%';
     el.style.fontSize=(item.size/1080*stage.getBoundingClientRect().width).toFixed(2)+'px';
   }
-  const slider=$('photoTextSize');
-  if(slider)slider.value=String(item.size);
   event.preventDefault();
 }
 function photoTextPointerUp(event){
@@ -3100,6 +3099,11 @@ if(act==='photo-edit'){photoTextOpen();return;}
 if(act==='text-eyedropper'){void openPhotoEyedropper();return;}
 if(act==='eye-cancel'){cancelPhotoEyedropper();return;}
 if(act==='eye-use-color'){usePhotoEyedropperColor();return;}
+if(act==='text-tool'){
+  if(!app.photoEditor||!['font','color','style'].includes(uid))return;
+  app.photoEditor.tool=app.photoEditor.tool===uid?null:uid;
+  render();return;
+}
 if(act==='text-add'){photoTextAdd();return;}
 if(act==='text-edit'){photoTextComposeOpen();return;}
 if(act==='text-compose-done'){photoTextComposeDone();return;}
@@ -3110,7 +3114,8 @@ if(act==='text-delete'){
   if(editor&&selected){
     editor.texts=editor.texts.filter(item=>item.id!==selected.id);
     editor.selectedId=editor.texts.at(-1)?.id||null;
-    photoTextRefreshLayers();photoTextRefreshControls();
+    if(!editor.texts.length)editor.tool=null;
+    render();
   }
   return;
 }
