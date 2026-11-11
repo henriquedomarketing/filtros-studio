@@ -683,16 +683,16 @@ function photoEditorView(){
       <span class="fs-edit-top-title">Editar foto</span>
       <button type="button" data-act="text-finish" class="fs-edit-top-done">Concluir</button>
     </header>
+    <div class="fs-editor-add-top">
+      <button type="button" class="fs-edit-add-top" data-act="text-add">＋ Adicionar texto</button>
+    </div>
     <div class="fs-edit-workspace">
       <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
       </div>
     </div>
-    <div class="fs-edit-panel fs-simple-panel" aria-label="Ferramentas de texto">
-      <div class="fs-edit-actions fs-simple-primary">
-        <button type="button" class="fs-edit-add" data-act="text-add">＋ Adicionar texto</button>
-      </div>
+    <div class="fs-edit-panel fs-simple-panel ${editor.texts.some(item=>item.text.trim())?'':'fs-simple-empty'}" aria-label="Ferramentas de texto">
       ${editor.texts.some(item=>item.text.trim())?`
       <div class="fs-simple-tools" role="group" aria-label="Ferramentas de edição">
         <button type="button" class="fs-simple-tool ${editor.tool==='text'?'chosen':''}" data-act="text-tool" data-id="text" ${active?'':'disabled'} aria-pressed="${editor.tool==='text'}">
