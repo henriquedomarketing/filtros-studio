@@ -35,7 +35,7 @@ test('editor começa apenas com Adicionar texto, sem controles pequenos',()=>{
 
 test('após escrever, mostra somente quatro opções grandes e nenhuma aba aberta',()=>{
   const html=makeView([{id:'t1',text:'Bom dia',size:80,font:'modern',color:'#FFFFFF',style:'plain'}],null);
-  const buttons=(html.match(/class="fs-simple-tool[^"]*"/g)||[]).length;
+  const buttons=(html.match(/class="fs-simple-tool(?: [^"]*)?"/g)||[]).length;
   assert.equal(buttons,4);
   assert.match(html,/data-id="font"/);
   assert.match(html,/data-id="color"/);
