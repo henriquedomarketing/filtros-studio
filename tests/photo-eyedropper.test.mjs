@@ -45,5 +45,5 @@ test('fontes web e cores personalizadas são exportadas sem trocar a fonte',()=>
   assert.match(source,/document\.fonts\.load\(/);
   assert.match(source,/for\(const item of texts\)await loadPhotoTextFont\(item\)/);
   assert.match(html,/fonts\.googleapis\.com\/css2/);
-  assert.match(html,/20261109-premium-pinch-v10/);
+  assert.match(html,/20261111-simple-editor-v11/);
 });
