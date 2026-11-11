@@ -43,8 +43,8 @@ test('limites evitam escala extrema, números inválidos e imagem movida',()=>{
   const start={center:{x:100,y:100},distance:100,x:.5,y:.5,size:100};
   const large=transform(start,{center:{x:999,y:-999},distance:900},{width:300,height:500});
   assert.equal(large.size,600);
-  assert.equal(large.x,.93);
-  assert.equal(large.y,.05);
+  assert.equal(large.x,1.2);
+  assert.equal(large.y,-.2);
   const tiny=transform(start,{center:{x:0,y:0},distance:1},{width:300,height:500});
   assert.equal(tiny.size,4);
   const pointer=app.slice(app.indexOf('function photoTextPointerDown('),app.indexOf('function photoTextWrap('));
@@ -54,6 +54,14 @@ test('limites evitam escala extrema, números inválidos e imagem movida',()=>{
   assert.doesNotMatch(pointer,/drawFramedSource|framingDraft|galleryBase/);
 });
 
+test('arraste pode alcançar a borda inferior e sair parcialmente do quadro',()=>{
+  const start={center:{x:0,y:0},distance:1,x:.5,y:.5,size:80};
+  const atBottom=transform(start,{center:{x:0,y:450},distance:1},{width:300,height:500});
+  assert.equal(atBottom.y,1.2);
+  const canvas=app.slice(app.indexOf('function photoTextDraw('),app.indexOf('async function photoTextFinish()'));
+  assert.match(canvas,/const y=item\.y\*canvasHeight;/);
+  assert.doesNotMatch(canvas,/Math\.max\(height\/2/);
+});
 test('prévia em px compatível com navegadores sem unidades cqw',()=>{
   assert.match(app,/function photoTextSyncPixels\(\)/);
   assert.match(app,/stage\.getBoundingClientRect\(\)\.width/);
@@ -70,7 +78,7 @@ test('botão dourado mostra coroa e EDITAR FOTO, com brilho reduzível',()=>{
   assert.match(css,/@keyframes fs-premium-sheen/);
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/animation:none/);
-  assert.match(html,/app\.js\?v=20261111-simple-editor-v11/);
+  assert.match(html,/app\.js\?v=20261111-editor-edge-v12/);
 });
 
 test('confirmações do editor usam o dourado premium',()=>{
