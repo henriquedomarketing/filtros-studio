@@ -674,7 +674,7 @@ function photoEditorView(){
     `<button type="button" class="fs-edit-font ${active?.font===key?'chosen':''}" data-act="text-font" data-id="${key}" ${active?'':'disabled'} style="font-family:${escapeHtml(font.css)};font-weight:${font.weight}">${font.label}</button>`
   ).join('');
   const styles=[['none','Sem sombra'],['plain','Sombra suave'],['shadow','Sombra forte'],['dark','Faixa escura'],['light','Faixa clara'],['outline','Contorno']].map(([key,label])=>
-    `<button type="button" class="fs-edit-style ${active?.style===key?'chosen':''}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="${label}">${label}</button>`
+    `<button type="button" class="fs-edit-style fs-style-preview-card ${active?.style===key?'chosen':''}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Aplicar ${label}" aria-pressed="${active?.style===key?'true':'false'}"><span class="fs-style-preview fs-style-preview--${key}" aria-hidden="true"><span>Aa</span></span><span class="fs-style-preview-label">${label}</span></button>`
   ).join('');
   const colors=PHOTO_TEXT_COLORS.map(color=>
     `<button type="button" class="fs-edit-color ${active?.color===color?'chosen':''}" data-act="text-color" data-id="${color}"
@@ -683,13 +683,10 @@ function photoEditorView(){
   return `<section class="fs-photo-editor" aria-label="Editor de texto para foto">
     <header class="fs-edit-top">
       <button type="button" data-act="text-cancel" class="fs-edit-top-back">← <span>Voltar</span></button>
-      <span class="fs-edit-top-title">Editar foto</span>
+      <span class="fs-edit-top-title">Texto</span>
       <button type="button" data-act="text-finish" class="fs-edit-top-done">Salvar edição</button>
     </header>
-    <div class="fs-editor-add-top">
-      <button type="button" class="fs-edit-add-top" data-act="text-add">＋ Adicionar texto</button>
-    </div>
-    <div class="fs-edit-workspace">
+     <div class="fs-edit-workspace">
       <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
@@ -738,7 +735,7 @@ function photoEditorView(){
         <div class="fs-edit-fonts" id="photoTextFonts" aria-label="Escolha a fonte">${fonts}</div>
         <div class="fs-edit-styles fs-simple-style-options" id="photoTextStyles" aria-label="Escolha o efeito">${styles}</div>
       </div>`:''}
-      <p class="fs-edit-hint">Toque para escrever · Arraste para mover · 2 dedos ampliam e giram</p>
+      <p class="fs-edit-hint">Toque duas vezes para editar</p>
       `:''}
     </div>
     ${photoEyedropperView()}
@@ -864,7 +861,9 @@ function photoTextOpen(){
   app.photoEditor={texts,selectedId:texts.at(-1)?.id||null,composing:false,drag:null,saving:false,eyedropper:null,tool:null};
   app.page='editor';
   render();
-  // O editor inicia limpo: o usuário escolhe quando adicionar texto.
+  // A ação ADICIONAR TEXTO abre diretamente o teclado no mesmo gesto do usuário.
+  // Preserva os textos anteriores ao reabrir uma foto já editada.
+  photoTextAdd();
 }
 
 function photoTextAdd(){
@@ -1298,7 +1297,7 @@ function previewView(){
     <div class="fs-result-picture" style="--photo-ratio:${app.captureData.width||1080} / ${app.captureData.height||1920}">
       <img src="${escapeHtml(app.captureData.url)}" alt="Foto pronta com filtro aplicado"></div>
     <div class="fs-result-buttons">
-      <button type="button" class="fs-result-premium" data-act="photo-edit"><span class="fs-premium-crown" aria-hidden="true">👑</span><strong>EDITAR FOTO</strong></button>
+      <button type="button" class="fs-result-premium" data-act="photo-edit"><span class="fs-premium-crown" aria-hidden="true">👑</span><strong>ADICIONAR TEXTO</strong></button>
       <button type="button" class="fs-result-save" data-act="photo-save"><span aria-hidden="true">↓</span> Salvar foto</button>
       <button type="button" class="fs-result-retry" data-act="photo-retake">↻ Nova foto</button>
     </div>
@@ -2726,6 +2725,81 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-canva-toolbar button:active{background:#f1edfa}
 .fs-photo-editor .fs-edit-stage:has(.fs-edit-inline-input:not(.hidden)) .fs-canva-toolbar{display:none}
 @media(max-width:430px){.fs-photo-editor .fs-canva-toolbar{top:-57px}.fs-photo-editor .fs-canva-toolbar button{min-width:39px;height:37px}}
+
+/* Editor minimalista: palco claro e ferramentas contextuais */
+.fs-photo-editor{background:#f7f7f9!important;color:#1c1c23!important}
+.fs-photo-editor .fs-edit-top{min-height:58px!important;padding:8px 16px!important;background:#fff!important;border-bottom:1px solid #e8e8ee!important;box-shadow:none!important;color:#22232a!important;backdrop-filter:none!important}
+.fs-photo-editor .fs-edit-top-title{color:#25242c!important;font-size:15px!important;font-weight:650!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-back{color:#282831!important;background:transparent!important;border:0!important;padding:8px 4px!important;font-weight:600!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-done{background:#873df2!important;color:#fff!important;border:0!important;border-radius:10px!important;padding:10px 13px!important;min-width:0!important;font-size:13px!important;box-shadow:none!important}
+.fs-photo-editor .fs-editor-add-top{position:absolute!important;left:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:8;padding:0!important;width:auto!important;background:transparent!important}
+.fs-photo-editor .fs-editor-add-top .fs-edit-add-top{min-height:45px!important;min-width:104px!important;padding:9px 15px!important;border:1px solid #e5e5eb!important;border-radius:26px!important;background:#fff!important;color:#26252d!important;box-shadow:0 3px 14px #00000014!important;font-size:14px!important;font-weight:650!important}
+.fs-photo-editor .fs-edit-workspace{padding:12px 14px 72px!important;background:#f7f7f9!important;overflow:hidden!important}
+.fs-photo-editor .fs-edit-stage{width:min(calc(100vw - 52px),calc((100dvh - 230px)*.5625),440px)!important;min-width:0!important;border-radius:0!important;box-shadow:0 3px 15px #0000001c!important}
+.fs-photo-editor .fs-edit-panel{background:#fff!important;border-top:1px solid #e9e9ef!important;color:#292832!important;padding:9px 10px calc(9px + env(safe-area-inset-bottom,0px))!important;gap:5px!important}
+.fs-photo-editor .fs-simple-tools{display:flex!important;gap:4px!important;justify-content:space-around!important}
+.fs-photo-editor .fs-simple-tool{min-height:47px!important;flex:1!important;border:0!important;border-radius:9px!important;background:transparent!important;color:#3b3944!important;padding:6px 2px!important;font-size:11px!important;font-weight:600!important;box-shadow:none!important}
+.fs-photo-editor .fs-simple-tool svg{width:19px!important;height:19px!important}
+.fs-photo-editor .fs-simple-tool.chosen{background:#f1eaff!important;color:#7835dc!important;border:0!important}
+.fs-photo-editor .fs-simple-options{background:#fff!important;color:#24242b!important;border:0!important;box-shadow:none!important}
+.fs-photo-editor .fs-edit-hint{display:none!important}
+.fs-photo-editor .fs-canva-toolbar{top:-58px!important;background:#fff!important;box-shadow:0 3px 15px #0002!important;border:1px solid #ededf2!important;padding:3px 9px!important}
+.fs-photo-editor .fs-canva-toolbar button{font-size:21px!important;min-width:39px!important;height:37px!important}
+.fs-photo-editor .fs-canva-toolbar.hidden{display:none!important}
+.fs-photo-editor .fs-edit-text.selected{outline:1.5px solid #9747ff!important;outline-offset:2px!important}
+.fs-photo-editor .fs-canva-handle-scale{width:17px!important;height:31px!important;right:-10px!important}
+.fs-photo-editor .fs-canva-handle-rotate{width:30px!important;height:30px!important;bottom:-43px!important;font-size:20px!important}
+@media(max-height:740px){.fs-photo-editor .fs-edit-workspace{padding-bottom:62px!important}.fs-photo-editor .fs-edit-stage{width:min(calc(100vw - 60px),calc((100dvh - 210px)*.5625))!important}}
+
+/* Editor de texto clean: tela neutra, foto em destaque, controles contextuais. */
+.fs-photo-editor{background:#f7f7f9!important;color:#1d1d23!important}
+.fs-photo-editor .fs-edit-top{background:#fff!important;border-bottom:1px solid #ececf0!important;color:#18181d!important;backdrop-filter:none!important;min-height:60px!important;padding:8px 16px!important}
+.fs-photo-editor .fs-edit-top-title{color:#24242a!important;font-size:15px!important;font-weight:650!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-back{color:#22232b!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-done{background:#202027!important;color:#fff!important;border:0!important;border-radius:12px!important;font-size:13px!important;padding:11px 13px!important;box-shadow:none!important}
+.fs-photo-editor .fs-editor-add-top{display:none!important}
+.fs-photo-editor .fs-edit-workspace{background:#f7f7f9!important;padding:18px 18px 30px!important;overflow:hidden!important}
+.fs-photo-editor .fs-edit-stage{width:min(calc(100vw - 62px),calc((100dvh - 260px)*0.5625),420px)!important;min-width:120px!important;border-radius:4px!important;box-shadow:0 8px 25px #00000018!important;overflow:visible!important}
+.fs-photo-editor .fs-edit-panel{background:#fff!important;color:#25252b!important;border-top:1px solid #eeeef2!important;padding:9px 12px calc(10px + env(safe-area-inset-bottom,0px))!important;box-shadow:none!important;gap:5px!important}
+.fs-photo-editor .fs-simple-tools{display:flex!important;justify-content:space-around!important;gap:4px!important}
+.fs-photo-editor .fs-simple-tool{min-height:46px!important;min-width:58px!important;flex:1!important;padding:5px 3px!important;border:0!important;background:transparent!important;color:#303039!important;border-radius:10px!important;box-shadow:none!important;font-size:11px!important;font-weight:600!important}
+.fs-photo-editor .fs-simple-tool svg{width:21px!important;height:21px!important}
+.fs-photo-editor .fs-simple-tool.chosen{background:#f1ebff!important;color:#7132db!important}
+.fs-photo-editor .fs-simple-options{background:#fff!important;color:#20202a!important;box-shadow:none!important;border-color:#eee!important}
+.fs-photo-editor .fs-simple-option-button{background:#f3f3f6!important;color:#24242a!important;border-color:#e7e7ed!important}
+.fs-photo-editor .fs-edit-hint{display:none!important}
+.fs-photo-editor .fs-canva-toolbar{top:-59px!important;border:1px solid #ededf1!important;box-shadow:0 4px 14px #00000016!important}
+.fs-photo-editor .fs-canva-toolbar.hidden{display:none!important}
+.fs-photo-editor .fs-canva-toolbar button{font-size:21px!important}
+.fs-photo-editor .fs-edit-text.selected{outline:2px solid #9747ff!important}
+@media(max-height:730px){.fs-photo-editor .fs-edit-stage{width:min(calc(100vw - 80px),calc((100dvh - 235px)*0.5625),400px)!important}}
+
+/* Preview maior, aproveitando a área disponível sem painéis extras. */
+.fs-photo-editor .fs-edit-workspace{padding:8px 9px 12px!important;min-height:0!important}
+.fs-photo-editor .fs-edit-stage{width:min(calc(100vw - 24px),calc((100dvh - 164px)*0.5625),520px)!important;min-width:150px!important}
+.fs-photo-editor .fs-edit-panel.fs-simple-empty{display:none!important}
+.fs-photo-editor:has(.fs-edit-inline-input:not(.hidden)) .fs-edit-panel{display:none!important}
+.fs-photo-editor:has(.fs-edit-inline-input:not(.hidden)) .fs-edit-top{display:none!important}
+.fs-photo-editor:has(.fs-edit-inline-input:not(.hidden)) .fs-edit-workspace{padding:8px!important;align-items:flex-start!important}
+.fs-photo-editor:has(.fs-edit-inline-input:not(.hidden)) .fs-edit-stage{width:min(calc(100vw - 22px),calc((100dvh - 160px)*0.5625),520px)!important}
+.fs-photo-editor .fs-edit-inline-input{background:transparent!important;border:1px dashed #9a59e8!important;outline:2px solid #9747ff!important;outline-offset:3px!important;border-radius:4px!important;box-shadow:none!important;padding:3px!important}
+.fs-photo-editor .fs-edit-inline-input::placeholder{color:rgba(255,255,255,.8)!important}
+@media(max-height:760px){.fs-photo-editor .fs-edit-stage{width:min(calc(100vw - 22px),calc((100dvh - 155px)*0.5625),490px)!important}}
+
+/* Miniaturas reais de cada estilo, em vez de botões apenas com texto. */
+.fs-photo-editor .fs-edit-styles.fs-simple-style-options{display:flex!important;flex-wrap:nowrap!important;gap:10px!important;overflow-x:auto!important;overscroll-behavior-x:contain!important;scroll-snap-type:x proximity!important;padding:9px 3px 12px!important;scrollbar-width:none}
+.fs-photo-editor .fs-edit-styles::-webkit-scrollbar{display:none}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card{flex:0 0 98px!important;width:98px!important;min-height:104px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:6px!important;border:1px solid #e3e3e8!important;background:#fff!important;color:#34343c!important;border-radius:13px!important;padding:7px!important;box-shadow:none!important;scroll-snap-align:start!important;font-size:11px!important;font-weight:600!important;white-space:normal!important;line-height:1.2!important}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card.chosen{border:2px solid #9747ff!important;background:#f9f5ff!important;color:#5224a0!important;padding:6px!important}
+.fs-photo-editor .fs-style-preview{display:flex;align-items:center;justify-content:center;width:82px;height:60px;border-radius:8px;background:#68686d;overflow:hidden}
+.fs-photo-editor .fs-style-preview span{font:800 32px/1 Arial,sans-serif;color:#fff;letter-spacing:-2px}
+.fs-photo-editor .fs-style-preview--none span{text-shadow:none}
+.fs-photo-editor .fs-style-preview--plain span{text-shadow:1px 2px 3px #0009}
+.fs-photo-editor .fs-style-preview--shadow span{text-shadow:2px 4px 2px #000,0 0 7px #000}
+.fs-photo-editor .fs-style-preview--dark span{background:#141419b8;padding:4px 9px;border-radius:4px;text-shadow:none}
+.fs-photo-editor .fs-style-preview--light span{background:#ffffffed;color:#222;padding:4px 9px;border-radius:4px;text-shadow:none}
+.fs-photo-editor .fs-style-preview--outline span{-webkit-text-stroke:1.8px #151515;text-shadow:none}
+.fs-photo-editor .fs-style-preview-label{display:block;text-align:center;max-width:100%;font-size:11px!important;line-height:1.2!important}
 `;
 
 function ensurePhotoEditorStyles(){
