@@ -664,7 +664,7 @@ function photoTextLayer(item){
     font-family:${escapeHtml(font.css)};font-weight:${font.weight};color:${escapeHtml(color)};
     transform:translate(-50%,-50%) rotate(${Number(item.rotation)||0}deg)">
     <span>${escapeHtml(item.text||'Seu texto').replace(/\n/g,'<br>')}</span>
-    ${app.photoEditor?.selectedId===item.id&&!composing?'<span class="fs-canva-handle fs-canva-handle-scale" data-text-handle="scale" aria-label="Arraste para redimensionar">⤡</span><span class="fs-canva-handle fs-canva-handle-rotate" data-text-handle="rotate" aria-label="Arraste para girar">↻</span>':''}
+    ${app.photoEditor?.selectedId===item.id&&!composing?'<span class="fs-canva-handle fs-canva-handle-scale" data-text-handle="scale" aria-label="Arraste para redimensionar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16 16 8M9 8h7v7M8 12v4h4"/></svg></span><span class="fs-canva-handle fs-canva-handle-rotate" data-text-handle="rotate" aria-label="Arraste para girar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 6M20 5v6h-6"/></svg></span><button type="button" class="fs-canva-delete" data-act="text-delete" aria-label="Excluir texto selecionado" title="Excluir texto"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v6M14 11v6"/></svg></button>':''}
   </div>`;
 }
 
@@ -700,9 +700,6 @@ function photoEditorView(){
     <div class="fs-edit-panel fs-simple-panel ${editor.texts.some(item=>item.text.trim())?'':'fs-simple-empty'}" aria-label="Ferramentas de texto">
       ${editor.texts.some(item=>item.text.trim())?`
       <div class="fs-simple-tools" role="group" aria-label="Ferramentas de edição">
-        <button type="button" class="fs-simple-tool ${editor.tool==='text'?'chosen':''}" data-act="text-tool" data-id="text" ${active?'':'disabled'} aria-pressed="${editor.tool==='text'}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M12 7v13M8 20h8M8 4h8"/></svg><span>Adicionar texto</span>
-        </button>
         <button type="button" class="fs-simple-tool ${editor.tool==='font'?'chosen':''}" data-act="text-tool" data-id="font" ${active?'':'disabled'} aria-pressed="${editor.tool==='font'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19h16M6 16l6-12 6 12M8 12h8"/></svg><span>Fontes</span></button>
         <button type="button" class="fs-simple-tool ${editor.tool==='color'?'chosen':''}" data-act="text-tool" data-id="color" ${active?'':'disabled'} aria-pressed="${editor.tool==='color'}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-2.8 4.1-6 7.7-6 11a6 6 0 0 0 12 0c0-3.3-3.2-6.9-6-11Z"/><path d="M9 15a3 3 0 0 0 3 3"/></svg><span>Cor</span>
@@ -1095,6 +1092,7 @@ function photoTextGestureTransform(start,current,rect){
 function photoTextPointerDown(event){
   const editor=app.photoEditor;
   if(app.page!=='editor'||!editor||editor.composing||editor.eyedropper||editor.saving)return;
+  if(event.target.closest?.('[data-act="text-delete"]'))return;
   const stage=event.target.closest?.('#photoTextStage');
   if(!stage)return;
   const activeDrag=editor.drag;
@@ -2820,6 +2818,32 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-edit-panel .fs-simple-tools{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}
 .fs-photo-editor .fs-simple-tool{font-size:11px!important;min-width:0!important}
 .fs-photo-editor .fs-simple-tool span{font-size:11px!important}
+
+/* Fundo do editor na identidade azul; foto segue intacta. */
+.fs-photo-editor{background:#061d78!important;color:#fff!important}
+.fs-photo-editor .fs-edit-workspace{background:linear-gradient(145deg,#122d91 0%,#061b72 100%)!important}
+.fs-photo-editor .fs-edit-top{background:#071e7b!important;color:#fff!important;border-bottom:1px solid #29449f!important}
+.fs-photo-editor .fs-edit-top-title{color:#fff!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-back{color:#fff!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-done{background:#fff!important;color:#071e7b!important}
+.fs-photo-editor .fs-edit-panel{background:#071e7b!important;border-top:1px solid #344ba5!important}
+.fs-photo-editor .fs-edit-panel .fs-simple-tools{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.fs-photo-editor .fs-canva-handle{width:29px!important;height:29px!important;background:#fff!important;color:#6433c6!important;border:1.5px solid #9a68f4!important;box-shadow:0 1px 5px #0003!important}
+.fs-photo-editor .fs-canva-handle-scale{right:-17px!important;top:100%!important;transform:translateY(-50%)!important;border-radius:8px!important}
+.fs-photo-editor .fs-canva-handle-rotate{left:50%!important;bottom:-44px!important;transform:translateX(-50%)!important;border-radius:50%!important}
+.fs-photo-editor .fs-canva-handle svg{width:17px!important;height:17px!important;pointer-events:none}
+
+.fs-photo-editor .fs-canva-delete{position:absolute!important;left:-16px!important;top:-17px!important;display:grid!important;place-items:center!important;width:30px!important;height:30px!important;border:1.5px solid #a16bf0!important;border-radius:50%!important;background:#fff!important;color:#6d37bd!important;box-shadow:0 2px 7px #0003!important;z-index:8!important;cursor:pointer!important;touch-action:manipulation!important;padding:0!important}
+.fs-photo-editor .fs-canva-delete svg{pointer-events:none!important}
+
+/* Prévia de foto: imagem protagonista, botões compactos, sem excesso de área vazia. */
+.client-app.is-preview .fs-result-compact{gap:14px!important;width:100%!important;max-width:520px!important;margin:0 auto!important;padding:0 10px 8px!important;box-sizing:border-box!important}
+.client-app.is-preview .fs-result-picture{width:min(calc(100vw - 54px),calc((100dvh - 370px)*.5625),410px)!important;min-width:210px!important;max-width:100%!important;aspect-ratio:9/16!important;border-radius:13px!important;box-shadow:0 9px 26px #0003!important}
+.client-app.is-preview .fs-result-buttons{width:min(100%,440px)!important;gap:8px!important}
+.client-app.is-preview .fs-result-buttons button{min-height:46px!important;border-radius:13px!important;font-size:14px!important}
+.client-app.is-preview .fs-result-buttons .fs-result-premium{min-height:49px!important}
+.client-app.is-preview .fs-result-buttons .fs-result-retry{min-height:40px!important}
+@media(max-height:760px){.client-app.is-preview .fs-result-picture{width:min(calc(100vw - 62px),calc((100dvh - 315px)*.5625),380px)!important;min-width:175px!important}.client-app.is-preview .fs-result-compact{gap:10px!important}}
 `;
 
 function ensurePhotoEditorStyles(){
