@@ -861,12 +861,19 @@ function photoTextOpen(){
   photoTextAdd();
 }
 
+function photoTextHideAddPrompt(editor){
+  if(!editor)return;
+  clearTimeout(editor.addTextTimer);
+  editor.addTextTimer=null;
+  editor.addTextPoint=null;
+  document.querySelector('.fs-edit-add-here')?.remove();
+}
 function photoTextAdd(){
   const e=app.photoEditor;
   if(!e)return;
   const item={id:id(),text:'',x:.5,y:.48,size:80,font:'modern',color:'#FFFFFF',style:'plain',effectColor:'#000000',rotation:0};
   if(e.addTextPoint){item.x=e.addTextPoint.x;item.y=e.addTextPoint.y;}
-  e.addTextPoint=null;
+  photoTextHideAddPrompt(e);
   e.texts.push(item);e.selectedId=item.id;e.tool=null;
   photoTextRefreshLayers();
   photoTextRefreshControls();
@@ -958,7 +965,7 @@ function photoTextComposeOpen(){
   const editor=app.photoEditor,item=photoTextActive(),field=$('photoTextInput');
   if(!editor||!item||!field)return;
   editor.composing=true;
-  editor.addTextPoint=null;
+  photoTextHideAddPrompt(editor);
   field.value=item.text;
   photoTextRefreshLayers();
   photoTextSyncInline();
@@ -1010,7 +1017,12 @@ function photoTextStageClicked(event){
   if(!rect?.width||!rect?.height)return;
   editor.addTextPoint={x:Math.max(.08,Math.min(.92,(event.clientX-rect.left)/rect.width)),y:Math.max(.06,Math.min(.94,(event.clientY-rect.top)/rect.height))};
   editor.selectedId=null;editor.tool=null;
+  clearTimeout(editor.addTextTimer);
   render();
+  editor.addTextTimer=setTimeout(()=>{
+    if(app.page!=='editor'||app.photoEditor!==editor)return;
+    photoTextHideAddPrompt(editor);
+  },1000);
 }
 function photoTextLayerKeydown(event){
   if(app.page!=='editor'||!['Enter',' '].includes(event.key))return;
@@ -1128,6 +1140,7 @@ function photoTextPointerDown(event){
     if(!el)return;
     id=el.dataset.photoText;
     if(!editor.texts.some(item=>item.id===id))return;
+    photoTextHideAddPrompt(editor);
     const wasSelected=editor.selectedId===id;
     editor.selectedId=id;
     editor.drag={id,pointers:new Map(),start:null,moved:false,multi:false,handle,wasSelected,
@@ -3167,6 +3180,9 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-edit-add-here{position:absolute;z-index:7;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;padding:7px 11px 7px 8px;max-width:90%;min-height:42px;border:1px solid rgba(255,255,255,.8);border-radius:999px;background:rgba(0,24,147,.94);color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3);font-size:12px;font-weight:750;white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
 .fs-photo-editor .fs-edit-add-here>span:first-child{display:grid;place-items:center;background:#fff;color:#001893;border-radius:50%;width:25px;height:25px;font-size:23px;line-height:1;font-weight:500;flex:none}
 .fs-photo-editor .fs-edit-add-here:focus-visible{outline:3px solid #fff;outline-offset:3px}
+
+/* Confirmação compacta, discreta e com alvo de toque confortável. */
+.fs-photo-editor .fs-edit-confirm{width:30px;height:30px;min-width:30px;min-height:30px;border:1px solid rgba(255,255,255,.7);background:rgba(25,36,56,.82);color:#fff;font-size:17px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 `;
 
 function ensurePhotoEditorStyles(){
