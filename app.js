@@ -693,7 +693,7 @@ function photoEditorView(){
       <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--editor-ratio:${(photo.width||1080)/(photo.height||1920)};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
-        ${'<div class="fs-canva-toolbar '+(active&&!editor.composing?'':'hidden')+'" role="toolbar" aria-label="Ações do texto selecionado"><button type="button" data-act="text-add" aria-label="Adicionar texto" title="Adicionar texto">＋</button><button type="button" data-act="text-duplicate" aria-label="Duplicar texto" title="Duplicar texto">▣</button><button type="button" data-act="text-delete" aria-label="Excluir texto" title="Excluir texto">🗑</button><button type="button" data-act="text-more" aria-label="Mais opções de texto" title="Mais opções">•••</button></div>'}
+        
         <span class="fs-edit-text-measure" id="photoTextMeasure" aria-hidden="true"></span>
         <textarea class="fs-edit-inline-input hidden" id="photoTextInput" rows="1" maxlength="220"
           placeholder="Digite seu texto" aria-label="Editar texto diretamente na foto"
