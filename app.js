@@ -643,6 +643,8 @@ const PHOTO_TEXT_FONTS={
 };
 const PHOTO_TEXT_COLORS=['#FFFFFF','#101828','#FFE16B','#FF4B68','#42C9FF','#1ADBA7','#B796FF'];
 const PHOTO_TEXT_STYLES=['none','plain','shadow','dark','light','outline'];
+const PHOTO_EFFECT_COLORS=['#000000','#FFFFFF','#FF3131','#0047FF','#14D600','#FFD12A','#FF892A','#8B30E8'];
+function photoEffectColor(item){return /^#[0-9a-f]{6}$/i.test(item?.effectColor||'')?item.effectColor:'#000000';}
 
 function photoTextFont(item){
   return PHOTO_TEXT_FONTS[item?.font]||PHOTO_TEXT_FONTS.modern;
@@ -661,7 +663,7 @@ function photoTextLayer(item){
     data-photo-text="${escapeHtml(item.id)}" role="button" tabindex="0"
     aria-label="Toque para editar, arraste para mover o texto ${escapeHtml(item.text||'novo')}"
     style="left:${(item.x*100).toFixed(2)}%;top:${(item.y*100).toFixed(2)}%;font-size:${size}cqw;
-    font-family:${escapeHtml(font.css)};font-weight:${font.weight};color:${escapeHtml(color)};
+    font-family:${escapeHtml(font.css)};font-weight:${font.weight};color:${escapeHtml(color)};--effect-color:${escapeHtml(photoEffectColor(item))};--effect-soft:${escapeHtml(photoEffectColor(item))}a6;--effect-strong:${escapeHtml(photoEffectColor(item))}f2;--effect-band:${escapeHtml(photoEffectColor(item))}c7;
     transform:translate(-50%,-50%) rotate(${Number(item.rotation)||0}deg)">
     <span>${escapeHtml(item.text||'Seu texto').replace(/\n/g,'<br>')}</span>
     ${app.photoEditor?.selectedId===item.id&&!composing?'<span class="fs-canva-handle fs-canva-handle-scale" data-text-handle="scale" aria-label="Arraste para redimensionar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16 16 8M9 8h7v7M8 12v4h4"/></svg></span><span class="fs-canva-handle fs-canva-handle-rotate" data-text-handle="rotate" aria-label="Arraste para girar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 6M20 5v6h-6"/></svg></span><button type="button" class="fs-canva-delete" data-act="text-delete" aria-label="Excluir texto selecionado" title="Excluir texto"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v6M14 11v6"/></svg></button>':''}
@@ -674,8 +676,9 @@ function photoEditorView(){
     `<button type="button" class="fs-edit-font ${active?.font===key?'chosen':''}" data-act="text-font" data-id="${key}" ${active?'':'disabled'} style="font-family:${escapeHtml(font.css)};font-weight:${font.weight}">${font.label}</button>`
   ).join('');
   const styles=[['none','Sem sombra'],['plain','Sombra suave'],['shadow','Sombra forte'],['dark','Faixa escura'],['light','Faixa clara'],['outline','Contorno']].map(([key,label])=>
-    `<button type="button" class="fs-edit-style fs-style-preview-card ${active?.style===key?'chosen':''}" style="--preview-text-color:${escapeHtml(active?.style==='light'?'#121928':(active?.color||'#ffffff'))}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Aplicar ${label}" aria-pressed="${active?.style===key?'true':'false'}"><span class="fs-style-preview fs-style-preview--${key}" aria-hidden="true"><span>Aa</span></span><span class="fs-style-preview-label">${label}</span></button>`
+    `<button type="button" class="fs-edit-style fs-style-preview-card ${active?.style===key?'chosen':''}" style="--preview-text-color:${escapeHtml(active?.style==='light'?'#121928':(active?.color||'#ffffff'))};--effect-color:${escapeHtml(photoEffectColor(active))};--effect-soft:${escapeHtml(photoEffectColor(active))}a6;--effect-strong:${escapeHtml(photoEffectColor(active))}f2;--effect-band:${escapeHtml(photoEffectColor(active))}c7" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Aplicar ${label}" aria-pressed="${active?.style===key?'true':'false'}"><span class="fs-style-preview fs-style-preview--${key}" aria-hidden="true"><span>Aa</span></span><span class="fs-style-preview-label">${label}</span></button>`
   ).join('');
+  const effectColors=PHOTO_EFFECT_COLORS.map(color=>`<button type="button" class="fs-effect-swatch ${active&&photoEffectColor(active)===color?'chosen':''}" data-act="text-effect-color" data-id="${color}" aria-label="Cor do efeito ${color}" aria-pressed="${active&&photoEffectColor(active)===color}" style="--swatch:${color}"></button>`).join('');
   const colors=PHOTO_TEXT_COLORS.map(color=>
     `<button type="button" class="fs-edit-color ${active?.color===color?'chosen':''}" data-act="text-color" data-id="${color}"
       aria-label="Cor ${color}" ${active?'':'disabled'} style="--swatch:${color}"></button>`
@@ -723,7 +726,7 @@ function photoEditorView(){
       </div>`:''}
       ${editor.tool==='font'?`<div class="fs-simple-style-panel fs-simple-options"><div class="fs-edit-fonts" id="photoTextFonts" aria-label="Escolha a fonte">${fonts}</div></div>`:''}
       ${editor.tool==='style'?`<div class="fs-simple-style-panel fs-simple-options">
-        <div class="fs-edit-styles fs-simple-style-options" id="photoTextStyles" aria-label="Escolha o efeito">${styles}</div>
+        <div class="fs-effect-header"><span>Estilos do texto</span><span>Cor do efeito</span></div><div class="fs-edit-styles fs-simple-style-options" id="photoTextStyles" aria-label="Escolha o efeito">${styles}</div><div class="fs-effect-colors" aria-label="Escolha a cor da sombra, faixa ou contorno">${effectColors}<label class="fs-effect-custom" title="Escolher outra cor"><input type="color" id="photoEffectCustom" value="${escapeHtml(photoEffectColor(active))}" aria-label="Cor personalizada do efeito"><span>◉</span></label></div>
       </div>`:''}
       <p class="fs-edit-hint">Toque duas vezes para editar</p>
       `:''}
@@ -859,7 +862,7 @@ function photoTextOpen(){
 function photoTextAdd(){
   const e=app.photoEditor;
   if(!e)return;
-  const item={id:id(),text:'',x:.5,y:.48,size:80,font:'modern',color:'#FFFFFF',style:'plain',rotation:0};
+  const item={id:id(),text:'',x:.5,y:.48,size:80,font:'modern',color:'#FFFFFF',style:'plain',effectColor:'#000000',rotation:0};
   e.texts.push(item);e.selectedId=item.id;e.tool=null;
   photoTextRefreshLayers();
   photoTextRefreshControls();
@@ -925,13 +928,14 @@ function photoTextRefreshControls(){
   const toolbar=document.querySelector('.fs-canva-toolbar');
   if(toolbar)toolbar.classList.toggle('hidden',!active||!!app.photoEditor?.composing);
 
-  document.querySelectorAll('.fs-edit-font,.fs-edit-style,.fs-edit-color').forEach(el=>{
-    const chosen=!!active&&(el.dataset.id===active.font||el.dataset.id===active.style||el.dataset.id===active.color);
+  document.querySelectorAll('.fs-edit-font,.fs-edit-style,.fs-edit-color,.fs-effect-swatch').forEach(el=>{
+    const chosen=!!active&&(el.dataset.id===active.font||el.dataset.id===active.style||el.dataset.id===active.color||(el.classList.contains('fs-effect-swatch')&&el.dataset.id===photoEffectColor(active)));
     el.classList.toggle('chosen',chosen);
     el.disabled=!active;
     el.setAttribute('aria-pressed',String(chosen));
   });
   document.querySelectorAll('[data-act="text-edit"],[data-act="text-delete"],[data-act="text-eyedropper"],[data-act="text-tool"],[data-act="text-smaller"],[data-act="text-larger"]').forEach(el=>el.disabled=!active);
+  const custom=$('photoEffectCustom');if(custom&&active)custom.value=photoEffectColor(active);
   const slider=$('photoTextSize');if(slider&&active)slider.value=String(active.size);
 }
 
@@ -1040,6 +1044,7 @@ function photoTextChange(kind,value){
   if(kind==='font'){void choosePhotoTextFont(value);return;}
   if(kind==='style'&&PHOTO_TEXT_STYLES.includes(value))active.style=value;
   if(kind==='color'&&PHOTO_TEXT_COLORS.includes(value))active.color=value;
+  if(kind==='effect-color'&&/^#[0-9a-f]{6}$/i.test(value))active.effectColor=value;
   photoTextRefreshLayers();photoTextRefreshControls();
 }
 
@@ -1047,6 +1052,7 @@ function photoTextInputChanged(event){
   if(app.page!=='editor'||!app.photoEditor)return;
   const active=photoTextActive();
   if(!active)return;
+  if(event.target.id==='photoEffectCustom'){photoTextChange('effect-color',event.target.value);return;}
   if(event.target.id==='photoTextInput'){
     active.text=event.target.value.slice(0,220);
     // Não reconstruir o textarea: preserva cursor, seleção e teclado do iPhone.
@@ -1223,16 +1229,16 @@ function photoTextDraw(ctx,item){
       ctx.lineTo(l+r,t+height);ctx.quadraticCurveTo(l,t+height,l,t+height-r);
       ctx.lineTo(l,t+r);ctx.quadraticCurveTo(l,t,l+r,t);ctx.closePath();
     }
-    ctx.fillStyle=item.style==='dark'?'rgba(0,0,0,.78)':'rgba(255,255,255,.92)';
+    ctx.fillStyle=item.style==='dark'?photoEffectColor(item)+'c7':(item.effectColor?photoEffectColor(item)+'c7':'rgba(255,255,255,.92)');
     ctx.fill();
   }
   ctx.font=`${font.weight} ${size}px ${font.canvas}`;
   lines.forEach((line,index)=>{
     const ly=ty+(index-(lines.length-1)/2)*step;
     if(item.style==='outline'){
-      ctx.strokeStyle='rgba(0,0,0,.90)';ctx.lineWidth=Math.max(5,size*.12);ctx.strokeText(line,tx,ly);
+      ctx.strokeStyle=photoEffectColor(item);ctx.lineWidth=Math.max(5,size*.12);ctx.strokeText(line,tx,ly);
     }else if(item.style==='plain'||item.style==='shadow'){
-      ctx.shadowColor=item.style==='shadow'?'rgba(0,0,0,.95)':'rgba(0,0,0,.63)';
+      ctx.shadowColor=photoEffectColor(item)+(item.style==='shadow'?'f2':'a6');
       ctx.shadowBlur=size*(item.style==='shadow'?.32:.15);
       ctx.shadowOffsetY=size*(item.style==='shadow'?.09:.04);
     }
@@ -3072,6 +3078,26 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
  color:#fff!important;
  border-color:#d9b7ff!important;
 }
+
+/* Paleta compacta do efeito: integra-se ao painel azul sem cartões brancos. */
+.fs-photo-editor .fs-effect-header{display:flex;justify-content:space-between;gap:12px;color:#fff;font-size:12px;font-weight:700;padding:3px 4px 5px}
+.fs-photo-editor .fs-effect-colors{display:flex;align-items:center;gap:11px;overflow-x:auto;scrollbar-width:none;padding:9px 5px 7px;min-height:51px}
+.fs-photo-editor .fs-effect-colors::-webkit-scrollbar{display:none}
+.fs-photo-editor .fs-effect-swatch{flex:0 0 32px;width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,.65);background:var(--swatch)!important;box-shadow:none!important;padding:0}
+.fs-photo-editor .fs-effect-swatch.chosen{outline:2px solid #cf9cff;outline-offset:3px}
+.fs-photo-editor .fs-effect-custom{flex:0 0 34px;width:34px;height:34px;position:relative;border-radius:50%;overflow:hidden;border:1px solid #ffffffa8;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);display:grid;place-items:center}
+.fs-photo-editor .fs-effect-custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.fs-photo-editor .fs-effect-custom span{pointer-events:none;color:#fff;text-shadow:0 1px 4px #000;font-size:20px}
+.fs-photo-editor .fs-edit-text-plain span{text-shadow:0 1px 6px var(--effect-soft,#000a),0 1px 2px var(--effect-soft,#0009)}
+.fs-photo-editor .fs-edit-text-shadow span{text-shadow:2px 3px 4px var(--effect-strong,#000f),0 0 8px var(--effect-soft,#000a)}
+.fs-photo-editor .fs-edit-text-dark span{background:var(--effect-band,#000c)}
+.fs-photo-editor .fs-edit-text-light span{background:var(--effect-band,#fffffff0)}
+.fs-photo-editor .fs-edit-text-outline span{-webkit-text-stroke:.065em var(--effect-color,#000)}
+.fs-photo-editor .fs-style-preview--plain span{text-shadow:1px 2px 3px var(--effect-soft,#0009)}
+.fs-photo-editor .fs-style-preview--shadow span{text-shadow:2px 4px 2px var(--effect-strong,#000),0 0 7px var(--effect-soft,#000)}
+.fs-photo-editor .fs-style-preview--dark span{background:var(--effect-band,#000c)}
+.fs-photo-editor .fs-style-preview--light span{background:var(--effect-band,#fffffff0)}
+.fs-photo-editor .fs-style-preview--outline span{-webkit-text-stroke:1.8px var(--effect-color,#000)}
 `;
 
 function ensurePhotoEditorStyles(){
@@ -4203,7 +4229,7 @@ if(act==='text-delete'){
   }
   return;
 }
-if(act==='text-font'||act==='text-style'||act==='text-color'){
+if(act==='text-font'||act==='text-style'||act==='text-color'||act==='text-effect-color'){
   photoTextChange(act.slice(5),uid);return;
 }
 if(act==='photo-share'){shareCapturedPhoto();return;}if(act==='photo-instagram'){shareCapturedPhoto('instagram');return;}if(act==='photo-whatsapp'){shareCapturedPhoto('whatsapp');return;}if(act==='photo-save'){saveCapturedPhoto();return;}if(act==='photo-back'||act==='photo-retake'||act==='photo-change-filter'){backToCamera();return;}}catch(error){toast(errorMessage(error));}}
