@@ -664,7 +664,7 @@ function photoTextLayer(item){
     font-family:${escapeHtml(font.css)};font-weight:${font.weight};color:${escapeHtml(color)};
     transform:translate(-50%,-50%) rotate(${Number(item.rotation)||0}deg)">
     <span>${escapeHtml(item.text||'Seu texto').replace(/\n/g,'<br>')}</span>
-    ${app.photoEditor?.selectedId===item.id&&!composing?'<span class="fs-canva-handle fs-canva-handle-scale" data-text-handle="scale" aria-hidden="true"></span><span class="fs-canva-handle fs-canva-handle-rotate" data-text-handle="rotate" aria-hidden="true">↻</span>':''}
+    ${app.photoEditor?.selectedId===item.id&&!composing?'<span class="fs-canva-handle fs-canva-handle-scale" data-text-handle="scale" aria-label="Arraste para redimensionar">⤡</span><span class="fs-canva-handle fs-canva-handle-rotate" data-text-handle="rotate" aria-label="Arraste para girar">↻</span>':''}
   </div>`;
 }
 
@@ -684,13 +684,13 @@ function photoEditorView(){
     <header class="fs-edit-top">
       <button type="button" data-act="text-cancel" class="fs-edit-top-back">← <span>Voltar</span></button>
       <span class="fs-edit-top-title">Texto</span>
-      <button type="button" data-act="text-finish" class="fs-edit-top-done">Salvar edição</button>
+      <button type="button" data-act="text-finish" class="fs-edit-top-done">Salvar imagem</button>
     </header>
      <div class="fs-edit-workspace">
       <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
-        ${'<div class="fs-canva-toolbar '+(active&&!editor.composing?'':'hidden')+'" role="toolbar" aria-label="Ações do texto selecionado"><button type="button" data-act="text-add" aria-label="Adicionar texto" title="Adicionar texto">＋</button><button type="button" data-act="text-duplicate" aria-label="Duplicar texto" title="Duplicar texto">▣</button><button type="button" data-act="text-delete" aria-label="Excluir texto" title="Excluir texto">✕</button><button type="button" data-act="text-more" aria-label="Mais opções de texto" title="Mais opções">•••</button></div>'}
+        ${'<div class="fs-canva-toolbar '+(active&&!editor.composing?'':'hidden')+'" role="toolbar" aria-label="Ações do texto selecionado"><button type="button" data-act="text-add" aria-label="Adicionar texto" title="Adicionar texto">＋</button><button type="button" data-act="text-duplicate" aria-label="Duplicar texto" title="Duplicar texto">▣</button><button type="button" data-act="text-delete" aria-label="Excluir texto" title="Excluir texto">🗑</button><button type="button" data-act="text-more" aria-label="Mais opções de texto" title="Mais opções">•••</button></div>'}
         <span class="fs-edit-text-measure" id="photoTextMeasure" aria-hidden="true"></span>
         <textarea class="fs-edit-inline-input hidden" id="photoTextInput" rows="1" maxlength="220"
           placeholder="Digite seu texto" aria-label="Editar texto diretamente na foto"
@@ -701,16 +701,14 @@ function photoEditorView(){
       ${editor.texts.some(item=>item.text.trim())?`
       <div class="fs-simple-tools" role="group" aria-label="Ferramentas de edição">
         <button type="button" class="fs-simple-tool ${editor.tool==='text'?'chosen':''}" data-act="text-tool" data-id="text" ${active?'':'disabled'} aria-pressed="${editor.tool==='text'}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M12 7v13M8 20h8M8 4h8"/></svg><span>Texto</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M12 7v13M8 20h8M8 4h8"/></svg><span>Adicionar texto</span>
         </button>
+        <button type="button" class="fs-simple-tool ${editor.tool==='font'?'chosen':''}" data-act="text-tool" data-id="font" ${active?'':'disabled'} aria-pressed="${editor.tool==='font'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19h16M6 16l6-12 6 12M8 12h8"/></svg><span>Fontes</span></button>
         <button type="button" class="fs-simple-tool ${editor.tool==='color'?'chosen':''}" data-act="text-tool" data-id="color" ${active?'':'disabled'} aria-pressed="${editor.tool==='color'}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-2.8 4.1-6 7.7-6 11a6 6 0 0 0 12 0c0-3.3-3.2-6.9-6-11Z"/><path d="M9 15a3 3 0 0 0 3 3"/></svg><span>Cor</span>
         </button>
-        <button type="button" class="fs-simple-tool ${editor.tool==='size'?'chosen':''}" data-act="text-tool" data-id="size" ${active?'':'disabled'} aria-pressed="${editor.tool==='size'}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M4 15v5h5M20 15v5h-5"/><path d="M8 12h8"/></svg><span>Tamanho</span>
-        </button>
         <button type="button" class="fs-simple-tool ${editor.tool==='style'?'chosen':''}" data-act="text-tool" data-id="style" ${active?'':'disabled'} aria-pressed="${editor.tool==='style'}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3ZM19 17l.6 1.4L21 19l-1.4.6L19 21l-.6-1.4L17 19l1.4-.6L19 17Z"/></svg><span>Estilo</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3ZM19 17l.6 1.4L21 19l-1.4.6L19 21l-.6-1.4L17 19l1.4-.6L19 17Z"/></svg><span>Estilos</span>
         </button>
       </div>
       ${editor.tool==='text'?`<div class="fs-simple-text-panel fs-simple-options" role="group" aria-label="Ações do texto">
@@ -726,13 +724,8 @@ function photoEditorView(){
           </svg>
         </button>
       </div>`:''}
-      ${editor.tool==='size'?`<div class="fs-simple-size-panel fs-simple-options" role="group" aria-label="Ajustar tamanho">
-        <button type="button" class="fs-simple-option-button" data-act="text-smaller" ${active?'':'disabled'} aria-label="Diminuir tamanho do texto"><span aria-hidden="true">A−</span> Menor</button>
-        <input id="photoTextSize" type="range" min="4" max="600" step="1" value="${active?.size||80}" ${active?'':'disabled'} aria-label="Tamanho do texto">
-        <button type="button" class="fs-simple-option-button" data-act="text-larger" ${active?'':'disabled'} aria-label="Aumentar tamanho do texto">Maior <span aria-hidden="true">A+</span></button>
-      </div>`:''}
+      ${editor.tool==='font'?`<div class="fs-simple-style-panel fs-simple-options"><div class="fs-edit-fonts" id="photoTextFonts" aria-label="Escolha a fonte">${fonts}</div></div>`:''}
       ${editor.tool==='style'?`<div class="fs-simple-style-panel fs-simple-options">
-        <div class="fs-edit-fonts" id="photoTextFonts" aria-label="Escolha a fonte">${fonts}</div>
         <div class="fs-edit-styles fs-simple-style-options" id="photoTextStyles" aria-label="Escolha o efeito">${styles}</div>
       </div>`:''}
       <p class="fs-edit-hint">Toque duas vezes para editar</p>
@@ -994,8 +987,10 @@ function photoTextStageClicked(event){
   const editor=app.photoEditor;
   if(editor.ignoreStageClick){editor.ignoreStageClick=false;return;}
   if(editor.composing)photoTextComposeDone({refresh:false});
+  // Um toque em espaço livre cria imediatamente outra caixa de texto.
   editor.selectedId=null;editor.tool=null;
   render();
+  photoTextAdd();
 }
 function photoTextLayerKeydown(event){
   if(app.page!=='editor'||!['Enter',' '].includes(event.key))return;
@@ -2800,6 +2795,31 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-style-preview--light span{background:#ffffffed;color:#222;padding:4px 9px;border-radius:4px;text-shadow:none}
 .fs-photo-editor .fs-style-preview--outline span{-webkit-text-stroke:1.8px #151515;text-shadow:none}
 .fs-photo-editor .fs-style-preview-label{display:block;text-align:center;max-width:100%;font-size:11px!important;line-height:1.2!important}
+
+/* Identidade Filtros Studio: painel azul com controles contrastantes. */
+.fs-photo-editor{background:#eef2fa!important;color:#15265d!important}
+.fs-photo-editor .fs-edit-top{background:#fff!important;border-bottom:1px solid #dfe5f3!important}
+.fs-photo-editor .fs-edit-panel{background:#001893!important;color:#fff!important;border-top:1px solid #3654d2!important;box-shadow:0 -3px 16px #00115c19!important}
+.fs-photo-editor .fs-simple-tool{background:#1533a4!important;color:#fff!important;border:1px solid #5369c9!important;box-shadow:none!important;opacity:1!important}
+.fs-photo-editor .fs-simple-tool svg,.fs-photo-editor .fs-simple-tool span{color:inherit!important;opacity:1!important;stroke:currentColor!important}
+.fs-photo-editor .fs-simple-tool.chosen{background:#fff!important;color:#001893!important;border-color:#fff!important}
+.fs-photo-editor .fs-simple-tool:disabled{background:#233e9d!important;color:#cdd7ff!important;border-color:#5369b8!important;opacity:.72!important}
+.fs-photo-editor .fs-simple-panel .fs-simple-options{background:#0a238c!important;border:1px solid #4b61ba!important;box-shadow:none!important}
+.fs-photo-editor .fs-simple-panel .fs-simple-option-button{background:#18369b!important;color:#fff!important;border:1px solid #6478d0!important}
+.fs-photo-editor .fs-edit-fonts button{color:#fff!important}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card{background:#fff!important;color:#222637!important}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card.chosen{background:#f4edff!important;color:#5822a8!important}
+.fs-photo-editor .fs-edit-workspace{background:#eef2fa!important}
+.fs-photo-editor .fs-canva-handle-scale{width:17px!important;height:30px!important;right:-11px!important;border-width:1.5px!important}
+.fs-photo-editor .fs-canva-handle-rotate{width:31px!important;height:31px!important;bottom:-46px!important;font-size:20px!important}
+.fs-photo-editor .fs-edit-inline-input{background:transparent!important;color:#fff!important;-webkit-text-fill-color:currentColor!important}
+.fs-photo-editor .fs-edit-inline-input::placeholder{color:#fff!important;opacity:.9!important}
+@media(max-width:430px){.fs-photo-editor .fs-edit-panel{padding:9px 10px calc(10px + env(safe-area-inset-bottom,0px))!important}.fs-photo-editor .fs-simple-tool{min-height:49px!important;font-size:12px!important}}
+
+.fs-photo-editor .fs-canva-handle-scale{width:32px!important;height:32px!important;right:-22px!important;top:100%!important;border-radius:50%!important;transform:translateY(-40%)!important;font-size:23px!important;font-weight:600!important}
+.fs-photo-editor .fs-edit-panel .fs-simple-tools{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.fs-photo-editor .fs-simple-tool{font-size:11px!important;min-width:0!important}
+.fs-photo-editor .fs-simple-tool span{font-size:11px!important}
 `;
 
 function ensurePhotoEditorStyles(){
@@ -3855,7 +3875,8 @@ if(act==='text-eyedropper'){void openPhotoEyedropper();return;}
 if(act==='eye-cancel'){cancelPhotoEyedropper();return;}
 if(act==='eye-use-color'){usePhotoEyedropperColor();return;}
 if(act==='text-tool'){
-  if(!app.photoEditor||!['text','color','size','style'].includes(uid))return;
+  if(!app.photoEditor||!['text','font','color','style'].includes(uid))return;
+  if(uid==='text'){photoTextAdd();return;}
   app.photoEditor.tool=app.photoEditor.tool===uid?null:uid;
   render();return;
 }
