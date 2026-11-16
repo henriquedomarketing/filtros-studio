@@ -469,7 +469,7 @@ function cameraView(){
   return `<section class="client-camera-screen">
     <div class="client-viewfinder-wrap">
       <div class="camera-frame client-viewfinder" data-filter-format="story">
-        <button type="button" class="client-camera-menu-toggle client-camera-floating-menu" data-act="open-client-menu" aria-label="Abrir menu de categorias" aria-controls="clientCameraDrawer" aria-expanded="false"><span aria-hidden="true">☰</span></button>
+        
         ${fromGallery
           ? `<img id="galleryBase" class="client-gallery-image" src="${escapeHtml(app.galleryPhoto.url)}" alt="Foto escolhida na galeria, recortada ao centro em formato Stories">`
           : '<video id="cameraVideo" autoplay playsinline muted></video>'}
@@ -482,7 +482,7 @@ function cameraView(){
       </div>
     </div>
     <div class="client-photo-controls">
-      <button type="button" data-act="${fromGallery?'use-camera':'flip-camera'}" class="client-control-secondary" aria-label="${fromGallery?'Voltar para câmera':'Alternar câmera'}" title="${fromGallery?'Voltar para câmera':'Alternar câmera'}"><span class="client-control-icon">${fromGallery?'←':'⟳'}</span><small>${fromGallery?'Voltar':'Alternar'}</small></button>
+      <button type="button" data-act="back-categories" class="client-control-secondary" aria-label="Voltar às categorias" title="Voltar às categorias"><span class="client-control-icon" aria-hidden="true">←</span><small>Voltar</small></button>
       <button type="button" data-act="capture" class="client-shutter" aria-label="${fromGallery?'Enquadrar foto importada':'Fotografar e enquadrar'}" title="${fromGallery?'Enquadrar foto':'Fotografar'}"><span></span></button>
       <button type="button" data-act="pick-gallery" class="client-control-secondary" aria-label="Escolher foto da galeria" title="Escolher foto da galeria"><span class="client-control-icon" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m3 17 5.8-5.8 4.1 4.1 2.4-2.4L21 18"/></svg></span><small>Galeria</small></button>
       <input id="galleryPhotoInput" class="client-gallery-file-input" type="file" accept="image/*,.heic,.heif" aria-label="Escolher foto da galeria" tabindex="-1">
@@ -2957,6 +2957,19 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 @media(max-height:700px){
  .client-app.is-camera .client-viewfinder{
   width:min(calc(100vw - 12px),calc((100dvh - 145px)*.5625),480px)!important;
+ }
+}
+
+/* Margem superior discreta; o menu da câmera foi substituído pelo Voltar. */
+.client-app.is-camera .client-content{
+ padding-top:12px!important;
+}
+.client-app.is-camera .client-viewfinder{
+ width:min(calc(100vw - 12px),calc((100dvh - 175px)*.5625),520px)!important;
+}
+@media(max-height:700px){
+ .client-app.is-camera .client-viewfinder{
+  width:min(calc(100vw - 12px),calc((100dvh - 165px)*.5625),480px)!important;
  }
 }
 `;
