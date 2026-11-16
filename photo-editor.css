@@ -1495,3 +1495,17 @@
 .fs-photo-editor .fs-edit-panel .fs-simple-tools{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}
 .fs-photo-editor .fs-simple-tool{font-size:11px!important;min-width:0!important}
 .fs-photo-editor .fs-simple-tool span{font-size:11px!important}
+
+/* Fundo do editor na identidade azul; foto segue intacta. */
+.fs-photo-editor{background:#061d78!important;color:#fff!important}
+.fs-photo-editor .fs-edit-workspace{background:linear-gradient(145deg,#122d91 0%,#061b72 100%)!important}
+.fs-photo-editor .fs-edit-top{background:#071e7b!important;color:#fff!important;border-bottom:1px solid #29449f!important}
+.fs-photo-editor .fs-edit-top-title{color:#fff!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-back{color:#fff!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-done{background:#fff!important;color:#071e7b!important}
+.fs-photo-editor .fs-edit-panel{background:#071e7b!important;border-top:1px solid #344ba5!important}
+.fs-photo-editor .fs-edit-panel .fs-simple-tools{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.fs-photo-editor .fs-canva-handle{width:29px!important;height:29px!important;background:#fff!important;color:#6433c6!important;border:1.5px solid #9a68f4!important;box-shadow:0 1px 5px #0003!important}
+.fs-photo-editor .fs-canva-handle-scale{right:-17px!important;top:100%!important;transform:translateY(-50%)!important;border-radius:8px!important}
+.fs-photo-editor .fs-canva-handle-rotate{left:50%!important;bottom:-44px!important;transform:translateX(-50%)!important;border-radius:50%!important}
+.fs-photo-editor .fs-canva-handle svg{width:17px!important;height:17px!important;pointer-events:none}
