@@ -679,6 +679,7 @@ function photoEditorView(){
     `<button type="button" class="fs-edit-style fs-style-preview-card ${active?.style===key?'chosen':''}" style="--preview-text-color:${escapeHtml(active?.style==='light'?'#121928':(active?.color||'#ffffff'))};--effect-color:${escapeHtml(photoEffectColor(active))};--effect-soft:${escapeHtml(photoEffectColor(active))}a6;--effect-strong:${escapeHtml(photoEffectColor(active))}f2;--effect-band:${escapeHtml(photoEffectColor(active))}c7" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Aplicar ${label}" aria-pressed="${active?.style===key?'true':'false'}"><span class="fs-style-preview fs-style-preview--${key}" aria-hidden="true"><span>Aa</span></span><span class="fs-style-preview-label">${label}</span></button>`
   ).join('');
   const effectColors=PHOTO_EFFECT_COLORS.map(color=>`<button type="button" class="fs-effect-swatch ${active&&photoEffectColor(active)===color?'chosen':''}" data-act="text-effect-color" data-id="${color}" aria-label="Cor do efeito ${color}" aria-pressed="${active&&photoEffectColor(active)===color}" style="--swatch:${color}"></button>`).join('');
+  const templates=PHOTO_STYLE_TEMPLATES.map(([label,heading,sub],i)=>`<button type="button" class="fs-template-card" data-act="text-template" data-id="${i}" aria-label="Adicionar modelo ${escapeHtml(label)}"><span class="fs-template-preview"><strong>${escapeHtml(heading)}</strong><small>${escapeHtml(sub)}</small></span><span class="fs-template-label">${escapeHtml(label)}</span></button>`).join('');
   const colors=PHOTO_TEXT_COLORS.map(color=>
     `<button type="button" class="fs-edit-color ${active?.color===color?'chosen':''}" data-act="text-color" data-id="${color}"
       aria-label="Cor ${color}" ${active?'':'disabled'} style="--swatch:${color}"></button>`
@@ -701,16 +702,18 @@ function photoEditorView(){
       </div>
     </div>
     <div class="fs-edit-panel fs-simple-panel ${editor.texts.some(item=>item.text.trim())?'':'fs-simple-empty'}" aria-label="Ferramentas de texto">
-      ${editor.texts.some(item=>item.text.trim())?`
+      ${true?`
       <div class="fs-simple-tools" role="group" aria-label="Ferramentas de edição">
         <button type="button" class="fs-simple-tool ${editor.tool==='font'?'chosen':''}" data-act="text-tool" data-id="font" ${active?'':'disabled'} aria-pressed="${editor.tool==='font'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19h16M6 16l6-12 6 12M8 12h8"/></svg><span>Fontes</span></button>
         <button type="button" class="fs-simple-tool ${editor.tool==='color'?'chosen':''}" data-act="text-tool" data-id="color" ${active?'':'disabled'} aria-pressed="${editor.tool==='color'}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-2.8 4.1-6 7.7-6 11a6 6 0 0 0 12 0c0-3.3-3.2-6.9-6-11Z"/><path d="M9 15a3 3 0 0 0 3 3"/></svg><span>Cor</span>
         </button>
         <button type="button" class="fs-simple-tool ${editor.tool==='style'?'chosen':''}" data-act="text-tool" data-id="style" ${active?'':'disabled'} aria-pressed="${editor.tool==='style'}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3ZM19 17l.6 1.4L21 19l-1.4.6L19 21l-.6-1.4L17 19l1.4-.6L19 17Z"/></svg><span>Estilos</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3ZM19 17l.6 1.4L21 19l-1.4.6L19 21l-.6-1.4L17 19l1.4-.6L19 17Z"/></svg><span>Sombra</span>
         </button>
+        <button type="button" class="fs-simple-tool ${editor.tool==='templates'?'chosen':''}" data-act="text-tool" data-id="templates" aria-pressed="${editor.tool==='templates'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h10M7 13h7M7 17h4"/></svg><span>Estilos</span></button>
       </div>
+      ${editor.tool==='templates'?`<div class="fs-template-grid" aria-label="Modelos de texto prontos">${templates}</div>`:''}
       ${editor.tool==='text'?`<div class="fs-simple-text-panel fs-simple-options" role="group" aria-label="Ações do texto">
         <button type="button" class="fs-simple-option-button" data-act="text-edit" ${active?'':'disabled'}>Editar texto</button>
         <button type="button" class="fs-simple-option-button fs-simple-remove-button" data-act="text-delete" ${active?'':'disabled'}>Apagar texto</button>
@@ -859,6 +862,15 @@ function photoTextOpen(){
   photoTextAdd();
 }
 
+const PHOTO_STYLE_TEMPLATES=[["Segunda-feira","SEGUNDA-FEIRA","UMA ÓTIMA SEMANA"],["Terça-feira","TERÇA-FEIRA","VAMOS PRA CIMA"],["Quarta-feira","QUARTA-FEIRA","BOM DIA"],["Quinta-feira","QUINTA-FEIRA","UM DIA ESPECIAL"],["Sexta-feira","SEXTA-FEIRA","SEXTOU!"],["Sábado","SÁBADO","ESPERAMOS VOCÊ"],["Domingo","DOMINGO","APROVEITE O DIA"],["Negócio fechado","NEGÓCIO FECHADO","MAIS UM SONHO REALIZADO"],["Loja aberta","LOJA ABERTA","VENHA NOS VISITAR"],["Entre em contato","ENTRE EM CONTATO","TIRE SUAS DÚVIDAS"],["Localização","VISITE NOSSA LOJA","RUA • NÚMERO • CIDADE"],["Horário","HORÁRIO DE ATENDIMENTO","08:00 ÀS 18:00"]];
+function photoTextApplyTemplate(index){
+ const editor=app.photoEditor,entry=PHOTO_STYLE_TEMPLATES[index];if(!editor||!entry)return;
+ if(editor.composing)photoTextComposeDone({refresh:false});
+ const base=id(),y=.40;
+ const first={id:base,text:entry[1],x:.5,y,size:78,font:'modern',color:'#FFFFFF',style:'shadow',effectColor:'#000000',rotation:0};
+ const second={...first,id:id(),text:entry[2],y:y+.085,size:39,font:'modern',style:'dark',effectColor:'#001893'};
+ editor.texts.push(first,second);editor.selectedId=first.id;editor.tool='templates';render();
+}
 function photoTextAdd(){
   const e=app.photoEditor;
   if(!e)return;
@@ -3138,6 +3150,17 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
     width:min(calc(100% - 2px),calc((100dvh - 190px)*var(--editor-ratio,.5625)),520px)!important;
   }
 }
+
+/* Biblioteca v2: modelos editáveis em camadas, sem imagens rasterizadas. */
+.fs-photo-editor .fs-simple-tools{display:flex;justify-content:space-around;gap:5px}
+.fs-photo-editor .fs-simple-tool{min-width:0;flex:1}
+.fs-photo-editor .fs-template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-height:190px;overflow-y:auto;padding:5px 3px 9px}
+.fs-photo-editor .fs-template-card{appearance:none;display:flex;flex-direction:column;gap:7px;align-items:stretch;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.24);border-radius:12px;padding:10px 8px;color:white;box-shadow:none;min-width:0}
+.fs-photo-editor .fs-template-card:active{background:rgba(255,255,255,.18)}
+.fs-photo-editor .fs-template-preview{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:55px;background:rgba(0,0,0,.14);border-radius:8px;text-align:center;padding:6px}
+.fs-photo-editor .fs-template-preview strong{font-size:12px;line-height:1.1;font-weight:900;letter-spacing:.025em;overflow-wrap:anywhere}
+.fs-photo-editor .fs-template-preview small{font-size:8px;line-height:1.15;letter-spacing:.09em;opacity:.88}
+.fs-photo-editor .fs-template-label{font-size:11px;font-weight:650;text-align:center}
 `;
 
 function ensurePhotoEditorStyles(){
@@ -4234,7 +4257,7 @@ if(act==='text-eyedropper'){void openPhotoEyedropper();return;}
 if(act==='eye-cancel'){cancelPhotoEyedropper();return;}
 if(act==='eye-use-color'){usePhotoEyedropperColor();return;}
 if(act==='text-tool'){
-  if(!app.photoEditor||!['text','font','color','style'].includes(uid))return;
+  if(!app.photoEditor||!['text','font','color','style','templates'].includes(uid))return;
   if(uid==='text'){photoTextAdd();return;}
   app.photoEditor.tool=app.photoEditor.tool===uid?null:uid;
   render();return;
@@ -4247,6 +4270,7 @@ if(act==='text-smaller'||act==='text-larger'){
   photoTextRefreshControls();
   return;
 }
+if(act==='text-template'){photoTextApplyTemplate(Number(uid));return;}
 if(act==='text-add'){photoTextAdd();return;}
 if(act==='text-duplicate'){
   const editor=app.photoEditor,item=photoTextActive();if(!editor||!item)return;
