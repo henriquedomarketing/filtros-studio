@@ -1667,3 +1667,56 @@
   width:min(calc(100vw - 12px),calc((100dvh - 173px)*.5625),480px)!important;
  }
 }
+
+/* Identidade compacta e integrada ao topo da câmera. */
+.client-app.is-camera .fs-camera-brand{
+ display:flex;align-items:center;justify-content:center;gap:9px;
+ width:max-content;max-width:calc(100% - 24px);
+ margin:0 auto 11px;padding:0;color:#fff;
+ background:transparent;border:0;box-shadow:none;
+}
+.client-app.is-camera .fs-camera-brand img{
+ display:block;width:30px;height:30px;object-fit:contain;
+ border-radius:8px;flex:none;
+}
+.client-app.is-camera .fs-camera-brand span{display:flex;flex-direction:column;gap:1px;min-width:0}
+.client-app.is-camera .fs-camera-brand strong{font-size:14px;font-weight:800;letter-spacing:.015em;line-height:1.1}
+.client-app.is-camera .fs-camera-brand small{font-size:8px;font-weight:650;letter-spacing:.09em;line-height:1.2;opacity:.78}
+.client-app.is-camera .client-content{padding-top:13px!important}
+.client-app.is-camera .client-viewfinder[data-filter-format="story"]{
+ aspect-ratio:9/16!important;
+ width:min(calc(100vw - 12px),calc((100dvh - 202px)*.5625),520px)!important;
+}
+.client-app.is-camera .client-viewfinder[data-filter-format="feed"]{
+ aspect-ratio:4/5!important;
+ width:min(calc(100vw - 12px),calc((100dvh - 202px)*.8),520px)!important;
+}
+.client-app.is-camera:has(.client-gallery-finish) .client-viewfinder[data-filter-format="feed"]{
+ width:min(calc(100vw - 12px),calc((100dvh - 242px)*.8),520px)!important;
+}
+/* O PNG sempre cabe inteiro na área de visualização. */
+.client-app.is-camera .client-viewfinder #cameraOverlay{
+ width:100%!important;height:100%!important;object-fit:fill!important;
+}
+/* Respeitar a proporção do arquivo em resultado e edição. */
+.client-app.is-preview .fs-result-picture{
+ aspect-ratio:var(--photo-ratio,9/16)!important;
+ width:min(calc(100vw - 28px),calc((100dvh - 365px)*var(--photo-width-ratio, .5625)),450px)!important;
+ max-width:100%!important;
+}
+.client-app.is-preview .fs-result-picture img{object-fit:contain!important}
+.fs-photo-editor .fs-edit-stage{
+ aspect-ratio:var(--photo-ratio,9/16)!important;
+ width:min(calc(100vw - 20px),420px)!important;
+ max-height:calc(100dvh - 290px)!important;
+}
+.fs-photo-editor .fs-edit-base{object-fit:contain!important}
+@media(max-height:700px){
+ .client-app.is-camera .fs-camera-brand{margin-bottom:7px}
+ .client-app.is-camera .client-viewfinder[data-filter-format="story"]{
+  width:min(calc(100vw - 12px),calc((100dvh - 188px)*.5625),480px)!important;
+ }
+ .client-app.is-camera .client-viewfinder[data-filter-format="feed"]{
+  width:min(calc(100vw - 12px),calc((100dvh - 188px)*.8),480px)!important;
+ }
+}
