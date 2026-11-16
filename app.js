@@ -698,6 +698,7 @@ function photoEditorView(){
         <textarea class="fs-edit-inline-input hidden" id="photoTextInput" rows="1" maxlength="220"
           placeholder="Digite seu texto" aria-label="Editar texto diretamente na foto"
           autocomplete="off" autocapitalize="sentences" enterkeyhint="done" spellcheck="true"></textarea>
+        <button type="button" class="fs-edit-confirm hidden" id="photoTextConfirm" data-act="text-confirm" aria-label="Confirmar texto" title="Confirmar texto">✓</button>
       </div>
     </div>
     <div class="fs-edit-panel fs-simple-panel ${editor.texts.some(item=>item.text.trim())?'':'fs-simple-empty'}" aria-label="Ferramentas de texto">
@@ -887,7 +888,7 @@ function photoTextSyncInline(){
   const editor=app.photoEditor,stage=$('photoTextStage'),field=$('photoTextInput'),measure=$('photoTextMeasure');
   const item=photoTextActive();
   if(!stage||!field||!measure)return;
-  if(!editor?.composing||!item){field.classList.add('hidden');return;}
+  if(!editor?.composing||!item){field.classList.add('hidden');$('photoTextConfirm')?.classList.add('hidden');return;}
   const width=stage.getBoundingClientRect().width;
   if(!width)return;
   const font=photoTextFont(item),size=Math.max(16,(Number(item.size)||80)*width/1080);
@@ -913,6 +914,17 @@ function photoTextSyncInline(){
   field.classList.toggle('fs-inline-shadow',item.style==='shadow');
   field.classList.toggle('fs-inline-none',item.style==='none');
   field.classList.remove('hidden');
+  const confirm=$('photoTextConfirm');
+  if(confirm){
+    const fieldWidth=parseFloat(field.style.width)||88;
+    const fieldHeight=parseFloat(field.style.height)||42;
+    const centerX=item.x*width;
+    const centerY=item.y*stage.getBoundingClientRect().height;
+    const x=Math.max(23,Math.min(width-23,centerX+fieldWidth/2+19));
+    const y=Math.max(23,Math.min(stage.getBoundingClientRect().height-23,centerY+fieldHeight/2));
+    confirm.style.left=x+'px';confirm.style.top=y+'px';
+    confirm.classList.remove('hidden');
+  }
 }
 
 function photoTextRefreshLayers(){
@@ -958,6 +970,7 @@ function photoTextComposeDone({refresh=true}={}){
   editor.composing=false;
   const field=$('photoTextInput');
   field?.classList.add('hidden');
+  $('photoTextConfirm')?.classList.add('hidden');
   field?.blur();
   if(selected&&!selected.text.trim()){
     editor.texts=editor.texts.filter(item=>item.id!==selected.id);
@@ -970,7 +983,7 @@ function photoTextComposeDone({refresh=true}={}){
 // Encerrar a digitação antes de tocar em ferramentas, outra frase ou na foto.
 function photoTextOutsidePointerDown(event){
   if(app.page!=='editor'||!app.photoEditor?.composing)return;
-  if(event.target.closest?.('#photoTextInput'))return;
+  if(event.target.closest?.('#photoTextInput,#photoTextConfirm'))return;
   photoTextComposeDone({refresh:false});
 }
 function photoTextInputBlurred(event){
@@ -988,10 +1001,9 @@ function photoTextStageClicked(event){
   const editor=app.photoEditor;
   if(editor.ignoreStageClick){editor.ignoreStageClick=false;return;}
   if(editor.composing)photoTextComposeDone({refresh:false});
-  // Um toque em espaço livre cria imediatamente outra caixa de texto.
+  // Um toque no espaço vazio apenas encerra a seleção; nunca cria texto.
   editor.selectedId=null;editor.tool=null;
   render();
-  photoTextAdd();
 }
 function photoTextLayerKeydown(event){
   if(app.page!=='editor'||!['Enter',' '].includes(event.key))return;
@@ -3138,6 +3150,11 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
     width:min(calc(100% - 2px),calc((100dvh - 190px)*var(--editor-ratio,.5625)),520px)!important;
   }
 }
+
+/* Confirmação explícita ao lado do texto, acessível por toque em iOS/Android. */
+.fs-photo-editor .fs-edit-confirm{position:absolute;z-index:8;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;border:2px solid #fff;background:#12a66a;color:#fff;font-size:24px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 14px rgba(0,0,0,.3);touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
+.fs-photo-editor .fs-edit-confirm.hidden{display:none!important}
+.fs-photo-editor .fs-edit-confirm:focus-visible{outline:3px solid #fff;outline-offset:2px}
 `;
 
 function ensurePhotoEditorStyles(){
@@ -4247,6 +4264,7 @@ if(act==='text-smaller'||act==='text-larger'){
   photoTextRefreshControls();
   return;
 }
+if(act==='text-confirm'){photoTextComposeDone();return;}
 if(act==='text-add'){photoTextAdd();return;}
 if(act==='text-duplicate'){
   const editor=app.photoEditor,item=photoTextActive();if(!editor||!item)return;
@@ -4320,6 +4338,7 @@ $('root').addEventListener('pointercancel',clearFilterHold);
 $('root').addEventListener('pointerleave',clearFilterHold);
 $('root').addEventListener('contextmenu',event=>{if(event.target.closest?.('.client-numbered-filter'))event.preventDefault();});
 $('root').addEventListener('click',click);
+document.addEventListener('pointerdown',event=>{if(event.target.closest?.('#photoTextConfirm'))event.preventDefault();},true);
 document.addEventListener('pointerdown',photoTextOutsidePointerDown,true);
 $('root').addEventListener('focusout',photoTextInputBlurred);
 $('root').addEventListener('keydown',photoTextLayerKeydown);

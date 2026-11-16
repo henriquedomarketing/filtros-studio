@@ -1809,3 +1809,8 @@
     width:min(calc(100% - 2px),calc((100dvh - 190px)*var(--editor-ratio,.5625)),520px)!important;
   }
 }
+
+/* Confirmação explícita ao lado do texto, acessível por toque em iOS/Android. */
+.fs-photo-editor .fs-edit-confirm{position:absolute;z-index:8;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;border:2px solid #fff;background:#12a66a;color:#fff;font-size:24px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 14px rgba(0,0,0,.3);touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
+.fs-photo-editor .fs-edit-confirm.hidden{display:none!important}
+.fs-photo-editor .fs-edit-confirm:focus-visible{outline:3px solid #fff;outline-offset:2px}
