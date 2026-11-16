@@ -868,7 +868,7 @@ function photoTextOpen(){
 function photoTextAdd(){
   const e=app.photoEditor;
   if(!e)return;
-  const item={id:id(),text:'',x:.5,y:.48,size:80,font:'modern',color:'#FFFFFF',style:'plain'};
+  const item={id:id(),text:'',x:.5,y:.48,size:80,font:'modern',color:'#FFFFFF',style:'plain',rotation:0};
   e.texts.push(item);e.selectedId=item.id;e.tool=null;
   photoTextRefreshLayers();
   photoTextRefreshControls();
@@ -988,9 +988,21 @@ function photoTextStageClicked(event){
   if(!event.target.closest?.('#photoTextStage'))return;
   if(event.target.closest?.('[data-photo-text],#photoTextInput'))return;
   const editor=app.photoEditor;
+  if(editor.ignoreStageClick){editor.ignoreStageClick=false;return;}
   if(editor.composing)photoTextComposeDone({refresh:false});
   editor.selectedId=null;editor.tool=null;
   render();
+}
+function photoTextLayerKeydown(event){
+  if(app.page!=='editor'||!['Enter',' '].includes(event.key))return;
+  const layer=event.target.closest?.('[data-photo-text]');
+  if(!layer||!app.photoEditor)return;
+  const item=app.photoEditor.texts.find(text=>text.id===layer.dataset.photoText);
+  if(!item)return;
+  event.preventDefault();
+  app.photoEditor.selectedId=item.id;
+  photoTextRefreshLayers();
+  photoTextComposeOpen();
 }
 
 function photoTextCancel(){
@@ -1140,6 +1152,9 @@ function photoTextPointerUp(event){
   }else{
     const tapped=!drag.moved&&!drag.multi&&event.type!=='pointercancel';
     editor.drag=null;
+    // A captura de pointer pode redirecionar o click para o palco; não deselecionar após toque.
+    editor.ignoreStageClick=true;
+    setTimeout(()=>{if(app.photoEditor===editor)editor.ignoreStageClick=false;},0);
     photoTextRefreshLayers();
     photoTextRefreshControls();
     if(tapped)photoTextComposeOpen();
@@ -3706,6 +3721,7 @@ $('root').addEventListener('click',photoTextStageClicked);
 $('root').addEventListener('click',click);
 document.addEventListener('pointerdown',photoTextOutsidePointerDown,true);
 $('root').addEventListener('focusout',photoTextInputBlurred);
+$('root').addEventListener('keydown',photoTextLayerKeydown);
 $('root').addEventListener('pointerdown',categoryOrderPointerDown);
 $('root').addEventListener('pointerdown',photoTextPointerDown);
 $('root').addEventListener('pointerdown',photoEyedropperPointerDown);
