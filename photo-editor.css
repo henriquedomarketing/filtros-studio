@@ -1720,3 +1720,32 @@
   width:min(calc(100vw - 12px),calc((100dvh - 188px)*.8),480px)!important;
  }
 }
+
+/* Cards de estilos integrados ao azul do aplicativo, sem blocos brancos. */
+.fs-photo-editor .fs-edit-style.fs-style-preview-card{
+ background:rgba(255,255,255,.065)!important;
+ border:1px solid rgba(255,255,255,.25)!important;
+ color:#fff!important;
+ box-shadow:none!important;
+}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card.chosen{
+ background:rgba(255,255,255,.15)!important;
+ border:2px solid #d9b7ff!important;
+ color:#fff!important;
+}
+.fs-photo-editor .fs-style-preview{
+ background:rgba(0,0,0,.18)!important;
+ border:1px solid rgba(255,255,255,.14);
+}
+.fs-photo-editor .fs-style-preview span{
+ color:var(--preview-text-color,#fff)!important;
+}
+.fs-photo-editor .fs-style-preview--light span{
+ color:#121928!important;
+}
+.fs-photo-editor .fs-style-preview-label{color:inherit!important}
+.fs-photo-editor .fs-edit-font.chosen{
+ background:rgba(255,255,255,.16)!important;
+ color:#fff!important;
+ border-color:#d9b7ff!important;
+}
