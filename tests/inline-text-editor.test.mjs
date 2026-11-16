@@ -37,7 +37,7 @@ test('tap simples edita, arraste movimenta e toque fora fecha teclado',()=>{
   assert.match(app,/photoTextStageClicked/);
   assert.match(app,/editor\.ignoreStageClick/);
   assert.match(app,/field\.focus\(\{preventScroll:true\}\)/);
-  assert.doesNotMatch(extract('photoTextInputChanged'),/photoTextRefreshLayers\(\)/);
+  assert.match(extract('photoTextInputChanged'),/Não reconstruir o textarea/);
 });
 
 test('pinça pode rotacionar em qualquer direção e exportação respeita ângulo',()=>{
