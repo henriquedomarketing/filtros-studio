@@ -693,7 +693,7 @@ function photoEditorView(){
       <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
-        ${active&&!editor.composing?'<div class="fs-canva-toolbar" role="toolbar" aria-label="Ações do texto selecionado"><button type="button" data-act="text-add" aria-label="Adicionar texto" title="Adicionar texto">＋</button><button type="button" data-act="text-duplicate" aria-label="Duplicar texto" title="Duplicar texto">▣</button><button type="button" data-act="text-delete" aria-label="Excluir texto" title="Excluir texto">✕</button><button type="button" data-act="text-more" aria-label="Mais opções de texto" title="Mais opções">•••</button></div>':''}
+        ${'<div class="fs-canva-toolbar '+(active&&!editor.composing?'':'hidden')+'" role="toolbar" aria-label="Ações do texto selecionado"><button type="button" data-act="text-add" aria-label="Adicionar texto" title="Adicionar texto">＋</button><button type="button" data-act="text-duplicate" aria-label="Duplicar texto" title="Duplicar texto">▣</button><button type="button" data-act="text-delete" aria-label="Excluir texto" title="Excluir texto">✕</button><button type="button" data-act="text-more" aria-label="Mais opções de texto" title="Mais opções">•••</button></div>':''}
         <span class="fs-edit-text-measure" id="photoTextMeasure" aria-hidden="true"></span>
         <textarea class="fs-edit-inline-input hidden" id="photoTextInput" rows="1" maxlength="220"
           placeholder="Digite seu texto" aria-label="Editar texto diretamente na foto"
@@ -933,6 +933,9 @@ function photoTextRefreshLayers(){
 
 function photoTextRefreshControls(){
   const active=photoTextActive();
+  const toolbar=document.querySelector('.fs-canva-toolbar');
+  if(toolbar)toolbar.classList.toggle('hidden',!active||!!app.photoEditor?.composing);
+
   document.querySelectorAll('.fs-edit-font,.fs-edit-style,.fs-edit-color').forEach(el=>{
     const chosen=!!active&&(el.dataset.id===active.font||el.dataset.id===active.style||el.dataset.id===active.color);
     el.classList.toggle('chosen',chosen);
