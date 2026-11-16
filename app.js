@@ -2844,6 +2844,24 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .client-app.is-preview .fs-result-buttons .fs-result-premium{min-height:49px!important}
 .client-app.is-preview .fs-result-buttons .fs-result-retry{min-height:40px!important}
 @media(max-height:760px){.client-app.is-preview .fs-result-picture{width:min(calc(100vw - 62px),calc((100dvh - 315px)*.5625),380px)!important;min-width:175px!important}.client-app.is-preview .fs-result-compact{gap:10px!important}}
+
+/* 2026-11-16: previews larger in both framing and final result screens. */
+.fs-frame-workspace{gap:9px!important;padding:6px 10px 12px!important}
+.fs-frame-stage{width:min(calc(100vw - 26px),calc((100dvh - 255px)*.5625),520px)!important;max-width:100%!important}
+.fs-frame-stage[data-format="feed"]{width:min(calc(100vw - 26px),calc((100dvh - 255px)*.8),520px)!important}
+.fs-frame-hint{margin:0!important;padding:7px 10px!important;font-size:11px!important}
+.client-app.is-preview .client-content{padding:4px 12px 5px!important;justify-content:center!important}
+.client-app.is-preview .fs-result-compact{gap:9px!important;padding:0 4px!important}
+.client-app.is-preview .fs-result-picture{width:min(calc(100vw - 34px),calc((100dvh - 325px)*.5625),490px)!important;min-width:0!important;max-width:100%!important}
+.client-app.is-preview .fs-result-buttons{gap:7px!important}
+.client-app.is-preview .fs-result-buttons button{min-height:43px!important}
+.client-app.is-preview .fs-result-buttons .fs-result-premium{min-height:47px!important}
+.client-app.is-preview .fs-result-buttons .fs-result-retry{min-height:37px!important}
+@media(max-height:720px){
+.fs-frame-stage{width:min(calc(100vw - 28px),calc((100dvh - 225px)*.5625),480px)!important}
+.fs-frame-stage[data-format="feed"]{width:min(calc(100vw - 28px),calc((100dvh - 225px)*.8),480px)!important}
+.client-app.is-preview .fs-result-picture{width:min(calc(100vw - 36px),calc((100dvh - 290px)*.5625),440px)!important}
+}
 `;
 
 function ensurePhotoEditorStyles(){
