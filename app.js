@@ -1298,7 +1298,7 @@ function previewView(){
     <div class="fs-result-picture" style="--photo-ratio:${app.captureData.width||1080} / ${app.captureData.height||1920}">
       <img src="${escapeHtml(app.captureData.url)}" alt="Foto pronta com filtro aplicado"></div>
     <div class="fs-result-buttons">
-      <button type="button" class="fs-result-premium" data-act="photo-edit"><span class="fs-premium-crown" aria-hidden="true">👑</span><strong>EDITAR FOTO</strong></button>
+      <button type="button" class="fs-result-premium" data-act="photo-edit"><span class="fs-premium-crown" aria-hidden="true">👑</span><strong>ADICIONAR TEXTO</strong></button>
       <button type="button" class="fs-result-save" data-act="photo-save"><span aria-hidden="true">↓</span> Salvar foto</button>
       <button type="button" class="fs-result-retry" data-act="photo-retake">↻ Nova foto</button>
     </div>
@@ -2751,6 +2751,29 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-canva-handle-scale{width:17px!important;height:31px!important;right:-10px!important}
 .fs-photo-editor .fs-canva-handle-rotate{width:30px!important;height:30px!important;bottom:-43px!important;font-size:20px!important}
 @media(max-height:740px){.fs-photo-editor .fs-edit-workspace{padding-bottom:62px!important}.fs-photo-editor .fs-edit-stage{width:min(calc(100vw - 60px),calc((100dvh - 210px)*.5625))!important}}
+
+/* Editor de texto clean: tela neutra, foto em destaque, controles contextuais. */
+.fs-photo-editor{background:#f7f7f9!important;color:#1d1d23!important}
+.fs-photo-editor .fs-edit-top{background:#fff!important;border-bottom:1px solid #ececf0!important;color:#18181d!important;backdrop-filter:none!important;min-height:60px!important;padding:8px 16px!important}
+.fs-photo-editor .fs-edit-top-title{color:#24242a!important;font-size:15px!important;font-weight:650!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-back{color:#22232b!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-done{background:#202027!important;color:#fff!important;border:0!important;border-radius:12px!important;font-size:13px!important;padding:11px 13px!important;box-shadow:none!important}
+.fs-photo-editor .fs-editor-add-top{display:none!important}
+.fs-photo-editor .fs-edit-workspace{background:#f7f7f9!important;padding:18px 18px 30px!important;overflow:hidden!important}
+.fs-photo-editor .fs-edit-stage{width:min(calc(100vw - 62px),calc((100dvh - 260px)*0.5625),420px)!important;min-width:120px!important;border-radius:4px!important;box-shadow:0 8px 25px #00000018!important;overflow:visible!important}
+.fs-photo-editor .fs-edit-panel{background:#fff!important;color:#25252b!important;border-top:1px solid #eeeef2!important;padding:9px 12px calc(10px + env(safe-area-inset-bottom,0px))!important;box-shadow:none!important;gap:5px!important}
+.fs-photo-editor .fs-simple-tools{display:flex!important;justify-content:space-around!important;gap:4px!important}
+.fs-photo-editor .fs-simple-tool{min-height:46px!important;min-width:58px!important;flex:1!important;padding:5px 3px!important;border:0!important;background:transparent!important;color:#303039!important;border-radius:10px!important;box-shadow:none!important;font-size:11px!important;font-weight:600!important}
+.fs-photo-editor .fs-simple-tool svg{width:21px!important;height:21px!important}
+.fs-photo-editor .fs-simple-tool.chosen{background:#f1ebff!important;color:#7132db!important}
+.fs-photo-editor .fs-simple-options{background:#fff!important;color:#20202a!important;box-shadow:none!important;border-color:#eee!important}
+.fs-photo-editor .fs-simple-option-button{background:#f3f3f6!important;color:#24242a!important;border-color:#e7e7ed!important}
+.fs-photo-editor .fs-edit-hint{display:none!important}
+.fs-photo-editor .fs-canva-toolbar{top:-59px!important;border:1px solid #ededf1!important;box-shadow:0 4px 14px #00000016!important}
+.fs-photo-editor .fs-canva-toolbar.hidden{display:none!important}
+.fs-photo-editor .fs-canva-toolbar button{font-size:21px!important}
+.fs-photo-editor .fs-edit-text.selected{outline:2px solid #9747ff!important}
+@media(max-height:730px){.fs-photo-editor .fs-edit-stage{width:min(calc(100vw - 80px),calc((100dvh - 235px)*0.5625),400px)!important}}
 `;
 
 function ensurePhotoEditorStyles(){
