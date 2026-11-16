@@ -467,6 +467,10 @@ function applyCameraFilterFormat(format){
 function cameraView(){
   const fromGallery=Boolean(app.galleryPhoto);
   return `<section class="client-camera-screen">
+    <div class="fs-camera-brand" aria-label="Filtros Studio — Filtros personalizados">
+      <img src="./assets/filtros-studio-mark.svg" alt="" decoding="async">
+      <span><strong>Filtros Studio</strong><small>FILTROS PERSONALIZADOS</small></span>
+    </div>
     <div class="client-viewfinder-wrap">
       <div class="camera-frame client-viewfinder" data-filter-format="story">
         
@@ -670,7 +674,7 @@ function photoEditorView(){
     `<button type="button" class="fs-edit-font ${active?.font===key?'chosen':''}" data-act="text-font" data-id="${key}" ${active?'':'disabled'} style="font-family:${escapeHtml(font.css)};font-weight:${font.weight}">${font.label}</button>`
   ).join('');
   const styles=[['none','Sem sombra'],['plain','Sombra suave'],['shadow','Sombra forte'],['dark','Faixa escura'],['light','Faixa clara'],['outline','Contorno']].map(([key,label])=>
-    `<button type="button" class="fs-edit-style fs-style-preview-card ${active?.style===key?'chosen':''}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Aplicar ${label}" aria-pressed="${active?.style===key?'true':'false'}"><span class="fs-style-preview fs-style-preview--${key}" aria-hidden="true"><span>Aa</span></span><span class="fs-style-preview-label">${label}</span></button>`
+    `<button type="button" class="fs-edit-style fs-style-preview-card ${active?.style===key?'chosen':''}" style="--preview-text-color:${escapeHtml(active?.style==='light'?'#121928':(active?.color||'#ffffff'))}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Aplicar ${label}" aria-pressed="${active?.style===key?'true':'false'}"><span class="fs-style-preview fs-style-preview--${key}" aria-hidden="true"><span>Aa</span></span><span class="fs-style-preview-label">${label}</span></button>`
   ).join('');
   const colors=PHOTO_TEXT_COLORS.map(color=>
     `<button type="button" class="fs-edit-color ${active?.color===color?'chosen':''}" data-act="text-color" data-id="${color}"
@@ -2985,6 +2989,88 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
  .client-app.is-camera .client-viewfinder{
   width:min(calc(100vw - 12px),calc((100dvh - 173px)*.5625),480px)!important;
  }
+}
+
+/* Identidade compacta e integrada ao topo da câmera. */
+.client-app.is-camera .fs-camera-brand{
+ display:flex;align-items:center;justify-content:center;gap:9px;
+ width:max-content;max-width:calc(100% - 24px);
+ margin:0 auto 11px;padding:0;color:#fff;
+ background:transparent;border:0;box-shadow:none;
+}
+.client-app.is-camera .fs-camera-brand img{
+ display:block;width:30px;height:30px;object-fit:contain;
+ border-radius:8px;flex:none;
+}
+.client-app.is-camera .fs-camera-brand span{display:flex;flex-direction:column;gap:1px;min-width:0}
+.client-app.is-camera .fs-camera-brand strong{font-size:14px;font-weight:800;letter-spacing:.015em;line-height:1.1}
+.client-app.is-camera .fs-camera-brand small{font-size:8px;font-weight:650;letter-spacing:.09em;line-height:1.2;opacity:.78}
+.client-app.is-camera .client-content{padding-top:13px!important}
+.client-app.is-camera .client-viewfinder[data-filter-format="story"]{
+ aspect-ratio:9/16!important;
+ width:min(calc(100vw - 12px),calc((100dvh - 202px)*.5625),520px)!important;
+}
+.client-app.is-camera .client-viewfinder[data-filter-format="feed"]{
+ aspect-ratio:4/5!important;
+ width:min(calc(100vw - 12px),calc((100dvh - 202px)*.8),520px)!important;
+}
+.client-app.is-camera:has(.client-gallery-finish) .client-viewfinder[data-filter-format="feed"]{
+ width:min(calc(100vw - 12px),calc((100dvh - 242px)*.8),520px)!important;
+}
+/* O PNG sempre cabe inteiro na área de visualização. */
+.client-app.is-camera .client-viewfinder #cameraOverlay{
+ width:100%!important;height:100%!important;object-fit:fill!important;
+}
+/* Respeitar a proporção do arquivo em resultado e edição. */
+.client-app.is-preview .fs-result-picture{
+ aspect-ratio:var(--photo-ratio,9/16)!important;
+ width:min(calc(100vw - 28px),calc((100dvh - 365px)*var(--photo-width-ratio, .5625)),450px)!important;
+ max-width:100%!important;
+}
+.client-app.is-preview .fs-result-picture img{object-fit:contain!important}
+.fs-photo-editor .fs-edit-stage{
+ aspect-ratio:var(--photo-ratio,9/16)!important;
+ width:min(calc(100vw - 20px),420px)!important;
+ max-height:calc(100dvh - 290px)!important;
+}
+.fs-photo-editor .fs-edit-base{object-fit:contain!important}
+@media(max-height:700px){
+ .client-app.is-camera .fs-camera-brand{margin-bottom:7px}
+ .client-app.is-camera .client-viewfinder[data-filter-format="story"]{
+  width:min(calc(100vw - 12px),calc((100dvh - 188px)*.5625),480px)!important;
+ }
+ .client-app.is-camera .client-viewfinder[data-filter-format="feed"]{
+  width:min(calc(100vw - 12px),calc((100dvh - 188px)*.8),480px)!important;
+ }
+}
+
+/* Cards de estilos integrados ao azul do aplicativo, sem blocos brancos. */
+.fs-photo-editor .fs-edit-style.fs-style-preview-card{
+ background:rgba(255,255,255,.065)!important;
+ border:1px solid rgba(255,255,255,.25)!important;
+ color:#fff!important;
+ box-shadow:none!important;
+}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card.chosen{
+ background:rgba(255,255,255,.15)!important;
+ border:2px solid #d9b7ff!important;
+ color:#fff!important;
+}
+.fs-photo-editor .fs-style-preview{
+ background:rgba(0,0,0,.18)!important;
+ border:1px solid rgba(255,255,255,.14);
+}
+.fs-photo-editor .fs-style-preview span{
+ color:var(--preview-text-color,#fff)!important;
+}
+.fs-photo-editor .fs-style-preview--light span{
+ color:#121928!important;
+}
+.fs-photo-editor .fs-style-preview-label{color:inherit!important}
+.fs-photo-editor .fs-edit-font.chosen{
+ background:rgba(255,255,255,.16)!important;
+ color:#fff!important;
+ border-color:#d9b7ff!important;
 }
 `;
 
