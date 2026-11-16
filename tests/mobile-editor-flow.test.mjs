@@ -55,12 +55,12 @@ test('enquadramento é posterior à captura e separado da moldura',()=>{
   assert.match(css,/touch-action:none!important/);
 });
 
-test('editor mantém somente o campo de escrita, com opções após Pronto',()=>{
+test('editor escreve na foto, sem confirmação obrigatória por texto',()=>{
   const view=between('function photoEditorView(){','function photoTextOpen(){');
-  const compose=view.slice(view.indexOf('<div class="fs-edit-compose hidden"'));
+  const compose=view.slice(view.indexOf('id="photoTextStage"'));
   assert.match(compose,/id="photoTextInput"/);
-  assert.match(compose,/data-act="text-compose-done"/);
-  assert.doesNotMatch(compose,/fs-edit-compose-fonts|fs-edit-compose-options/);
+  assert.match(compose,/fs-edit-inline-input/);
+  assert.doesNotMatch(compose,/data-act="text-compose-done"|fs-edit-compose hidden/);
   assert.match(view,/fs-edit-fonts/);
   assert.match(view,/fs-edit-colors/);
   assert.match(view,/id="photoTextSize"/);
@@ -93,6 +93,6 @@ test('cores, proporções e cache coerentes com a identidade Filtros Studio',()=
   assert.match(css,/\.fs-photo-editor,\.fs-framing-screen\{/);
   assert.match(css,/background-color:#001893!important/);
   assert.match(css,/fs-frame-stage\[data-format="feed"\]/);
-  assert.match(html,/app\.js\?v=20261111-add-text-above-v13/);
-  assert.match(html,/photo-editor\.css\?v=20261111-add-text-above-v13/);
+  assert.match(html,/app\.js\?v=20261116-texto-direto-v14/);
+  assert.match(html,/photo-editor\.css\?v=20261116-texto-direto-v14/);
 });
