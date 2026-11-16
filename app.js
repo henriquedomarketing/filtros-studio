@@ -2887,6 +2887,44 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 @media(max-height:700px){
  .client-app.is-camera .client-viewfinder{width:min(calc(100vw - 24px),calc((100dvh - 230px)*.5625),470px)!important}
 }
+
+/* Ajuste de proporção da câmera e limpeza visual dos seletores numerados. */
+.client-app.is-camera .client-viewfinder{
+ width:min(calc(100vw - 16px),calc((100dvh - 190px)*.5625),520px)!important;
+}
+.client-app.is-camera:has(.client-gallery-finish) .client-viewfinder{
+ width:min(calc(100vw - 16px),calc((100dvh - 215px)*.5625),520px)!important;
+}
+.client-app.is-camera .client-numbered-filter-rail{
+ overflow-x:visible!important;
+ padding:6px 5px!important;
+ filter:none!important;
+ background:transparent!important;
+ box-shadow:none!important;
+}
+.client-app.is-camera .client-numbered-filter{
+ appearance:none!important;-webkit-appearance:none!important;
+ background:#001893!important;color:#fff!important;
+ border:1px solid rgba(255,255,255,.32)!important;
+ outline:0!important;box-shadow:none!important;
+ filter:none!important;transform:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ text-shadow:none!important;
+}
+.client-app.is-camera .client-numbered-filter.active{
+ background:#fff!important;color:#001893!important;
+ border:2px solid #001893!important;
+}
+.client-app.is-camera .client-numbered-filter::before,
+.client-app.is-camera .client-numbered-filter::after{
+ content:none!important;display:none!important;
+}
+.client-app.is-camera .client-numbered-filter:focus:not(:focus-visible){outline:none!important}
+@media(max-height:700px){
+ .client-app.is-camera .client-viewfinder{
+  width:min(calc(100vw - 16px),calc((100dvh - 185px)*.5625),480px)!important;
+ }
+}
 `;
 
 function ensurePhotoEditorStyles(){
