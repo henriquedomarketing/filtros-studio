@@ -693,6 +693,7 @@ function photoEditorView(){
       <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--editor-ratio:${(photo.width||1080)/(photo.height||1920)};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
+        ${editor.addTextPoint&&!editor.composing?`<button type="button" class="fs-edit-add-here" data-act="text-add-here" style="left:${(editor.addTextPoint.x*100).toFixed(2)}%;top:${(editor.addTextPoint.y*100).toFixed(2)}%" aria-label="Adicionar novo texto" title="Adicionar novo texto"><span aria-hidden="true">+</span><span class="fs-edit-add-label">Novo texto</span></button>`:''}
         
         <span class="fs-edit-text-measure" id="photoTextMeasure" aria-hidden="true"></span>
         <textarea class="fs-edit-inline-input hidden" id="photoTextInput" rows="1" maxlength="220"
@@ -864,6 +865,8 @@ function photoTextAdd(){
   const e=app.photoEditor;
   if(!e)return;
   const item={id:id(),text:'',x:.5,y:.48,size:80,font:'modern',color:'#FFFFFF',style:'plain',effectColor:'#000000',rotation:0};
+  if(e.addTextPoint){item.x=e.addTextPoint.x;item.y=e.addTextPoint.y;}
+  e.addTextPoint=null;
   e.texts.push(item);e.selectedId=item.id;e.tool=null;
   photoTextRefreshLayers();
   photoTextRefreshControls();
@@ -955,6 +958,7 @@ function photoTextComposeOpen(){
   const editor=app.photoEditor,item=photoTextActive(),field=$('photoTextInput');
   if(!editor||!item||!field)return;
   editor.composing=true;
+  editor.addTextPoint=null;
   field.value=item.text;
   photoTextRefreshLayers();
   photoTextSyncInline();
@@ -997,11 +1001,14 @@ function photoTextInputBlurred(event){
 function photoTextStageClicked(event){
   if(app.page!=='editor'||!app.photoEditor)return;
   if(!event.target.closest?.('#photoTextStage'))return;
-  if(event.target.closest?.('[data-photo-text],#photoTextInput'))return;
+  if(event.target.closest?.('[data-photo-text],#photoTextInput,#photoTextConfirm,[data-act="text-add-here"]'))return;
   const editor=app.photoEditor;
   if(editor.ignoreStageClick){editor.ignoreStageClick=false;return;}
   if(editor.composing)photoTextComposeDone({refresh:false});
-  // Um toque no espaço vazio apenas encerra a seleção; nunca cria texto.
+  // Um toque livre oferece a opção de criar texto, sem adicioná-lo automaticamente.
+  const stage=$('photoTextStage'),rect=stage?.getBoundingClientRect();
+  if(!rect?.width||!rect?.height)return;
+  editor.addTextPoint={x:Math.max(.08,Math.min(.92,(event.clientX-rect.left)/rect.width)),y:Math.max(.06,Math.min(.94,(event.clientY-rect.top)/rect.height))};
   editor.selectedId=null;editor.tool=null;
   render();
 }
@@ -3155,6 +3162,11 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-edit-confirm{position:absolute;z-index:8;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;border:2px solid #fff;background:#12a66a;color:#fff;font-size:24px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 14px rgba(0,0,0,.3);touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
 .fs-photo-editor .fs-edit-confirm.hidden{display:none!important}
 .fs-photo-editor .fs-edit-confirm:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
+/* Ação contextual para criar texto apenas quando a pessoa desejar. */
+.fs-photo-editor .fs-edit-add-here{position:absolute;z-index:7;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;padding:7px 11px 7px 8px;max-width:90%;min-height:42px;border:1px solid rgba(255,255,255,.8);border-radius:999px;background:rgba(0,24,147,.94);color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3);font-size:12px;font-weight:750;white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
+.fs-photo-editor .fs-edit-add-here>span:first-child{display:grid;place-items:center;background:#fff;color:#001893;border-radius:50%;width:25px;height:25px;font-size:23px;line-height:1;font-weight:500;flex:none}
+.fs-photo-editor .fs-edit-add-here:focus-visible{outline:3px solid #fff;outline-offset:3px}
 `;
 
 function ensurePhotoEditorStyles(){
@@ -4265,6 +4277,7 @@ if(act==='text-smaller'||act==='text-larger'){
   return;
 }
 if(act==='text-confirm'){photoTextComposeDone();return;}
+if(act==='text-add-here'){photoTextAdd();return;}
 if(act==='text-add'){photoTextAdd();return;}
 if(act==='text-duplicate'){
   const editor=app.photoEditor,item=photoTextActive();if(!editor||!item)return;
