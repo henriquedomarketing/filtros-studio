@@ -204,12 +204,6 @@ function layout(content){const admin=app.profile?.role==='admin';
     return `<div class="client-app ${type} ${testing?'is-admin-test':''}" ${home?`style="${brandStyle(app.company)}"`:''}>
       ${cameraMode?`<header class="client-camera-header" style="${brandStyle(testing?testingCompany:app.company)}">
         <button type="button" class="client-camera-menu-toggle" data-act="open-client-menu" aria-label="Abrir menu de categorias" aria-controls="clientCameraDrawer" aria-expanded="false"><span aria-hidden="true">☰</span></button>
-        <div class="client-top-filters" role="group" aria-label="Filtros disponíveis para esta categoria">
-          ${app.filters.filter(f=>f.category_id===app.selectedCategory&&f.active).map(f=>`<button type="button" class="client-filter-choice ${app.selectedFilter===f.id?'active':''}" data-act="choose-filter" data-id="${escapeHtml(f.id)}" aria-label="Selecionar filtro ${escapeHtml(f.name)}" aria-pressed="${app.selectedFilter===f.id}">
-            <span class="client-filter-circle"><img data-img="${escapeHtml(f.id)}" alt="" loading="lazy"></span>
-            <span class="client-filter-name">${escapeHtml(f.name)}</span>
-          </button>`).join('')||'<span class="client-top-filters-empty">Nenhum filtro disponível</span>'}
-        </div>
       </header>`:type==='is-preview'?`<header class="client-preview-header">
         <button type="button" class="client-preview-back" data-act="photo-back" aria-label="Voltar para a câmera"><span aria-hidden="true">←</span> Voltar</button>
       </header>`:`<header class="client-header">
@@ -481,6 +475,9 @@ function cameraView(){
           ? `<img id="galleryBase" class="client-gallery-image" src="${escapeHtml(app.galleryPhoto.url)}" alt="Foto escolhida na galeria, recortada ao centro em formato Stories">`
           : '<video id="cameraVideo" autoplay playsinline muted></video>'}
         <img class="hidden" id="cameraOverlay" alt="Filtro sobre a foto">
+        <nav class="client-numbered-filter-rail" aria-label="Escolher filtro por número">
+          ${app.filters.filter(f=>f.category_id===app.selectedCategory&&f.active).map((f,i)=>`<button type="button" class="client-filter-choice client-numbered-filter ${app.selectedFilter===f.id?'active':''}" data-act="choose-filter" data-id="${escapeHtml(f.id)}" aria-label="Filtro ${i+1}: ${escapeHtml(f.name)}" title="${escapeHtml(f.name)}" aria-pressed="${app.selectedFilter===f.id}">${i+1}</button>`).join('')||'<span class="client-numbered-empty">Sem filtros</span>'}
+        </nav>
         ${fromGallery?'<button type="button" class="client-gallery-back" data-act="use-camera" aria-label="Voltar à câmera sem a foto importada"><span aria-hidden="true">←</span> Voltar à câmera</button>':''}
         ${fromGallery?'<span class="client-gallery-indicator">FOTO DA GALERIA</span>':''}
       </div>
@@ -2862,6 +2859,18 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-frame-stage[data-format="feed"]{width:min(calc(100vw - 28px),calc((100dvh - 225px)*.8),480px)!important}
 .client-app.is-preview .fs-result-picture{width:min(calc(100vw - 36px),calc((100dvh - 290px)*.5625),440px)!important}
 }
+
+/* Teste: navegação numerada sobre a câmera, sem miniaturas. */
+.client-app.is-camera .client-camera-header{display:flex!important;align-items:center!important;justify-content:flex-start!important}
+.client-app.is-camera .client-camera-header .client-top-filters{display:none!important}
+.client-viewfinder{position:relative!important}
+.client-numbered-filter-rail{position:absolute!important;right:8px!important;top:50%!important;transform:translateY(-50%)!important;z-index:12!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:9px!important;max-height:75%!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding:5px 2px!important;scrollbar-width:none!important;pointer-events:auto!important}
+.client-numbered-filter-rail::-webkit-scrollbar{display:none}
+.client-numbered-filter{display:grid!important;place-items:center!important;flex:0 0 auto!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;border-radius:50%!important;background:#001893!important;color:#fff!important;border:1px solid #ffffff55!important;box-shadow:0 2px 9px #0005!important;font:700 14px/1 Inter,system-ui,sans-serif!important;padding:0!important}
+.client-numbered-filter.active{background:#fff!important;color:#001893!important;border:2px solid #001893!important}
+.client-numbered-filter .client-filter-circle,.client-numbered-filter .client-filter-name{display:none!important}
+.client-numbered-empty{font-size:10px;color:#fff;background:#001893b8;border-radius:9px;padding:7px}
+@media(max-width:380px){.client-numbered-filter{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}.client-numbered-filter-rail{right:5px!important;gap:7px!important}}
 `;
 
 function ensurePhotoEditorStyles(){
