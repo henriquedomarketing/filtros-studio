@@ -988,7 +988,12 @@ function photoTextComposeDone({refresh=true}={}){
     editor.selectedId=editor.texts.at(-1)?.id||null;
     if(!editor.texts.length)editor.tool=null;
   }
-  if(refresh)render();
+  // A camada fica oculta durante a digitação; restaurá-la imediatamente
+  // evita o texto desaparecer até um próximo toque quando refresh=false.
+  if(!refresh){
+    photoTextRefreshLayers();
+    photoTextRefreshControls();
+  }else render();
 }
 
 // Encerrar a digitação antes de tocar em ferramentas, outra frase ou na foto.
