@@ -1814,3 +1814,8 @@
 .fs-photo-editor .fs-edit-confirm{position:absolute;z-index:8;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;border:2px solid #fff;background:#12a66a;color:#fff;font-size:24px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 14px rgba(0,0,0,.3);touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
 .fs-photo-editor .fs-edit-confirm.hidden{display:none!important}
 .fs-photo-editor .fs-edit-confirm:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
+/* Ação contextual para criar texto apenas quando a pessoa desejar. */
+.fs-photo-editor .fs-edit-add-here{position:absolute;z-index:7;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;padding:7px 11px 7px 8px;max-width:90%;min-height:42px;border:1px solid rgba(255,255,255,.8);border-radius:999px;background:rgba(0,24,147,.94);color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3);font-size:12px;font-weight:750;white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
+.fs-photo-editor .fs-edit-add-here>span:first-child{display:grid;place-items:center;background:#fff;color:#001893;border-radius:50%;width:25px;height:25px;font-size:23px;line-height:1;font-weight:500;flex:none}
+.fs-photo-editor .fs-edit-add-here:focus-visible{outline:3px solid #fff;outline-offset:3px}
