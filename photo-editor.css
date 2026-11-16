@@ -1382,3 +1382,16 @@
   border-radius:10px;
 }
 .fs-photo-editor .fs-edit-hint{line-height:1.35!important}
+
+/* Controles contextuais móveis inspirados no Canva */
+.fs-photo-editor .fs-edit-stage{overflow:visible}
+.fs-photo-editor .fs-edit-text.selected{outline:2px solid #9747ff!important;outline-offset:2px;border:0!important}
+.fs-photo-editor .fs-edit-text.selected.is-composing{outline:0!important}
+.fs-photo-editor .fs-canva-handle{position:absolute;display:flex;align-items:center;justify-content:center;z-index:5;background:#fff;color:#24232b;border:2px solid #bfc1c9;box-shadow:0 2px 9px #0002;touch-action:none;pointer-events:auto}
+.fs-photo-editor .fs-canva-handle-scale{width:23px;height:39px;border-radius:12px;right:-15px;top:50%;transform:translateY(-50%);cursor:nwse-resize}
+.fs-photo-editor .fs-canva-handle-rotate{width:37px;height:37px;border-radius:50%;left:50%;bottom:-56px;transform:translateX(-50%);font-size:25px;font-weight:400;cursor:grab}
+.fs-photo-editor .fs-canva-toolbar{position:absolute;z-index:12;left:50%;top:-62px;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:3px;padding:6px 10px;background:#fff;color:#14151b;border-radius:40px;box-shadow:0 6px 22px #09092d36;max-width:calc(100% - 12px);white-space:nowrap}
+.fs-photo-editor .fs-canva-toolbar button{display:grid;place-items:center;min-width:43px;height:40px;border:0;border-radius:25px;background:transparent;color:#16151c;font-size:24px;font-weight:600;cursor:pointer}
+.fs-photo-editor .fs-canva-toolbar button:active{background:#f1edfa}
+.fs-photo-editor .fs-edit-stage:has(.fs-edit-inline-input:not(.hidden)) .fs-canva-toolbar{display:none}
+@media(max-width:430px){.fs-photo-editor .fs-canva-toolbar{top:-57px}.fs-photo-editor .fs-canva-toolbar button{min-width:39px;height:37px}}

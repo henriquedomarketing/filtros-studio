@@ -664,6 +664,7 @@ function photoTextLayer(item){
     font-family:${escapeHtml(font.css)};font-weight:${font.weight};color:${escapeHtml(color)};
     transform:translate(-50%,-50%) rotate(${Number(item.rotation)||0}deg)">
     <span>${escapeHtml(item.text||'Seu texto').replace(/\n/g,'<br>')}</span>
+    ${app.photoEditor?.selectedId===item.id&&!composing?'<span class="fs-canva-handle fs-canva-handle-scale" data-text-handle="scale" aria-hidden="true"></span><span class="fs-canva-handle fs-canva-handle-rotate" data-text-handle="rotate" aria-hidden="true">↻</span>':''}
   </div>`;
 }
 
@@ -692,6 +693,7 @@ function photoEditorView(){
       <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
+        ${'<div class="fs-canva-toolbar '+(active&&!editor.composing?'':'hidden')+'" role="toolbar" aria-label="Ações do texto selecionado"><button type="button" data-act="text-add" aria-label="Adicionar texto" title="Adicionar texto">＋</button><button type="button" data-act="text-duplicate" aria-label="Duplicar texto" title="Duplicar texto">▣</button><button type="button" data-act="text-delete" aria-label="Excluir texto" title="Excluir texto">✕</button><button type="button" data-act="text-more" aria-label="Mais opções de texto" title="Mais opções">•••</button></div>'}
         <span class="fs-edit-text-measure" id="photoTextMeasure" aria-hidden="true"></span>
         <textarea class="fs-edit-inline-input hidden" id="photoTextInput" rows="1" maxlength="220"
           placeholder="Digite seu texto" aria-label="Editar texto diretamente na foto"
@@ -931,6 +933,9 @@ function photoTextRefreshLayers(){
 
 function photoTextRefreshControls(){
   const active=photoTextActive();
+  const toolbar=document.querySelector('.fs-canva-toolbar');
+  if(toolbar)toolbar.classList.toggle('hidden',!active||!!app.photoEditor?.composing);
+
   document.querySelectorAll('.fs-edit-font,.fs-edit-style,.fs-edit-color').forEach(el=>{
     const chosen=!!active&&(el.dataset.id===active.font||el.dataset.id===active.style||el.dataset.id===active.color);
     el.classList.toggle('chosen',chosen);
@@ -1099,14 +1104,16 @@ function photoTextPointerDown(event){
   const stage=event.target.closest?.('#photoTextStage');
   if(!stage)return;
   const activeDrag=editor.drag;
+  const handle=event.target.closest?.('[data-text-handle]')?.dataset.textHandle||null;
   let id=activeDrag?.id;
   if(!activeDrag){
     const el=event.target.closest?.('[data-photo-text]');
     if(!el)return;
     id=el.dataset.photoText;
     if(!editor.texts.some(item=>item.id===id))return;
+    const wasSelected=editor.selectedId===id;
     editor.selectedId=id;
-    editor.drag={id,pointers:new Map(),start:null,moved:false,multi:false,
+    editor.drag={id,pointers:new Map(),start:null,moved:false,multi:false,handle,wasSelected,
       initialX:event.clientX,initialY:event.clientY};
     photoTextRefreshControls();
   }
@@ -1131,6 +1138,18 @@ function photoTextPointerMove(event){
   if(drag.pointers.size>=2&&drag.start.angle!==null){
     const delta=photoTextGestureAngle(drag.pointers)-drag.start.angle;
     values.rotation=Math.round((drag.start.rotation+((delta+540)%360-180))*10)/10;
+  }
+  if(drag.handle==='scale'){
+    const dx=event.clientX-drag.initialX,dy=event.clientY-drag.initialY;
+    const factor=Math.max(.2,1+(dx+dy)/Math.max(100,stage.getBoundingClientRect().width));
+    values.size=Math.max(4,Math.min(600,Math.round(drag.start.size*factor)));
+    values.x=drag.start.x;values.y=drag.start.y;
+  }else if(drag.handle==='rotate'){
+    const rect=stage.getBoundingClientRect();
+    const cx=rect.left+drag.start.x*rect.width,cy=rect.top+drag.start.y*rect.height;
+    const startAngle=Math.atan2(drag.initialY-cy,drag.initialX-cx);
+    values.rotation=Math.round((drag.start.rotation+(Math.atan2(event.clientY-cy,event.clientX-cx)-startAngle)*180/Math.PI)*10)/10;
+    values.x=drag.start.x;values.y=drag.start.y;
   }
   Object.assign(item,values);
   // Não recriar o DOM durante o gesto: mantém a captura do ponteiro no iOS.
@@ -1157,7 +1176,7 @@ function photoTextPointerUp(event){
     setTimeout(()=>{if(app.photoEditor===editor)editor.ignoreStageClick=false;},0);
     photoTextRefreshLayers();
     photoTextRefreshControls();
-    if(tapped)photoTextComposeOpen();
+    if(tapped&&!drag.handle&&drag.wasSelected)photoTextComposeOpen();
   }
 }
 
@@ -2694,6 +2713,19 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
   border-radius:10px;
 }
 .fs-photo-editor .fs-edit-hint{line-height:1.35!important}
+
+/* Controles contextuais móveis inspirados no Canva */
+.fs-photo-editor .fs-edit-stage{overflow:visible}
+.fs-photo-editor .fs-edit-text.selected{outline:2px solid #9747ff!important;outline-offset:2px;border:0!important}
+.fs-photo-editor .fs-edit-text.selected.is-composing{outline:0!important}
+.fs-photo-editor .fs-canva-handle{position:absolute;display:flex;align-items:center;justify-content:center;z-index:5;background:#fff;color:#24232b;border:2px solid #bfc1c9;box-shadow:0 2px 9px #0002;touch-action:none;pointer-events:auto}
+.fs-photo-editor .fs-canva-handle-scale{width:23px;height:39px;border-radius:12px;right:-15px;top:50%;transform:translateY(-50%);cursor:nwse-resize}
+.fs-photo-editor .fs-canva-handle-rotate{width:37px;height:37px;border-radius:50%;left:50%;bottom:-56px;transform:translateX(-50%);font-size:25px;font-weight:400;cursor:grab}
+.fs-photo-editor .fs-canva-toolbar{position:absolute;z-index:12;left:50%;top:-62px;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:3px;padding:6px 10px;background:#fff;color:#14151b;border-radius:40px;box-shadow:0 6px 22px #09092d36;max-width:calc(100% - 12px);white-space:nowrap}
+.fs-photo-editor .fs-canva-toolbar button{display:grid;place-items:center;min-width:43px;height:40px;border:0;border-radius:25px;background:transparent;color:#16151c;font-size:24px;font-weight:600;cursor:pointer}
+.fs-photo-editor .fs-canva-toolbar button:active{background:#f1edfa}
+.fs-photo-editor .fs-edit-stage:has(.fs-edit-inline-input:not(.hidden)) .fs-canva-toolbar{display:none}
+@media(max-width:430px){.fs-photo-editor .fs-canva-toolbar{top:-57px}.fs-photo-editor .fs-canva-toolbar button{min-width:39px;height:37px}}
 `;
 
 function ensurePhotoEditorStyles(){
@@ -3762,6 +3794,14 @@ if(act==='text-smaller'||act==='text-larger'){
   return;
 }
 if(act==='text-add'){photoTextAdd();return;}
+if(act==='text-duplicate'){
+  const editor=app.photoEditor,item=photoTextActive();if(!editor||!item)return;
+  const copy={...item,id:id(),x:Math.min(1.1,item.x+.045),y:Math.min(1.1,item.y+.035)};
+  editor.texts.push(copy);editor.selectedId=copy.id;editor.tool=null;render();return;
+}
+if(act==='text-more'){
+  if(!app.photoEditor)return;app.photoEditor.tool='style';render();return;
+}
 if(act==='text-edit'){photoTextComposeOpen();return;}
 if(act==='text-cancel'){photoTextCancel();return;}
 if(act==='text-finish'){void photoTextFinish();return;}
