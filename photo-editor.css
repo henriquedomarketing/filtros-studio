@@ -1551,3 +1551,19 @@
 .client-numbered-filter .client-filter-circle,.client-numbered-filter .client-filter-name{display:none!important}
 .client-numbered-empty{font-size:10px;color:#fff;background:#001893b8;border-radius:9px;padding:7px}
 @media(max-width:380px){.client-numbered-filter{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}.client-numbered-filter-rail{right:5px!important;gap:7px!important}}
+
+/* Mais área útil da câmera, sem deformar o PNG 9:16. */
+.client-app.is-camera .client-camera-screen{max-width:540px!important}
+.client-app.is-camera .client-viewfinder-wrap{max-width:540px!important}
+.client-app.is-camera .client-viewfinder{
+  width:min(calc(100vw - 24px),calc((100dvh - 260px)*.5625),510px)!important;
+  max-width:100%!important;
+}
+.client-app.is-camera:has(.client-gallery-finish) .client-viewfinder{
+  width:min(calc(100vw - 24px),calc((100dvh - 290px)*.5625),510px)!important;
+}
+.client-app.is-camera .client-numbered-filter{-webkit-touch-callout:none!important;user-select:none!important;-webkit-user-select:none!important;touch-action:pan-y!important}
+.client-app.is-camera .client-photo-controls{margin:5px auto 5px!important}
+@media(max-height:700px){
+ .client-app.is-camera .client-viewfinder{width:min(calc(100vw - 24px),calc((100dvh - 230px)*.5625),470px)!important}
+}
