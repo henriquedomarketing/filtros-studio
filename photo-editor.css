@@ -1509,3 +1509,6 @@
 .fs-photo-editor .fs-canva-handle-scale{right:-17px!important;top:100%!important;transform:translateY(-50%)!important;border-radius:8px!important}
 .fs-photo-editor .fs-canva-handle-rotate{left:50%!important;bottom:-44px!important;transform:translateX(-50%)!important;border-radius:50%!important}
 .fs-photo-editor .fs-canva-handle svg{width:17px!important;height:17px!important;pointer-events:none}
+
+.fs-photo-editor .fs-canva-delete{position:absolute!important;left:-16px!important;top:-17px!important;display:grid!important;place-items:center!important;width:30px!important;height:30px!important;border:1.5px solid #a16bf0!important;border-radius:50%!important;background:#fff!important;color:#6d37bd!important;box-shadow:0 2px 7px #0003!important;z-index:8!important;cursor:pointer!important;touch-action:manipulation!important;padding:0!important}
+.fs-photo-editor .fs-canva-delete svg{pointer-events:none!important}
