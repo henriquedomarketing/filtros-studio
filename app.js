@@ -2871,6 +2871,22 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .client-numbered-filter .client-filter-circle,.client-numbered-filter .client-filter-name{display:none!important}
 .client-numbered-empty{font-size:10px;color:#fff;background:#001893b8;border-radius:9px;padding:7px}
 @media(max-width:380px){.client-numbered-filter{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}.client-numbered-filter-rail{right:5px!important;gap:7px!important}}
+
+/* Mais área útil da câmera, sem deformar o PNG 9:16. */
+.client-app.is-camera .client-camera-screen{max-width:540px!important}
+.client-app.is-camera .client-viewfinder-wrap{max-width:540px!important}
+.client-app.is-camera .client-viewfinder{
+  width:min(calc(100vw - 24px),calc((100dvh - 260px)*.5625),510px)!important;
+  max-width:100%!important;
+}
+.client-app.is-camera:has(.client-gallery-finish) .client-viewfinder{
+  width:min(calc(100vw - 24px),calc((100dvh - 290px)*.5625),510px)!important;
+}
+.client-app.is-camera .client-numbered-filter{-webkit-touch-callout:none!important;user-select:none!important;-webkit-user-select:none!important;touch-action:pan-y!important}
+.client-app.is-camera .client-photo-controls{margin:5px auto 5px!important}
+@media(max-height:700px){
+ .client-app.is-camera .client-viewfinder{width:min(calc(100vw - 24px),calc((100dvh - 230px)*.5625),470px)!important}
+}
 `;
 
 function ensurePhotoEditorStyles(){
@@ -3852,6 +3868,47 @@ function toggleAdminSensitive(){
     control.title=app.adminSensitiveHidden?'Mostrar números':'Desfocar números';
   }
 }
+
+let filterHoldTimer=null,filterHoldStart=null,filterHoldConsumed=false;
+function clearFilterHold(){if(filterHoldTimer!==null)clearTimeout(filterHoldTimer);filterHoldTimer=null;filterHoldStart=null;}
+async function downloadFilterPNG(fid){
+  const filter=app.filters.find(f=>f.id===fid&&f.category_id===app.selectedCategory&&f.active);
+  if(!filter)return;
+  try{
+    const {data,error}=await api.storage.from('company-filters').download(filter.storage_path);
+    if(error)throw error;
+    const png=new Blob([data],{type:'image/png'});
+    const url=URL.createObjectURL(png);
+    const link=document.createElement('a');
+    link.href=url;link.download='filtro-'+(app.filters.filter(f=>f.category_id===app.selectedCategory&&f.active).findIndex(f=>f.id===fid)+1)+'.png';
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    toast('PNG solicitado! Confira Downloads ou Arquivos no celular.');
+  }catch(error){console.warn('Download do PNG:',error);toast('Não foi possível baixar o filtro. Tente novamente.');}
+}
+function filterNumberPointerDown(event){
+  const button=event.target.closest?.('.client-numbered-filter[data-id]');
+  if(!button||event.button>0)return;
+  clearFilterHold();filterHoldConsumed=false;
+  filterHoldStart={x:event.clientX,y:event.clientY,id:button.dataset.id};
+  filterHoldTimer=setTimeout(()=>{
+    const id=filterHoldStart?.id;filterHoldTimer=null;
+    if(!id)return;
+    filterHoldConsumed=true;
+    if(navigator.vibrate)navigator.vibrate(35);
+    void downloadFilterPNG(id);
+  },650);
+}
+function filterNumberPointerMove(event){
+  if(!filterHoldStart)return;
+  if(Math.hypot(event.clientX-filterHoldStart.x,event.clientY-filterHoldStart.y)>12)clearFilterHold();
+}
+function filterNumberClickCapture(event){
+  if(!filterHoldConsumed)return;
+  if(!event.target.closest?.('.client-numbered-filter'))return;
+  event.preventDefault();event.stopImmediatePropagation();filterHoldConsumed=false;
+}
+
 async function click(event){const target=event.target.closest('[data-act],[data-nav]');if(!target)return;if(target.dataset.nav){navigate(target.dataset.nav);return;}const act=target.dataset.act,uid=target.dataset.id;try{if(act==='toggle-admin-sensitive'){toggleAdminSensitive();return;}if(act==='check-client-access'){
   if(app.profile?.role==='admin')return;
   await loadData();
@@ -4004,6 +4061,13 @@ window.addEventListener('resize',()=>{
 });
 
 $('root').addEventListener('click',photoTextStageClicked);
+$('root').addEventListener('click',filterNumberClickCapture,true);
+$('root').addEventListener('pointerdown',filterNumberPointerDown);
+$('root').addEventListener('pointermove',filterNumberPointerMove);
+$('root').addEventListener('pointerup',clearFilterHold);
+$('root').addEventListener('pointercancel',clearFilterHold);
+$('root').addEventListener('pointerleave',clearFilterHold);
+$('root').addEventListener('contextmenu',event=>{if(event.target.closest?.('.client-numbered-filter'))event.preventDefault();});
 $('root').addEventListener('click',click);
 document.addEventListener('pointerdown',photoTextOutsidePointerDown,true);
 $('root').addEventListener('focusout',photoTextInputBlurred);
