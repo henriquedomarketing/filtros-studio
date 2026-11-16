@@ -1769,3 +1769,43 @@
 .fs-photo-editor .fs-style-preview--dark span{background:var(--effect-band,#000c)}
 .fs-photo-editor .fs-style-preview--light span{background:var(--effect-band,#fffffff0)}
 .fs-photo-editor .fs-style-preview--outline span{-webkit-text-stroke:1.8px var(--effect-color,#000)}
+
+/* Editor: o palco acompanha a proporção real (9:16 ou 4:5), sem quadro externo.
+   A largura é limitada pela altura disponível, nunca pela altura fixa do CSS antigo. */
+.fs-photo-editor .fs-edit-workspace{
+  padding:8px 8px 10px!important;
+  min-height:0!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+}
+.fs-photo-editor .fs-edit-stage,
+.fs-photo-editor .fs-edit-stage[data-format="story"],
+.fs-photo-editor .fs-edit-stage[data-format="feed"]{
+  box-sizing:border-box!important;
+  flex:0 0 auto!important;
+  width:min(calc(100% - 2px),calc((100dvh - 210px)*var(--editor-ratio,.5625)),520px)!important;
+  height:auto!important;
+  min-width:0!important;
+  max-width:100%!important;
+  max-height:none!important;
+  aspect-ratio:var(--photo-ratio,9/16)!important;
+  border:0!important;
+  border-radius:8px!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  overflow:visible!important;
+}
+.fs-photo-editor .fs-edit-base{
+  width:100%!important;
+  height:100%!important;
+  object-fit:fill!important;
+  border-radius:8px!important;
+}
+@media(max-height:760px){
+  .fs-photo-editor .fs-edit-stage,
+  .fs-photo-editor .fs-edit-stage[data-format="story"],
+  .fs-photo-editor .fs-edit-stage[data-format="feed"]{
+    width:min(calc(100% - 2px),calc((100dvh - 190px)*var(--editor-ratio,.5625)),520px)!important;
+  }
+}
