@@ -3255,6 +3255,11 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 
 /* Check verde, pequeno e discreto; mantém confirmação automática ao tocar fora. */
 .fs-photo-editor .fs-edit-confirm{color:#54e0a0;background:rgba(25,36,56,.86);border-color:rgba(255,255,255,.58)}
+
+/* Foto ajustável atrás da moldura PNG e dos textos, no editor. */
+.fs-photo-editor .fs-edit-framing-source{position:absolute;top:50%;left:50%;width:100%;height:100%;max-width:none;object-fit:fill;transform:translate(-50%,-50%);pointer-events:none;user-select:none;-webkit-user-drag:none}
+.fs-photo-editor .fs-edit-framing-overlay{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;user-select:none}
+.fs-photo-editor .fs-edit-stage{touch-action:none}
 `;
 
 function ensurePhotoEditorStyles(){
