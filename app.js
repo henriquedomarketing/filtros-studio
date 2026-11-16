@@ -674,7 +674,7 @@ function photoEditorView(){
     `<button type="button" class="fs-edit-font ${active?.font===key?'chosen':''}" data-act="text-font" data-id="${key}" ${active?'':'disabled'} style="font-family:${escapeHtml(font.css)};font-weight:${font.weight}">${font.label}</button>`
   ).join('');
   const styles=[['none','Sem sombra'],['plain','Sombra suave'],['shadow','Sombra forte'],['dark','Faixa escura'],['light','Faixa clara'],['outline','Contorno']].map(([key,label])=>
-    `<button type="button" class="fs-edit-style fs-style-preview-card ${active?.style===key?'chosen':''}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Aplicar ${label}" aria-pressed="${active?.style===key?'true':'false'}"><span class="fs-style-preview fs-style-preview--${key}" aria-hidden="true"><span>Aa</span></span><span class="fs-style-preview-label">${label}</span></button>`
+    `<button type="button" class="fs-edit-style fs-style-preview-card ${active?.style===key?'chosen':''}" style="--preview-text-color:${escapeHtml(active?.style==='light'?'#121928':(active?.color||'#ffffff'))}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Aplicar ${label}" aria-pressed="${active?.style===key?'true':'false'}"><span class="fs-style-preview fs-style-preview--${key}" aria-hidden="true"><span>Aa</span></span><span class="fs-style-preview-label">${label}</span></button>`
   ).join('');
   const colors=PHOTO_TEXT_COLORS.map(color=>
     `<button type="button" class="fs-edit-color ${active?.color===color?'chosen':''}" data-act="text-color" data-id="${color}"
@@ -3042,6 +3042,35 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
  .client-app.is-camera .client-viewfinder[data-filter-format="feed"]{
   width:min(calc(100vw - 12px),calc((100dvh - 188px)*.8),480px)!important;
  }
+}
+
+/* Cards de estilos integrados ao azul do aplicativo, sem blocos brancos. */
+.fs-photo-editor .fs-edit-style.fs-style-preview-card{
+ background:rgba(255,255,255,.065)!important;
+ border:1px solid rgba(255,255,255,.25)!important;
+ color:#fff!important;
+ box-shadow:none!important;
+}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card.chosen{
+ background:rgba(255,255,255,.15)!important;
+ border:2px solid #d9b7ff!important;
+ color:#fff!important;
+}
+.fs-photo-editor .fs-style-preview{
+ background:rgba(0,0,0,.18)!important;
+ border:1px solid rgba(255,255,255,.14);
+}
+.fs-photo-editor .fs-style-preview span{
+ color:var(--preview-text-color,#fff)!important;
+}
+.fs-photo-editor .fs-style-preview--light span{
+ color:#121928!important;
+}
+.fs-photo-editor .fs-style-preview-label{color:inherit!important}
+.fs-photo-editor .fs-edit-font.chosen{
+ background:rgba(255,255,255,.16)!important;
+ color:#fff!important;
+ border-color:#d9b7ff!important;
 }
 `;
 
