@@ -1640,3 +1640,16 @@
   width:min(calc(100vw - 12px),calc((100dvh - 145px)*.5625),480px)!important;
  }
 }
+
+/* Margem superior discreta; o menu da câmera foi substituído pelo Voltar. */
+.client-app.is-camera .client-content{
+ padding-top:12px!important;
+}
+.client-app.is-camera .client-viewfinder{
+ width:min(calc(100vw - 12px),calc((100dvh - 175px)*.5625),520px)!important;
+}
+@media(max-height:700px){
+ .client-app.is-camera .client-viewfinder{
+  width:min(calc(100vw - 12px),calc((100dvh - 165px)*.5625),480px)!important;
+ }
+}
