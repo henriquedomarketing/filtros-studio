@@ -1784,7 +1784,7 @@
 .fs-photo-editor .fs-edit-stage[data-format="feed"]{
   box-sizing:border-box!important;
   flex:0 0 auto!important;
-  width:min(calc(100% - 2px),calc((100dvh - 210px)*var(--photo-ratio,0.5625)),520px)!important;
+  width:min(calc(100% - 2px),calc((100dvh - 210px)*var(--editor-ratio,.5625)),520px)!important;
   height:auto!important;
   min-width:0!important;
   max-width:100%!important;
@@ -1806,6 +1806,6 @@
   .fs-photo-editor .fs-edit-stage,
   .fs-photo-editor .fs-edit-stage[data-format="story"],
   .fs-photo-editor .fs-edit-stage[data-format="feed"]{
-    width:min(calc(100% - 2px),calc((100dvh - 190px)*var(--photo-ratio,0.5625)),520px)!important;
+    width:min(calc(100% - 2px),calc((100dvh - 190px)*var(--editor-ratio,.5625)),520px)!important;
   }
 }
