@@ -611,8 +611,9 @@ async function finishPhotoFraming(){
     const blob=await new Promise((resolve,reject)=>
       canvas.toBlob(b=>b?resolve(b):reject(Error('Não foi possível gerar a imagem.')),'image/png'));
     const name='filtros-studio-'+Date.now()+'.png';
-    clearCapturedPhoto();
-    app.framingDraft=d;
+    // O rascunho é a fonte da edição posterior: não revogar seu object URL.
+    if(app.captureData?.url)URL.revokeObjectURL(app.captureData.url);
+    if(app.captureData?.baseUrl&&app.captureData.baseUrl!==app.captureData.url)URL.revokeObjectURL(app.captureData.baseUrl);
     app.captureData={blob,file:new File([blob],name,{type:'image/png'}),name,
       url:URL.createObjectURL(blob),width:canvas.width,height:canvas.height,format:d.format.id};
     app.page='preview';render();window.scrollTo(0,0);
@@ -1169,6 +1170,7 @@ function editorBackgroundPointerMove(event){
   d.dx=g.dx+(center.x-g.center.x)/Math.max(1,stage.clientWidth);
   d.dy=g.dy+(center.y-g.center.y)/Math.max(1,stage.clientHeight);
   syncEditorFramingPreview();
+  if(editor.backgroundPointers.size>=2)editor.ignoreStageClick=true;
   event.preventDefault();
 }
 function editorBackgroundPointerEnd(event){
