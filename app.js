@@ -664,7 +664,7 @@ function photoTextLayer(item){
     font-family:${escapeHtml(font.css)};font-weight:${font.weight};color:${escapeHtml(color)};
     transform:translate(-50%,-50%) rotate(${Number(item.rotation)||0}deg)">
     <span>${escapeHtml(item.text||'Seu texto').replace(/\n/g,'<br>')}</span>
-    ${app.photoEditor?.selectedId===item.id&&!composing?'<span class="fs-canva-handle fs-canva-handle-scale" data-text-handle="scale" aria-label="Arraste para redimensionar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16 16 8M9 8h7v7M8 12v4h4"/></svg></span><span class="fs-canva-handle fs-canva-handle-rotate" data-text-handle="rotate" aria-label="Arraste para girar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 6M20 5v6h-6"/></svg></span>':''}
+    ${app.photoEditor?.selectedId===item.id&&!composing?'<span class="fs-canva-handle fs-canva-handle-scale" data-text-handle="scale" aria-label="Arraste para redimensionar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16 16 8M9 8h7v7M8 12v4h4"/></svg></span><span class="fs-canva-handle fs-canva-handle-rotate" data-text-handle="rotate" aria-label="Arraste para girar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 6M20 5v6h-6"/></svg></span><button type="button" class="fs-canva-delete" data-act="text-delete" aria-label="Excluir texto selecionado" title="Excluir texto"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v6M14 11v6"/></svg></button>':''}
   </div>`;
 }
 
@@ -1092,6 +1092,7 @@ function photoTextGestureTransform(start,current,rect){
 function photoTextPointerDown(event){
   const editor=app.photoEditor;
   if(app.page!=='editor'||!editor||editor.composing||editor.eyedropper||editor.saving)return;
+  if(event.target.closest?.('[data-act="text-delete"]'))return;
   const stage=event.target.closest?.('#photoTextStage');
   if(!stage)return;
   const activeDrag=editor.drag;
@@ -2831,6 +2832,9 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-canva-handle-scale{right:-17px!important;top:100%!important;transform:translateY(-50%)!important;border-radius:8px!important}
 .fs-photo-editor .fs-canva-handle-rotate{left:50%!important;bottom:-44px!important;transform:translateX(-50%)!important;border-radius:50%!important}
 .fs-photo-editor .fs-canva-handle svg{width:17px!important;height:17px!important;pointer-events:none}
+
+.fs-photo-editor .fs-canva-delete{position:absolute!important;left:-16px!important;top:-17px!important;display:grid!important;place-items:center!important;width:30px!important;height:30px!important;border:1.5px solid #a16bf0!important;border-radius:50%!important;background:#fff!important;color:#6d37bd!important;box-shadow:0 2px 7px #0003!important;z-index:8!important;cursor:pointer!important;touch-action:manipulation!important;padding:0!important}
+.fs-photo-editor .fs-canva-delete svg{pointer-events:none!important}
 `;
 
 function ensurePhotoEditorStyles(){
