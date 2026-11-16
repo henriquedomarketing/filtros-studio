@@ -2800,6 +2800,26 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-style-preview--light span{background:#ffffffed;color:#222;padding:4px 9px;border-radius:4px;text-shadow:none}
 .fs-photo-editor .fs-style-preview--outline span{-webkit-text-stroke:1.8px #151515;text-shadow:none}
 .fs-photo-editor .fs-style-preview-label{display:block;text-align:center;max-width:100%;font-size:11px!important;line-height:1.2!important}
+
+/* Identidade Filtros Studio: painel azul com controles contrastantes. */
+.fs-photo-editor{background:#eef2fa!important;color:#15265d!important}
+.fs-photo-editor .fs-edit-top{background:#fff!important;border-bottom:1px solid #dfe5f3!important}
+.fs-photo-editor .fs-edit-panel{background:#001893!important;color:#fff!important;border-top:1px solid #3654d2!important;box-shadow:0 -3px 16px #00115c19!important}
+.fs-photo-editor .fs-simple-tool{background:#1533a4!important;color:#fff!important;border:1px solid #5369c9!important;box-shadow:none!important;opacity:1!important}
+.fs-photo-editor .fs-simple-tool svg,.fs-photo-editor .fs-simple-tool span{color:inherit!important;opacity:1!important;stroke:currentColor!important}
+.fs-photo-editor .fs-simple-tool.chosen{background:#fff!important;color:#001893!important;border-color:#fff!important}
+.fs-photo-editor .fs-simple-tool:disabled{background:#233e9d!important;color:#cdd7ff!important;border-color:#5369b8!important;opacity:.72!important}
+.fs-photo-editor .fs-simple-panel .fs-simple-options{background:#0a238c!important;border:1px solid #4b61ba!important;box-shadow:none!important}
+.fs-photo-editor .fs-simple-panel .fs-simple-option-button{background:#18369b!important;color:#fff!important;border:1px solid #6478d0!important}
+.fs-photo-editor .fs-edit-fonts button{color:#fff!important}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card{background:#fff!important;color:#222637!important}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card.chosen{background:#f4edff!important;color:#5822a8!important}
+.fs-photo-editor .fs-edit-workspace{background:#eef2fa!important}
+.fs-photo-editor .fs-canva-handle-scale{width:17px!important;height:30px!important;right:-11px!important;border-width:1.5px!important}
+.fs-photo-editor .fs-canva-handle-rotate{width:31px!important;height:31px!important;bottom:-46px!important;font-size:20px!important}
+.fs-photo-editor .fs-edit-inline-input{background:transparent!important;color:#fff!important;-webkit-text-fill-color:currentColor!important}
+.fs-photo-editor .fs-edit-inline-input::placeholder{color:#fff!important;opacity:.9!important}
+@media(max-width:430px){.fs-photo-editor .fs-edit-panel{padding:9px 10px calc(10px + env(safe-area-inset-bottom,0px))!important}.fs-photo-editor .fs-simple-tool{min-height:49px!important;font-size:12px!important}}
 `;
 
 function ensurePhotoEditorStyles(){
