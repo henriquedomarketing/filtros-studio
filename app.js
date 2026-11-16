@@ -664,7 +664,7 @@ function photoTextLayer(item){
     font-family:${escapeHtml(font.css)};font-weight:${font.weight};color:${escapeHtml(color)};
     transform:translate(-50%,-50%) rotate(${Number(item.rotation)||0}deg)">
     <span>${escapeHtml(item.text||'Seu texto').replace(/\n/g,'<br>')}</span>
-    ${app.photoEditor?.selectedId===item.id&&!composing?'<span class="fs-canva-handle fs-canva-handle-scale" data-text-handle="scale" aria-label="Arraste para redimensionar">⤡</span><span class="fs-canva-handle fs-canva-handle-rotate" data-text-handle="rotate" aria-label="Arraste para girar">↻</span>':''}
+    ${app.photoEditor?.selectedId===item.id&&!composing?'<span class="fs-canva-handle fs-canva-handle-scale" data-text-handle="scale" aria-label="Arraste para redimensionar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16 16 8M9 8h7v7M8 12v4h4"/></svg></span><span class="fs-canva-handle fs-canva-handle-rotate" data-text-handle="rotate" aria-label="Arraste para girar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 6M20 5v6h-6"/></svg></span>':''}
   </div>`;
 }
 
@@ -700,9 +700,6 @@ function photoEditorView(){
     <div class="fs-edit-panel fs-simple-panel ${editor.texts.some(item=>item.text.trim())?'':'fs-simple-empty'}" aria-label="Ferramentas de texto">
       ${editor.texts.some(item=>item.text.trim())?`
       <div class="fs-simple-tools" role="group" aria-label="Ferramentas de edição">
-        <button type="button" class="fs-simple-tool ${editor.tool==='text'?'chosen':''}" data-act="text-tool" data-id="text" ${active?'':'disabled'} aria-pressed="${editor.tool==='text'}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M12 7v13M8 20h8M8 4h8"/></svg><span>Adicionar texto</span>
-        </button>
         <button type="button" class="fs-simple-tool ${editor.tool==='font'?'chosen':''}" data-act="text-tool" data-id="font" ${active?'':'disabled'} aria-pressed="${editor.tool==='font'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19h16M6 16l6-12 6 12M8 12h8"/></svg><span>Fontes</span></button>
         <button type="button" class="fs-simple-tool ${editor.tool==='color'?'chosen':''}" data-act="text-tool" data-id="color" ${active?'':'disabled'} aria-pressed="${editor.tool==='color'}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-2.8 4.1-6 7.7-6 11a6 6 0 0 0 12 0c0-3.3-3.2-6.9-6-11Z"/><path d="M9 15a3 3 0 0 0 3 3"/></svg><span>Cor</span>
@@ -2820,6 +2817,20 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-edit-panel .fs-simple-tools{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}
 .fs-photo-editor .fs-simple-tool{font-size:11px!important;min-width:0!important}
 .fs-photo-editor .fs-simple-tool span{font-size:11px!important}
+
+/* Fundo do editor na identidade azul; foto segue intacta. */
+.fs-photo-editor{background:#061d78!important;color:#fff!important}
+.fs-photo-editor .fs-edit-workspace{background:linear-gradient(145deg,#122d91 0%,#061b72 100%)!important}
+.fs-photo-editor .fs-edit-top{background:#071e7b!important;color:#fff!important;border-bottom:1px solid #29449f!important}
+.fs-photo-editor .fs-edit-top-title{color:#fff!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-back{color:#fff!important}
+.fs-photo-editor .fs-edit-top .fs-edit-top-done{background:#fff!important;color:#071e7b!important}
+.fs-photo-editor .fs-edit-panel{background:#071e7b!important;border-top:1px solid #344ba5!important}
+.fs-photo-editor .fs-edit-panel .fs-simple-tools{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.fs-photo-editor .fs-canva-handle{width:29px!important;height:29px!important;background:#fff!important;color:#6433c6!important;border:1.5px solid #9a68f4!important;box-shadow:0 1px 5px #0003!important}
+.fs-photo-editor .fs-canva-handle-scale{right:-17px!important;top:100%!important;transform:translateY(-50%)!important;border-radius:8px!important}
+.fs-photo-editor .fs-canva-handle-rotate{left:50%!important;bottom:-44px!important;transform:translateX(-50%)!important;border-radius:50%!important}
+.fs-photo-editor .fs-canva-handle svg{width:17px!important;height:17px!important;pointer-events:none}
 `;
 
 function ensurePhotoEditorStyles(){
