@@ -691,7 +691,7 @@ function photoEditorView(){
     </header>
      <div class="fs-edit-workspace">
       <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--editor-ratio:${(photo.width||1080)/(photo.height||1920)};--photo-height:${photo.height||1920}">
-        <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
+        ${app.framingDraft?`<img id="editorFramingSource" class="fs-edit-framing-source" src="${escapeHtml(app.framingDraft.sourceUrl)}" alt="Foto de fundo ajustável" draggable="false"><img class="fs-edit-framing-overlay" src="${escapeHtml(app.framingDraft.overlayUrl)}" alt="Moldura PNG" draggable="false">`:`<img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com filtro" draggable="false">`}
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
         ${editor.addTextPoint&&!editor.composing?`<button type="button" class="fs-edit-add-here" data-act="text-add-here" style="left:${(editor.addTextPoint.x*100).toFixed(2)}%;top:${(editor.addTextPoint.y*100).toFixed(2)}%" aria-label="Adicionar novo texto" title="Adicionar novo texto"><span aria-hidden="true">+</span><span class="fs-edit-add-label">Novo texto</span></button>`:''}
         
@@ -853,12 +853,13 @@ function photoTextOpen(){
   const photo=app.captureData;
   if(!photo.baseBlob){photo.baseBlob=photo.blob;photo.baseUrl=photo.url;}
   const texts=(photo.texts||[]).map(item=>({...item}));
-  app.photoEditor={texts,selectedId:texts.at(-1)?.id||null,composing:false,drag:null,saving:false,eyedropper:null,tool:null};
+  app.photoEditor={texts,selectedId:texts.at(-1)?.id||null,composing:false,drag:null,saving:false,eyedropper:null,tool:null,backgroundPointers:new Map(),backgroundGesture:null};
   app.page='editor';
   render();
   // A ação ADICIONAR TEXTO abre diretamente o teclado no mesmo gesto do usuário.
   // Preserva os textos anteriores ao reabrir uma foto já editada.
   photoTextAdd();
+  syncEditorFramingPreview();
 }
 
 function photoTextHideAddPrompt(editor){
@@ -1131,6 +1132,50 @@ function photoTextGestureTransform(start,current,rect){
     size:Math.max(4,Math.min(600,Math.round(start.size*scale)))
   };
 }
+function syncEditorFramingPreview(){
+  const d=app.framingDraft,stage=$('photoTextStage'),source=$('editorFramingSource');
+  if(!d||!stage||!source)return;
+  clampFramingDraft(d);
+  const cover=Math.max(d.format.width/d.sourceWidth,d.format.height/d.sourceHeight);
+  source.style.width=(100*d.sourceWidth*cover*d.zoom/d.format.width)+'%';
+  source.style.height=(100*d.sourceHeight*cover*d.zoom/d.format.height)+'%';
+  source.style.transform='translate(calc(-50% + '+(d.dx*stage.clientWidth)+'px),calc(-50% + '+(d.dy*stage.clientHeight)+'px))';
+}
+function editorBackgroundGestureSnapshot(editor){
+  const d=app.framingDraft,points=[...editor.backgroundPointers.values()].slice(0,2);
+  if(!d||!points.length){editor.backgroundGesture=null;return;}
+  const center={x:points.reduce((v,p)=>v+p.x,0)/points.length,y:points.reduce((v,p)=>v+p.y,0)/points.length};
+  editor.backgroundGesture={center,zoom:d.zoom,dx:d.dx,dy:d.dy,distance:points.length===2?Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y):1};
+}
+function editorBackgroundPointerDown(event){
+  const editor=app.photoEditor,d=app.framingDraft;
+  if(app.page!=='editor'||!editor||!d||editor.saving||editor.composing)return;
+  const stage=event.target.closest?.('#photoTextStage');
+  if(!stage||event.target.closest?.('[data-photo-text],[data-text-handle],button,textarea'))return;
+  editor.backgroundPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  editorBackgroundGestureSnapshot(editor);
+  try{stage.setPointerCapture(event.pointerId);}catch(_){}
+}
+function editorBackgroundPointerMove(event){
+  const editor=app.photoEditor,d=app.framingDraft;
+  if(!editor||!d||!editor.backgroundPointers?.has(event.pointerId))return;
+  editor.backgroundPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  const pts=[...editor.backgroundPointers.values()].slice(0,2),g=editor.backgroundGesture;
+  if(!g)return;
+  const center={x:pts.reduce((v,p)=>v+p.x,0)/pts.length,y:pts.reduce((v,p)=>v+p.y,0)/pts.length};
+  const stage=$('photoTextStage');if(!stage)return;
+  d.zoom=pts.length===2?g.zoom*Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)/Math.max(1,g.distance):g.zoom;
+  d.dx=g.dx+(center.x-g.center.x)/Math.max(1,stage.clientWidth);
+  d.dy=g.dy+(center.y-g.center.y)/Math.max(1,stage.clientHeight);
+  syncEditorFramingPreview();
+  event.preventDefault();
+}
+function editorBackgroundPointerEnd(event){
+  const editor=app.photoEditor;
+  if(!editor?.backgroundPointers?.has(event.pointerId))return;
+  editor.backgroundPointers.delete(event.pointerId);
+  editorBackgroundGestureSnapshot(editor);
+}
 function photoTextPointerDown(event){
   const editor=app.photoEditor;
   if(app.page!=='editor'||!editor||editor.composing||editor.eyedropper||editor.saving)return;
@@ -1305,7 +1350,14 @@ async function photoTextFinish(){
     canvas.height=photo.height||image.naturalHeight||1920;
     const ctx=canvas.getContext('2d');
     if(!ctx)throw Error('Não foi possível criar a foto editada.');
-    ctx.drawImage(image,0,0,canvas.width,canvas.height);
+    if(app.framingDraft){
+      const d=app.framingDraft,source=new Image(),overlay=new Image();
+      const load=(img,url)=>new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('Não foi possível carregar a foto ou o filtro.'));img.src=url;if(img.complete&&img.naturalWidth)resolve();});
+      await Promise.all([load(source,d.sourceUrl),load(overlay,d.overlayUrl)]);
+      clampFramingDraft(d);
+      drawFramedSource(ctx,source,canvas.width,canvas.height,d);
+      ctx.drawImage(overlay,0,0,canvas.width,canvas.height);
+    }else ctx.drawImage(image,0,0,canvas.width,canvas.height);
     const texts=editor.texts.filter(item=>item.text.trim()).map(item=>({...item}));
     // Aguarda cada tipografia antes de renderizar no Canvas. Sem isso o Safari
     // pode salvar com uma fonte padrão diferente da escolhida na tela.
@@ -1318,6 +1370,17 @@ async function photoTextFinish(){
     photo.url=URL.createObjectURL(blob);
     photo.texts=texts;
     if(oldUrl!==photo.baseUrl)URL.revokeObjectURL(oldUrl);
+    if(app.framingDraft){
+      // A prévia sem texto deve acompanhar o enquadramento para reedições futuras.
+      const d=app.framingDraft,source=new Image(),overlay=new Image();
+      const load=(img,url)=>new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('Não foi possível atualizar o enquadramento.'));img.src=url;if(img.complete&&img.naturalWidth)resolve();});
+      await Promise.all([load(source,d.sourceUrl),load(overlay,d.overlayUrl)]);
+      const base=document.createElement('canvas');base.width=canvas.width;base.height=canvas.height;
+      const baseCtx=base.getContext('2d');drawFramedSource(baseCtx,source,base.width,base.height,d);baseCtx.drawImage(overlay,0,0,base.width,base.height);
+      const baseBlob=await new Promise((resolve,reject)=>base.toBlob(b=>b?resolve(b):reject(Error('Não foi possível atualizar a imagem.')),'image/png'));
+      if(photo.baseUrl&&photo.baseUrl!==oldUrl)URL.revokeObjectURL(photo.baseUrl);
+      photo.baseBlob=baseBlob;photo.baseUrl=URL.createObjectURL(baseBlob);
+    }
     app.photoEditor=null;app.page='preview';render();
     toast('Edição aplicada! A foto está pronta para salvar ou compartilhar.');
   }catch(error){
@@ -3219,6 +3282,7 @@ function render(){
   if(app.page==='editor'&&app.captureData&&app.photoEditor){
     $('root').innerHTML=photoEditorView();
     photoTextSyncPixels();
+    syncEditorFramingPreview();
     return;
   }
   const admin=app.profile.role==='admin';
@@ -4083,8 +4147,7 @@ async function capture(){
       sourceWidth,sourceHeight,format,zoom:1,dx:0,dy:0,
       pointers:new Map(),gesture:null,saving:false};
     stopCamera();
-    app.page='framing';
-    render();
+    await finishPhotoFraming();
     window.scrollTo(0,0);
   }catch(error){toast(errorMessage(error));}
   finally{
@@ -4094,7 +4157,7 @@ async function capture(){
       finishButton.disabled=false;
       finishButton.removeAttribute('aria-busy');
       const title=finishButton.querySelector('strong');
-      if(title)title.textContent='Ajustar foto';
+      if(title)title.textContent='Usar foto';
     }
   }
 }
@@ -4377,6 +4440,10 @@ $('root').addEventListener('contextmenu',event=>{if(event.target.closest?.('.cli
 $('root').addEventListener('click',click);
 document.addEventListener('pointerdown',event=>{if(event.target.closest?.('#photoTextConfirm'))event.preventDefault();},true);
 document.addEventListener('pointerdown',photoTextOutsidePointerDown,true);
+$('root').addEventListener('pointerdown',editorBackgroundPointerDown);
+$('root').addEventListener('pointermove',editorBackgroundPointerMove);
+$('root').addEventListener('pointerup',editorBackgroundPointerEnd);
+$('root').addEventListener('pointercancel',editorBackgroundPointerEnd);
 $('root').addEventListener('focusout',photoTextInputBlurred);
 $('root').addEventListener('keydown',photoTextLayerKeydown);
 $('root').addEventListener('pointerdown',categoryOrderPointerDown);
