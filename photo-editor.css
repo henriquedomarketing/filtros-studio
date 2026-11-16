@@ -1512,3 +1512,12 @@
 
 .fs-photo-editor .fs-canva-delete{position:absolute!important;left:-16px!important;top:-17px!important;display:grid!important;place-items:center!important;width:30px!important;height:30px!important;border:1.5px solid #a16bf0!important;border-radius:50%!important;background:#fff!important;color:#6d37bd!important;box-shadow:0 2px 7px #0003!important;z-index:8!important;cursor:pointer!important;touch-action:manipulation!important;padding:0!important}
 .fs-photo-editor .fs-canva-delete svg{pointer-events:none!important}
+
+/* Prévia de foto: imagem protagonista, botões compactos, sem excesso de área vazia. */
+.client-app.is-preview .fs-result-compact{gap:14px!important;width:100%!important;max-width:520px!important;margin:0 auto!important;padding:0 10px 8px!important;box-sizing:border-box!important}
+.client-app.is-preview .fs-result-picture{width:min(calc(100vw - 54px),calc((100dvh - 370px)*.5625),410px)!important;min-width:210px!important;max-width:100%!important;aspect-ratio:9/16!important;border-radius:13px!important;box-shadow:0 9px 26px #0003!important}
+.client-app.is-preview .fs-result-buttons{width:min(100%,440px)!important;gap:8px!important}
+.client-app.is-preview .fs-result-buttons button{min-height:46px!important;border-radius:13px!important;font-size:14px!important}
+.client-app.is-preview .fs-result-buttons .fs-result-premium{min-height:49px!important}
+.client-app.is-preview .fs-result-buttons .fs-result-retry{min-height:40px!important}
+@media(max-height:760px){.client-app.is-preview .fs-result-picture{width:min(calc(100vw - 62px),calc((100dvh - 315px)*.5625),380px)!important;min-width:175px!important}.client-app.is-preview .fs-result-compact{gap:10px!important}}
