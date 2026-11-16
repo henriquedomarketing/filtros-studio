@@ -2595,7 +2595,107 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
     font-size:14px;
   }
 }
+
+
+/* Edição direta no palco (iPhone/Android): teclado nativo, sem modal e sem Pronto. */
+.fs-photo-editor .fs-edit-text.is-composing{
+  opacity:0!important;
+  pointer-events:none!important;
+}
+.fs-photo-editor .fs-edit-inline-input{
+  position:absolute;
+  z-index:5;
+  display:block;
+  box-sizing:border-box;
+  min-width:48px;
+  min-height:42px;
+  max-width:87%;
+  overflow:hidden;
+  resize:none;
+  padding:.18em .28em;
+  margin:0;
+  border:1px dashed rgba(255,236,177,.96);
+  border-radius:.25em;
+  background:transparent;
+  box-shadow:none;
+  color:#fff;
+  text-align:center;
+  text-shadow:0 1px 6px rgba(0,0,0,.65);
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  line-height:1.18;
+  letter-spacing:normal;
+  outline:0;
+  caret-color:#ffe6a9;
+  -webkit-appearance:none;
+  appearance:none;
+  touch-action:auto;
+  -webkit-user-select:text;
+  user-select:text;
+}
+.fs-photo-editor .fs-edit-inline-input.hidden{display:none!important}
+.fs-photo-editor .fs-edit-inline-input::placeholder{
+  color:rgba(255,255,255,.92);
+  opacity:1;
+}
+.fs-photo-editor .fs-edit-inline-input.fs-inline-none{text-shadow:none}
+.fs-photo-editor .fs-edit-inline-input.fs-inline-shadow{
+  text-shadow:0 2px 10px #000,0 4px 18px rgba(0,0,0,.9);
+}
+.fs-photo-editor .fs-edit-inline-input.fs-inline-outline{
+  text-shadow:none;
+  -webkit-text-stroke:1px rgba(0,0,0,.9);
+}
+.fs-photo-editor .fs-edit-inline-input.fs-inline-dark{
+  background:rgba(0,0,0,.78);
+  text-shadow:none;
+  border-radius:.27em;
+}
+.fs-photo-editor .fs-edit-inline-input.fs-inline-light{
+  background:rgba(255,255,255,.92);
+  text-shadow:none;
+  border-radius:.27em;
+}
+.fs-photo-editor .fs-edit-text-shadow span{
+  text-shadow:0 2px 10px #000,0 4px 18px rgba(0,0,0,.9);
+}
+.fs-photo-editor .fs-edit-text-none span{text-shadow:none!important}
+.fs-photo-editor .fs-edit-text-measure{
+  position:absolute;
+  z-index:-1;
+  visibility:hidden;
+  pointer-events:none;
+  display:block;
+  width:max-content;
+  max-width:87%;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  text-align:center;
+  padding:.18em .28em;
+  border:1px solid transparent;
+  line-height:1.18;
+  box-sizing:border-box;
+}
+.fs-photo-editor .fs-simple-style-panel .fs-edit-styles{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:7px;
+}
+.fs-photo-editor .fs-simple-style-panel .fs-edit-style{
+  width:auto!important;
+  min-width:86px;
+  max-width:48%;
+  min-height:39px;
+  padding:7px 11px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0;
+  border-radius:10px;
+}
+.fs-photo-editor .fs-edit-hint{line-height:1.35!important}
 `;
+
 function ensurePhotoEditorStyles(){
   if(document.getElementById('fs-photo-editor-inline-style'))return;
   const el=document.createElement('style');
