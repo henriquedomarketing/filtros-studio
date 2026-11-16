@@ -4338,6 +4338,7 @@ $('root').addEventListener('pointercancel',clearFilterHold);
 $('root').addEventListener('pointerleave',clearFilterHold);
 $('root').addEventListener('contextmenu',event=>{if(event.target.closest?.('.client-numbered-filter'))event.preventDefault();});
 $('root').addEventListener('click',click);
+document.addEventListener('pointerdown',event=>{if(event.target.closest?.('#photoTextConfirm'))event.preventDefault();},true);
 document.addEventListener('pointerdown',photoTextOutsidePointerDown,true);
 $('root').addEventListener('focusout',photoTextInputBlurred);
 $('root').addEventListener('keydown',photoTextLayerKeydown);
