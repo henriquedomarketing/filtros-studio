@@ -612,6 +612,7 @@ async function finishPhotoFraming(){
       canvas.toBlob(b=>b?resolve(b):reject(Error('Não foi possível gerar a imagem.')),'image/png'));
     const name='filtros-studio-'+Date.now()+'.png';
     clearCapturedPhoto();
+    app.framingDraft=d;
     app.captureData={blob,file:new File([blob],name,{type:'image/png'}),name,
       url:URL.createObjectURL(blob),width:canvas.width,height:canvas.height,format:d.format.id};
     app.page='preview';render();window.scrollTo(0,0);
