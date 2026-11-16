@@ -1653,3 +1653,17 @@
   width:min(calc(100vw - 12px),calc((100dvh - 165px)*.5625),480px)!important;
  }
 }
+
+/* Espaçamento visual equilibrado entre topo, prévia e controles. */
+.client-app.is-camera .client-content{
+ padding-top:28px!important;
+}
+.client-app.is-camera .client-viewfinder{
+ width:min(calc(100vw - 12px),calc((100dvh - 191px)*.5625),520px)!important;
+}
+@media(max-height:700px){
+ .client-app.is-camera .client-content{padding-top:20px!important}
+ .client-app.is-camera .client-viewfinder{
+  width:min(calc(100vw - 12px),calc((100dvh - 173px)*.5625),480px)!important;
+ }
+}
