@@ -674,7 +674,7 @@ function photoEditorView(){
     `<button type="button" class="fs-edit-font ${active?.font===key?'chosen':''}" data-act="text-font" data-id="${key}" ${active?'':'disabled'} style="font-family:${escapeHtml(font.css)};font-weight:${font.weight}">${font.label}</button>`
   ).join('');
   const styles=[['none','Sem sombra'],['plain','Sombra suave'],['shadow','Sombra forte'],['dark','Faixa escura'],['light','Faixa clara'],['outline','Contorno']].map(([key,label])=>
-    `<button type="button" class="fs-edit-style ${active?.style===key?'chosen':''}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="${label}">${label}</button>`
+    `<button type="button" class="fs-edit-style fs-style-preview-card ${active?.style===key?'chosen':''}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Aplicar ${label}" aria-pressed="${active?.style===key?'true':'false'}"><span class="fs-style-preview fs-style-preview--${key}" aria-hidden="true"><span>Aa</span></span><span class="fs-style-preview-label">${label}</span></button>`
   ).join('');
   const colors=PHOTO_TEXT_COLORS.map(color=>
     `<button type="button" class="fs-edit-color ${active?.color===color?'chosen':''}" data-act="text-color" data-id="${color}"
@@ -2785,6 +2785,21 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-edit-inline-input{background:transparent!important;border:1px dashed #9a59e8!important;outline:2px solid #9747ff!important;outline-offset:3px!important;border-radius:4px!important;box-shadow:none!important;padding:3px!important}
 .fs-photo-editor .fs-edit-inline-input::placeholder{color:rgba(255,255,255,.8)!important}
 @media(max-height:760px){.fs-photo-editor .fs-edit-stage{width:min(calc(100vw - 22px),calc((100dvh - 155px)*0.5625),490px)!important}}
+
+/* Miniaturas reais de cada estilo, em vez de botões apenas com texto. */
+.fs-photo-editor .fs-edit-styles.fs-simple-style-options{display:flex!important;flex-wrap:nowrap!important;gap:10px!important;overflow-x:auto!important;overscroll-behavior-x:contain!important;scroll-snap-type:x proximity!important;padding:9px 3px 12px!important;scrollbar-width:none}
+.fs-photo-editor .fs-edit-styles::-webkit-scrollbar{display:none}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card{flex:0 0 98px!important;width:98px!important;min-height:104px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:6px!important;border:1px solid #e3e3e8!important;background:#fff!important;color:#34343c!important;border-radius:13px!important;padding:7px!important;box-shadow:none!important;scroll-snap-align:start!important;font-size:11px!important;font-weight:600!important;white-space:normal!important;line-height:1.2!important}
+.fs-photo-editor .fs-edit-style.fs-style-preview-card.chosen{border:2px solid #9747ff!important;background:#f9f5ff!important;color:#5224a0!important;padding:6px!important}
+.fs-photo-editor .fs-style-preview{display:flex;align-items:center;justify-content:center;width:82px;height:60px;border-radius:8px;background:#68686d;overflow:hidden}
+.fs-photo-editor .fs-style-preview span{font:800 32px/1 Arial,sans-serif;color:#fff;letter-spacing:-2px}
+.fs-photo-editor .fs-style-preview--none span{text-shadow:none}
+.fs-photo-editor .fs-style-preview--plain span{text-shadow:1px 2px 3px #0009}
+.fs-photo-editor .fs-style-preview--shadow span{text-shadow:2px 4px 2px #000,0 0 7px #000}
+.fs-photo-editor .fs-style-preview--dark span{background:#141419b8;padding:4px 9px;border-radius:4px;text-shadow:none}
+.fs-photo-editor .fs-style-preview--light span{background:#ffffffed;color:#222;padding:4px 9px;border-radius:4px;text-shadow:none}
+.fs-photo-editor .fs-style-preview--outline span{-webkit-text-stroke:1.8px #151515;text-shadow:none}
+.fs-photo-editor .fs-style-preview-label{display:block;text-align:center;max-width:100%;font-size:11px!important;line-height:1.2!important}
 `;
 
 function ensurePhotoEditorStyles(){
