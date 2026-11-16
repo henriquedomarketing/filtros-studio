@@ -690,7 +690,7 @@ function photoEditorView(){
       <button type="button" data-act="text-finish" class="fs-edit-top-done">Salvar imagem</button>
     </header>
      <div class="fs-edit-workspace">
-      <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--photo-height:${photo.height||1920}">
+      <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--editor-ratio:${(photo.width||1080)/(photo.height||1920)};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
         ${'<div class="fs-canva-toolbar '+(active&&!editor.composing?'':'hidden')+'" role="toolbar" aria-label="Ações do texto selecionado"><button type="button" data-act="text-add" aria-label="Adicionar texto" title="Adicionar texto">＋</button><button type="button" data-act="text-duplicate" aria-label="Duplicar texto" title="Duplicar texto">▣</button><button type="button" data-act="text-delete" aria-label="Excluir texto" title="Excluir texto">🗑</button><button type="button" data-act="text-more" aria-label="Mais opções de texto" title="Mais opções">•••</button></div>'}
@@ -3113,7 +3113,7 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 .fs-photo-editor .fs-edit-stage[data-format="feed"]{
   box-sizing:border-box!important;
   flex:0 0 auto!important;
-  width:min(calc(100% - 2px),calc((100dvh - 210px)*var(--photo-ratio,0.5625)),520px)!important;
+  width:min(calc(100% - 2px),calc((100dvh - 210px)*var(--editor-ratio,.5625)),520px)!important;
   height:auto!important;
   min-width:0!important;
   max-width:100%!important;
@@ -3135,7 +3135,7 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
   .fs-photo-editor .fs-edit-stage,
   .fs-photo-editor .fs-edit-stage[data-format="story"],
   .fs-photo-editor .fs-edit-stage[data-format="feed"]{
-    width:min(calc(100% - 2px),calc((100dvh - 190px)*var(--photo-ratio,0.5625)),520px)!important;
+    width:min(calc(100% - 2px),calc((100dvh - 190px)*var(--editor-ratio,.5625)),520px)!important;
   }
 }
 `;
