@@ -20,13 +20,13 @@ test('Visualização da foto pronta mantém tamanhos e botões grandes',()=>{
     assert.match(js,new RegExp('data-act="'+action+'"'));
 });
 test('Edição móvel possui foto enquadrada, controles e campo legível',()=>{
-  for(const name of ['fs-photo-editor','fs-edit-stage','fs-edit-panel','fs-edit-compose','fs-edit-fonts'])
+  for(const name of ['fs-photo-editor','fs-edit-stage','fs-edit-panel','fs-edit-inline-input','fs-edit-fonts'])
     assert.match(css,new RegExp('\\.'+name+'\\{'));
   assert.match(css,/@media\(max-height:690px\)/);
-  assert.match(js,/photoTextComposeDone\(\)/);
-  assert.match(js,/\$\('photoTextInput'\)\?\.blur\(\)/);
+  assert.match(js,/photoTextComposeDone/);
+  assert.match(js,/field\?\.blur\(\)/);
 });
 test('Versões do CSS e JavaScript foram renovadas para evitar cache antigo',()=>{
-  assert.match(html,/photo-editor\.css\?v=20261111-add-text-above-v13/);
-  assert.match(html,/app\.js\?v=20261111-add-text-above-v13/);
+  assert.match(html,/photo-editor\.css\?v=20261116-texto-direto-v14/);
+  assert.match(html,/app\.js\?v=20261116-texto-direto-v14/);
 });

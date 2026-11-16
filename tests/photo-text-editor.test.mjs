@@ -17,7 +17,7 @@ const wrapCode=between('function photoTextWrap(ctx,text,maxWidth){','function ph
 const drawCode=between('function photoTextDraw(ctx,item){','async function photoTextFinish(){');
 
 test('A foto final é simples e mantém somente as ações solicitadas',()=>{
-  for(const action of ['photo-edit','photo-save','photo-whatsapp','photo-instagram','photo-retake'])
+  for(const action of ['photo-edit','photo-save','photo-retake'])
     assert.match(preview,new RegExp('data-act="'+action+'"'));
   assert.doesNotMatch(preview,/Sua foto ficou pronta|FOTO FINALIZADA|photo-change-filter|photo-share/);
   assert.match(preview,/fs-result-premium/);
@@ -28,7 +28,7 @@ test('Editor oferece fontes, cores, estilos e texto livre',()=>{
   for(const act of ['text-font','text-style','text-color','text-finish','text-cancel','text-delete'])
     assert.match(editor,new RegExp('data-act="'+act+'"'));
   assert.match(editor,/photoTextInput/);
-  assert.match(editor,/fs-edit-compose-fonts/);
+  assert.match(editor,/fs-edit-inline-input/);
   assert.match(app,/const PHOTO_TEXT_COLORS=/);
   assert.match(css,/\.fs-edit-stage/);
   assert.match(css,/touch-action:none/);
@@ -48,8 +48,8 @@ test('Os controles de toque e tamanho estão registrados',()=>{
   assert.match(app,/addEventListener\('pointermove',photoTextPointerMove/);
   assert.match(app,/addEventListener\('pointerup',photoTextPointerUp/);
   assert.match(app,/addEventListener\('input',photoTextInputChanged\)/);
-  assert.match(app,/drag\.x\+dx\/rect\.width/);
-  assert.match(app,/drag\.y\+dy\/rect\.height/);
+  assert.match(app,/start\.x\+\(current\.center\.x-start\.center\.x\)/);
+  assert.match(app,/start\.y\+\(current\.center\.y-start\.center\.y\)/);
 });
 test('Quebra de texto respeita o limite horizontal da foto',()=>{
   const wrap=new Function('return ('+wrapCode.trim()+')')();
@@ -78,5 +78,5 @@ test('Desenho em Canvas é compatível com navegadores sem roundRect',()=>{
 });
 test('Nova folha visual é carregada depois do tema principal e módulo ganha versão nova',()=>{
   assert.ok(html.indexOf('photo-editor.css')>html.indexOf('studio-unified-blue.css'));
-  assert.match(html,/app\.js\?v=20261109-texto-stories-v2/);
+  assert.match(html,/app\.js\?v=20261116-texto-direto-v14/);
 });

@@ -642,7 +642,7 @@ const PHOTO_TEXT_FONTS={
   fashion:{label:'Arcade',family:'Press Start 2P',css:'"Press Start 2P",monospace',canvas:'"Press Start 2P",monospace',weight:'400'}
 };
 const PHOTO_TEXT_COLORS=['#FFFFFF','#101828','#FFE16B','#FF4B68','#42C9FF','#1ADBA7','#B796FF'];
-const PHOTO_TEXT_STYLES=['plain','dark','light','outline'];
+const PHOTO_TEXT_STYLES=['none','plain','shadow','dark','light','outline'];
 
 function photoTextFont(item){
   return PHOTO_TEXT_FONTS[item?.font]||PHOTO_TEXT_FONTS.modern;
@@ -656,11 +656,13 @@ function photoTextLayer(item){
   const font=photoTextFont(item);
   const color=item.style==='light'?'#121928':item.color;
   const size=(item.size/10.8).toFixed(3);
-  return `<div class="fs-edit-text fs-edit-text-${escapeHtml(item.style)} ${app.photoEditor?.selectedId===item.id?'selected':''}"
+  const composing=app.photoEditor?.composing&&app.photoEditor?.selectedId===item.id;
+  return `<div class="fs-edit-text fs-edit-text-${escapeHtml(item.style||'plain')} ${app.photoEditor?.selectedId===item.id?'selected':''} ${composing?'is-composing':''}"
     data-photo-text="${escapeHtml(item.id)}" role="button" tabindex="0"
-    aria-label="Mover ou editar o texto ${escapeHtml(item.text||'novo')}"
+    aria-label="Toque para editar, arraste para mover o texto ${escapeHtml(item.text||'novo')}"
     style="left:${(item.x*100).toFixed(2)}%;top:${(item.y*100).toFixed(2)}%;font-size:${size}cqw;
-    font-family:${escapeHtml(font.css)};font-weight:${font.weight};color:${escapeHtml(color)}">
+    font-family:${escapeHtml(font.css)};font-weight:${font.weight};color:${escapeHtml(color)};
+    transform:translate(-50%,-50%) rotate(${Number(item.rotation)||0}deg)">
     <span>${escapeHtml(item.text||'Seu texto').replace(/\n/g,'<br>')}</span>
   </div>`;
 }
@@ -670,8 +672,8 @@ function photoEditorView(){
   const fonts=Object.entries(PHOTO_TEXT_FONTS).map(([key,font])=>
     `<button type="button" class="fs-edit-font ${active?.font===key?'chosen':''}" data-act="text-font" data-id="${key}" ${active?'':'disabled'} style="font-family:${escapeHtml(font.css)};font-weight:${font.weight}">${font.label}</button>`
   ).join('');
-  const styles=[['plain','Aa'],['dark','▣'],['light','▤'],['outline','Ⓐ']].map(([key,label])=>
-    `<button type="button" class="fs-edit-style ${active?.style===key?'chosen':''}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="Estilo ${key}">${label}</button>`
+  const styles=[['none','Sem sombra'],['plain','Sombra suave'],['shadow','Sombra forte'],['dark','Faixa escura'],['light','Faixa clara'],['outline','Contorno']].map(([key,label])=>
+    `<button type="button" class="fs-edit-style ${active?.style===key?'chosen':''}" data-act="text-style" data-id="${key}" ${active?'':'disabled'} aria-label="${label}">${label}</button>`
   ).join('');
   const colors=PHOTO_TEXT_COLORS.map(color=>
     `<button type="button" class="fs-edit-color ${active?.color===color?'chosen':''}" data-act="text-color" data-id="${color}"
@@ -681,7 +683,7 @@ function photoEditorView(){
     <header class="fs-edit-top">
       <button type="button" data-act="text-cancel" class="fs-edit-top-back">← <span>Voltar</span></button>
       <span class="fs-edit-top-title">Editar foto</span>
-      <button type="button" data-act="text-finish" class="fs-edit-top-done">Concluir</button>
+      <button type="button" data-act="text-finish" class="fs-edit-top-done">Salvar edição</button>
     </header>
     <div class="fs-editor-add-top">
       <button type="button" class="fs-edit-add-top" data-act="text-add">＋ Adicionar texto</button>
@@ -690,6 +692,10 @@ function photoEditorView(){
       <div class="fs-edit-stage" id="photoTextStage" data-format="${photo.format||'story'}" style="--photo-ratio:${photo.width||1080} / ${photo.height||1920};--photo-height:${photo.height||1920}">
         <img class="fs-edit-base" src="${escapeHtml(photo.baseUrl||photo.url)}" alt="Foto com o filtro original" draggable="false">
         <div class="fs-edit-layers" id="photoTextLayers">${editor.texts.map(photoTextLayer).join('')}</div>
+        <span class="fs-edit-text-measure" id="photoTextMeasure" aria-hidden="true"></span>
+        <textarea class="fs-edit-inline-input hidden" id="photoTextInput" rows="1" maxlength="220"
+          placeholder="Digite seu texto" aria-label="Editar texto diretamente na foto"
+          autocomplete="off" autocapitalize="sentences" enterkeyhint="done" spellcheck="true"></textarea>
       </div>
     </div>
     <div class="fs-edit-panel fs-simple-panel ${editor.texts.some(item=>item.text.trim())?'':'fs-simple-empty'}" aria-label="Ferramentas de texto">
@@ -730,12 +736,8 @@ function photoEditorView(){
         <div class="fs-edit-fonts" id="photoTextFonts" aria-label="Escolha a fonte">${fonts}</div>
         <div class="fs-edit-styles fs-simple-style-options" id="photoTextStyles" aria-label="Escolha o efeito">${styles}</div>
       </div>`:''}
-      <p class="fs-edit-hint">1 dedo move · 2 dedos ajustam</p>
+      <p class="fs-edit-hint">Toque para escrever · Arraste para mover · 2 dedos ampliam e giram</p>
       `:''}
-    </div>
-    <div class="fs-edit-compose hidden" id="photoTextCompose">
-      <div class="fs-edit-compose-head"><strong>Escreva seu texto</strong><button type="button" data-act="text-compose-done">Pronto</button></div>
-      <textarea id="photoTextInput" rows="3" maxlength="220" placeholder="Digite aqui..." aria-label="Texto da foto" autocomplete="off"></textarea>
     </div>
     ${photoEyedropperView()}
   </section>`;
@@ -866,7 +868,7 @@ function photoTextOpen(){
 function photoTextAdd(){
   const e=app.photoEditor;
   if(!e)return;
-  const item={id:id(),text:'',x:.5,y:.48,size:80,font:'modern',color:'#FFFFFF',style:'plain'};
+  const item={id:id(),text:'',x:.5,y:.48,size:80,font:'modern',color:'#FFFFFF',style:'plain',rotation:0};
   e.texts.push(item);e.selectedId=item.id;e.tool=null;
   photoTextRefreshLayers();
   photoTextRefreshControls();
@@ -883,7 +885,42 @@ function photoTextSyncPixels(){
     const el=[...stage.querySelectorAll('[data-photo-text]')].find(x=>x.dataset.photoText===item.id);
     if(el)el.style.fontSize=(Math.max(1,Number(item.size)||92)*factor).toFixed(2)+'px';
   }
+  photoTextSyncInline();
 }
+
+// A caixa de escrita acompanha o texto na foto; o teclado nunca depende de "Pronto".
+function photoTextSyncInline(){
+  const editor=app.photoEditor,stage=$('photoTextStage'),field=$('photoTextInput'),measure=$('photoTextMeasure');
+  const item=photoTextActive();
+  if(!stage||!field||!measure)return;
+  if(!editor?.composing||!item){field.classList.add('hidden');return;}
+  const width=stage.getBoundingClientRect().width;
+  if(!width)return;
+  const font=photoTextFont(item),size=Math.max(16,(Number(item.size)||80)*width/1080);
+  const color=item.style==='light'?'#121928':item.color;
+  const rotation=Number(item.rotation)||0;
+  for(const el of [field,measure]){
+    el.style.fontFamily=font.css;
+    el.style.fontWeight=font.weight;
+    el.style.fontSize=size.toFixed(2)+'px';
+    el.style.lineHeight='1.18';
+  }
+  measure.textContent=item.text||'Digite seu texto';
+  const measureRect=measure.getBoundingClientRect();
+  field.style.left=(item.x*100).toFixed(2)+'%';
+  field.style.top=(item.y*100).toFixed(2)+'%';
+  field.style.transform='translate(-50%,-50%) rotate('+rotation+'deg)';
+  field.style.color=color;
+  field.style.width=Math.min(width*.87,Math.max(88,measureRect.width+8)).toFixed(2)+'px';
+  field.style.height=Math.max(42,measureRect.height+6).toFixed(2)+'px';
+  field.classList.toggle('fs-inline-dark',item.style==='dark');
+  field.classList.toggle('fs-inline-light',item.style==='light');
+  field.classList.toggle('fs-inline-outline',item.style==='outline');
+  field.classList.toggle('fs-inline-shadow',item.style==='shadow');
+  field.classList.toggle('fs-inline-none',item.style==='none');
+  field.classList.remove('hidden');
+}
+
 function photoTextRefreshLayers(){
   const host=$('photoTextLayers'),e=app.photoEditor;
   if(host&&e){
@@ -905,27 +942,67 @@ function photoTextRefreshControls(){
 }
 
 function photoTextComposeOpen(){
-  if(!app.photoEditor)return;
-  const item=photoTextActive();
-  if(!item)return;
-  app.photoEditor.composing=true;
-  const host=$('photoTextCompose'),field=$('photoTextInput');
-  if(host)host.classList.remove('hidden');
-  if(field){field.value=item.text;field.focus();field.setSelectionRange(field.value.length,field.value.length);}
+  const editor=app.photoEditor,item=photoTextActive(),field=$('photoTextInput');
+  if(!editor||!item||!field)return;
+  editor.composing=true;
+  field.value=item.text;
+  photoTextRefreshLayers();
+  photoTextSyncInline();
+  try{field.focus({preventScroll:true});}catch(_){field.focus();}
+  field.setSelectionRange(field.value.length,field.value.length);
 }
 
-function photoTextComposeDone(){
-  const e=app.photoEditor;
-  if(!e)return;
-  const active=photoTextActive();
-  if(active&&!active.text.trim()){
-    e.texts=e.texts.filter(item=>item.id!==active.id);
-    e.selectedId=e.texts.at(-1)?.id||null;
+// Ao perder o foco ou tocar fora, o texto permanece salvo no estado em memória.
+function photoTextComposeDone({refresh=true}={}){
+  const editor=app.photoEditor;
+  if(!editor||!editor.composing)return;
+  const selected=photoTextActive();
+  editor.composing=false;
+  const field=$('photoTextInput');
+  field?.classList.add('hidden');
+  field?.blur();
+  if(selected&&!selected.text.trim()){
+    editor.texts=editor.texts.filter(item=>item.id!==selected.id);
+    editor.selectedId=editor.texts.at(-1)?.id||null;
+    if(!editor.texts.length)editor.tool=null;
   }
-  e.composing=false;
-  $('photoTextInput')?.blur();
-  $('photoTextCompose')?.classList.add('hidden');
+  if(refresh)render();
+}
+
+// Encerrar a digitação antes de tocar em ferramentas, outra frase ou na foto.
+function photoTextOutsidePointerDown(event){
+  if(app.page!=='editor'||!app.photoEditor?.composing)return;
+  if(event.target.closest?.('#photoTextInput'))return;
+  photoTextComposeDone({refresh:false});
+}
+function photoTextInputBlurred(event){
+  if(event.target.id!=='photoTextInput'||!app.photoEditor?.composing)return;
+  const editor=app.photoEditor;
+  photoTextComposeDone({refresh:false});
+  requestAnimationFrame(()=>{
+    if(app.page==='editor'&&app.photoEditor===editor&&!editor.composing&&!editor.drag)render();
+  });
+}
+function photoTextStageClicked(event){
+  if(app.page!=='editor'||!app.photoEditor)return;
+  if(!event.target.closest?.('#photoTextStage'))return;
+  if(event.target.closest?.('[data-photo-text],#photoTextInput'))return;
+  const editor=app.photoEditor;
+  if(editor.ignoreStageClick){editor.ignoreStageClick=false;return;}
+  if(editor.composing)photoTextComposeDone({refresh:false});
+  editor.selectedId=null;editor.tool=null;
   render();
+}
+function photoTextLayerKeydown(event){
+  if(app.page!=='editor'||!['Enter',' '].includes(event.key))return;
+  const layer=event.target.closest?.('[data-photo-text]');
+  if(!layer||!app.photoEditor)return;
+  const item=app.photoEditor.texts.find(text=>text.id===layer.dataset.photoText);
+  if(!item)return;
+  event.preventDefault();
+  app.photoEditor.selectedId=item.id;
+  photoTextRefreshLayers();
+  photoTextComposeOpen();
 }
 
 function photoTextCancel(){
@@ -976,7 +1053,8 @@ function photoTextInputChanged(event){
   if(!active)return;
   if(event.target.id==='photoTextInput'){
     active.text=event.target.value.slice(0,220);
-    photoTextRefreshLayers();
+    // Não reconstruir o textarea: preserva cursor, seleção e teclado do iPhone.
+    photoTextSyncInline();
   }else if(event.target.id==='photoTextSize'){
     active.size=Math.max(4,Math.min(600,Number(event.target.value)||4));
     photoTextRefreshLayers();
@@ -991,14 +1069,21 @@ function photoTextGestureSnapshot(pointers){
   return {center,distance:pts.length===2?
     Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y):1};
 }
+function photoTextGestureAngle(pointers){
+  const pts=[...pointers.values()];
+  if(pts.length<2)return 0;
+  return Math.atan2(pts[1].y-pts[0].y,pts[1].x-pts[0].x)*180/Math.PI;
+}
 function photoTextGestureRebase(editor){
   const drag=editor?.drag;
   if(!drag)return;
   const item=editor.texts.find(text=>text.id===drag.id);
   if(!item||!drag.pointers.size){editor.drag=null;return;}
   const values=photoTextGestureSnapshot(drag.pointers);
-  drag.start={...values,x:item.x,y:item.y,size:item.size};
+  drag.start={...values,x:item.x,y:item.y,size:item.size,rotation:Number(item.rotation)||0,
+    angle:drag.pointers.size>=2?photoTextGestureAngle(drag.pointers):null};
 }
+
 function photoTextGestureTransform(start,current,rect){
   const scale=start.distance===1?1:
     current.distance/Math.max(1,start.distance);
@@ -1014,7 +1099,6 @@ function photoTextPointerDown(event){
   const stage=event.target.closest?.('#photoTextStage');
   if(!stage)return;
   const activeDrag=editor.drag;
-  // Segundo dedo pode tocar outra parte da foto, mas nunca troca o texto ativo.
   let id=activeDrag?.id;
   if(!activeDrag){
     const el=event.target.closest?.('[data-photo-text]');
@@ -1022,11 +1106,13 @@ function photoTextPointerDown(event){
     id=el.dataset.photoText;
     if(!editor.texts.some(item=>item.id===id))return;
     editor.selectedId=id;
-    editor.drag={id,pointers:new Map(),start:null};
+    editor.drag={id,pointers:new Map(),start:null,moved:false,multi:false,
+      initialX:event.clientX,initialY:event.clientY};
     photoTextRefreshControls();
   }
   if(editor.drag.pointers.size>=2)return;
   editor.drag.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  if(editor.drag.pointers.size>=2)editor.drag.multi=true;
   photoTextGestureRebase(editor);
   try{stage.setPointerCapture(event.pointerId);}catch(_){}
   event.preventDefault();
@@ -1038,8 +1124,14 @@ function photoTextPointerMove(event){
   const item=editor.texts.find(x=>x.id===drag.id);
   if(!stage||!item)return;
   drag.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  if(Math.hypot(event.clientX-drag.initialX,event.clientY-drag.initialY)>7)drag.moved=true;
+  if(drag.pointers.size>=2)drag.moved=true;
   const values=photoTextGestureTransform(drag.start,photoTextGestureSnapshot(drag.pointers),
     stage.getBoundingClientRect());
+  if(drag.pointers.size>=2&&drag.start.angle!==null){
+    const delta=photoTextGestureAngle(drag.pointers)-drag.start.angle;
+    values.rotation=Math.round((drag.start.rotation+((delta+540)%360-180))*10)/10;
+  }
   Object.assign(item,values);
   // Não recriar o DOM durante o gesto: mantém a captura do ponteiro no iOS.
   const el=[...stage.querySelectorAll('[data-photo-text]')].find(x=>x.dataset.photoText===item.id);
@@ -1047,6 +1139,7 @@ function photoTextPointerMove(event){
     el.style.left=(item.x*100).toFixed(2)+'%';
     el.style.top=(item.y*100).toFixed(2)+'%';
     el.style.fontSize=(item.size/1080*stage.getBoundingClientRect().width).toFixed(2)+'px';
+    el.style.transform='translate(-50%,-50%) rotate('+(Number(item.rotation)||0)+'deg)';
   }
   event.preventDefault();
 }
@@ -1057,9 +1150,14 @@ function photoTextPointerUp(event){
   if(drag.pointers.size){
     photoTextGestureRebase(editor);
   }else{
+    const tapped=!drag.moved&&!drag.multi&&event.type!=='pointercancel';
     editor.drag=null;
+    // A captura de pointer pode redirecionar o click para o palco; não deselecionar após toque.
+    editor.ignoreStageClick=true;
+    setTimeout(()=>{if(app.photoEditor===editor)editor.ignoreStageClick=false;},0);
     photoTextRefreshLayers();
     photoTextRefreshControls();
+    if(tapped)photoTextComposeOpen();
   }
 }
 
@@ -1099,11 +1197,15 @@ function photoTextDraw(ctx,item){
   // A posição gravada é exatamente a posição arrastada, inclusive junto às bordas.
   const x=item.x*canvasWidth;
   const y=item.y*canvasHeight;
+  // Rotaciona o texto, suas sombras e sua faixa em conjunto no arquivo exportado.
+  const transformed=typeof ctx.translate==='function';
+  if(transformed){ctx.translate(x,y);ctx.rotate?.((Number(item.rotation)||0)*Math.PI/180);}
+  const tx=transformed?0:x,ty=transformed?0:y;
   if(item.style==='dark'||item.style==='light'){
     ctx.beginPath();
-    if(typeof ctx.roundRect==='function')ctx.roundRect(x-width/2,y-height/2,width,height,size*.22);
+    if(typeof ctx.roundRect==='function')ctx.roundRect(tx-width/2,ty-height/2,width,height,size*.22);
     else{
-      const l=x-width/2,t=y-height/2,r=Math.min(size*.22,width/2,height/2);
+      const l=tx-width/2,t=ty-height/2,r=Math.min(size*.22,width/2,height/2);
       ctx.moveTo(l+r,t);ctx.lineTo(l+width-r,t);
       ctx.quadraticCurveTo(l+width,t,l+width,t+r);ctx.lineTo(l+width,t+height-r);
       ctx.quadraticCurveTo(l+width,t+height,l+width-r,t+height);
@@ -1115,14 +1217,16 @@ function photoTextDraw(ctx,item){
   }
   ctx.font=`${font.weight} ${size}px ${font.canvas}`;
   lines.forEach((line,index)=>{
-    const ly=y+(index-(lines.length-1)/2)*step;
+    const ly=ty+(index-(lines.length-1)/2)*step;
     if(item.style==='outline'){
-      ctx.strokeStyle='rgba(0,0,0,.90)';ctx.lineWidth=Math.max(5,size*.12);ctx.strokeText(line,x,ly);
-    }else if(item.style==='plain'){
-      ctx.shadowColor='rgba(0,0,0,.63)';ctx.shadowBlur=size*.15;ctx.shadowOffsetY=size*.04;
+      ctx.strokeStyle='rgba(0,0,0,.90)';ctx.lineWidth=Math.max(5,size*.12);ctx.strokeText(line,tx,ly);
+    }else if(item.style==='plain'||item.style==='shadow'){
+      ctx.shadowColor=item.style==='shadow'?'rgba(0,0,0,.95)':'rgba(0,0,0,.63)';
+      ctx.shadowBlur=size*(item.style==='shadow'?.32:.15);
+      ctx.shadowOffsetY=size*(item.style==='shadow'?.09:.04);
     }
     ctx.fillStyle=item.style==='light'?'#121928':item.color;
-    ctx.fillText(line,x,ly);
+    ctx.fillText(line,tx,ly);
     ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   });
   ctx.restore();
@@ -1131,7 +1235,7 @@ function photoTextDraw(ctx,item){
 async function photoTextFinish(){
   const editor=app.photoEditor,photo=app.captureData;
   if(!editor||!photo||editor.saving)return;
-  if(editor.composing)photoTextComposeDone();
+  if(editor.composing)photoTextComposeDone({refresh:false});
   editor.saving=true;
   const done=document.querySelector('[data-act="text-finish"]');
   if(done){done.disabled=true;done.textContent='Preparando...';}
@@ -1164,7 +1268,7 @@ async function photoTextFinish(){
     toast('Edição aplicada! A foto está pronta para salvar ou compartilhar.');
   }catch(error){
     editor.saving=false;
-    if(done?.isConnected){done.disabled=false;done.textContent='Concluir';}
+    if(done?.isConnected){done.disabled=false;done.textContent='Salvar edição';}
     toast(errorMessage(error));
   }
 }
@@ -2491,7 +2595,107 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
     font-size:14px;
   }
 }
+
+
+/* Edição direta no palco (iPhone/Android): teclado nativo, sem modal e sem Pronto. */
+.fs-photo-editor .fs-edit-text.is-composing{
+  opacity:0!important;
+  pointer-events:none!important;
+}
+.fs-photo-editor .fs-edit-inline-input{
+  position:absolute;
+  z-index:5;
+  display:block;
+  box-sizing:border-box;
+  min-width:48px;
+  min-height:42px;
+  max-width:87%;
+  overflow:hidden;
+  resize:none;
+  padding:.18em .28em;
+  margin:0;
+  border:1px dashed rgba(255,236,177,.96);
+  border-radius:.25em;
+  background:transparent;
+  box-shadow:none;
+  color:#fff;
+  text-align:center;
+  text-shadow:0 1px 6px rgba(0,0,0,.65);
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  line-height:1.18;
+  letter-spacing:normal;
+  outline:0;
+  caret-color:#ffe6a9;
+  -webkit-appearance:none;
+  appearance:none;
+  touch-action:auto;
+  -webkit-user-select:text;
+  user-select:text;
+}
+.fs-photo-editor .fs-edit-inline-input.hidden{display:none!important}
+.fs-photo-editor .fs-edit-inline-input::placeholder{
+  color:rgba(255,255,255,.92);
+  opacity:1;
+}
+.fs-photo-editor .fs-edit-inline-input.fs-inline-none{text-shadow:none}
+.fs-photo-editor .fs-edit-inline-input.fs-inline-shadow{
+  text-shadow:0 2px 10px #000,0 4px 18px rgba(0,0,0,.9);
+}
+.fs-photo-editor .fs-edit-inline-input.fs-inline-outline{
+  text-shadow:none;
+  -webkit-text-stroke:1px rgba(0,0,0,.9);
+}
+.fs-photo-editor .fs-edit-inline-input.fs-inline-dark{
+  background:rgba(0,0,0,.78);
+  text-shadow:none;
+  border-radius:.27em;
+}
+.fs-photo-editor .fs-edit-inline-input.fs-inline-light{
+  background:rgba(255,255,255,.92);
+  text-shadow:none;
+  border-radius:.27em;
+}
+.fs-photo-editor .fs-edit-text-shadow span{
+  text-shadow:0 2px 10px #000,0 4px 18px rgba(0,0,0,.9);
+}
+.fs-photo-editor .fs-edit-text-none span{text-shadow:none!important}
+.fs-photo-editor .fs-edit-text-measure{
+  position:absolute;
+  z-index:-1;
+  visibility:hidden;
+  pointer-events:none;
+  display:block;
+  width:max-content;
+  max-width:87%;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  text-align:center;
+  padding:.18em .28em;
+  border:1px solid transparent;
+  line-height:1.18;
+  box-sizing:border-box;
+}
+.fs-photo-editor .fs-simple-style-panel .fs-edit-styles{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:7px;
+}
+.fs-photo-editor .fs-simple-style-panel .fs-edit-style{
+  width:auto!important;
+  min-width:86px;
+  max-width:48%;
+  min-height:39px;
+  padding:7px 11px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0;
+  border-radius:10px;
+}
+.fs-photo-editor .fs-edit-hint{line-height:1.35!important}
 `;
+
 function ensurePhotoEditorStyles(){
   if(document.getElementById('fs-photo-editor-inline-style'))return;
   const el=document.createElement('style');
@@ -3559,7 +3763,6 @@ if(act==='text-smaller'||act==='text-larger'){
 }
 if(act==='text-add'){photoTextAdd();return;}
 if(act==='text-edit'){photoTextComposeOpen();return;}
-if(act==='text-compose-done'){photoTextComposeDone();return;}
 if(act==='text-cancel'){photoTextCancel();return;}
 if(act==='text-finish'){void photoTextFinish();return;}
 if(act==='text-delete'){
@@ -3614,7 +3817,11 @@ window.addEventListener('resize',()=>{
   if(window.innerWidth>700&&$('adminLayout')?.classList.contains('admin-menu-open'))setAdminMobileMenu(false);
 });
 
+$('root').addEventListener('click',photoTextStageClicked);
 $('root').addEventListener('click',click);
+document.addEventListener('pointerdown',photoTextOutsidePointerDown,true);
+$('root').addEventListener('focusout',photoTextInputBlurred);
+$('root').addEventListener('keydown',photoTextLayerKeydown);
 $('root').addEventListener('pointerdown',categoryOrderPointerDown);
 $('root').addEventListener('pointerdown',photoTextPointerDown);
 $('root').addEventListener('pointerdown',photoEyedropperPointerDown);
