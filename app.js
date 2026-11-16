@@ -202,9 +202,7 @@ function layout(content){const admin=app.profile?.role==='admin';
         </div>
       </aside>`:'';
     return `<div class="client-app ${type} ${testing?'is-admin-test':''}" ${home?`style="${brandStyle(app.company)}"`:''}>
-      ${cameraMode?`<header class="client-camera-header" style="${brandStyle(testing?testingCompany:app.company)}">
-        <button type="button" class="client-camera-menu-toggle" data-act="open-client-menu" aria-label="Abrir menu de categorias" aria-controls="clientCameraDrawer" aria-expanded="false"><span aria-hidden="true">☰</span></button>
-      </header>`:type==='is-preview'?`<header class="client-preview-header">
+      ${cameraMode?'':type==='is-preview'?`<header class="client-preview-header">
         <button type="button" class="client-preview-back" data-act="photo-back" aria-label="Voltar para a câmera"><span aria-hidden="true">←</span> Voltar</button>
       </header>`:`<header class="client-header">
         ${clientBrand}
@@ -471,6 +469,7 @@ function cameraView(){
   return `<section class="client-camera-screen">
     <div class="client-viewfinder-wrap">
       <div class="camera-frame client-viewfinder" data-filter-format="story">
+        <button type="button" class="client-camera-menu-toggle client-camera-floating-menu" data-act="open-client-menu" aria-label="Abrir menu de categorias" aria-controls="clientCameraDrawer" aria-expanded="false"><span aria-hidden="true">☰</span></button>
         ${fromGallery
           ? `<img id="galleryBase" class="client-gallery-image" src="${escapeHtml(app.galleryPhoto.url)}" alt="Foto escolhida na galeria, recortada ao centro em formato Stories">`
           : '<video id="cameraVideo" autoplay playsinline muted></video>'}
@@ -2923,6 +2922,41 @@ const PHOTO_EDITOR_INLINE_STYLES=`/* Filtros Studio · tela final compacta + edi
 @media(max-height:700px){
  .client-app.is-camera .client-viewfinder{
   width:min(calc(100vw - 16px),calc((100dvh - 185px)*.5625),480px)!important;
+ }
+}
+
+/* Câmera sem cabeçalho: menu flutuante sobre a imagem, prévia máxima 9:16. */
+.client-app.is-camera .client-content{
+ padding:2px 6px calc(5px + env(safe-area-inset-bottom,0px))!important;
+}
+.client-app.is-camera .client-camera-screen{
+ width:100%!important;max-width:540px!important;gap:0!important;
+}
+.client-app.is-camera .client-camera-screen .client-viewfinder-wrap{
+ width:100%!important;max-width:540px!important;margin:0 auto 5px!important;
+}
+.client-app.is-camera .client-viewfinder{
+ width:min(calc(100vw - 12px),calc((100dvh - 155px)*.5625),520px)!important;
+ max-width:100%!important;aspect-ratio:9/16!important;
+ border:1px solid rgba(255,255,255,.65)!important;
+ border-radius:15px!important;box-shadow:none!important;
+ position:relative!important;
+}
+.client-app.is-camera:has(.client-gallery-finish) .client-viewfinder{
+ width:min(calc(100vw - 12px),calc((100dvh - 210px)*.5625),520px)!important;
+}
+.client-app.is-camera .client-viewfinder .client-camera-floating-menu{
+ position:absolute!important;top:10px!important;left:10px!important;
+ z-index:16!important;display:grid!important;place-items:center!important;
+ width:43px!important;height:43px!important;min-width:43px!important;min-height:43px!important;
+ padding:0!important;margin:0!important;border-radius:13px!important;
+ color:#001893!important;background:#fff!important;border:1px solid #fff!important;
+ box-shadow:0 2px 9px #0003!important;
+}
+.client-app.is-camera .client-photo-controls{margin:4px auto 4px!important}
+@media(max-height:700px){
+ .client-app.is-camera .client-viewfinder{
+  width:min(calc(100vw - 12px),calc((100dvh - 145px)*.5625),480px)!important;
  }
 }
 `;
