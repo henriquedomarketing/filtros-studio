@@ -1809,3 +1809,14 @@
     width:min(calc(100% - 2px),calc((100dvh - 190px)*var(--editor-ratio,.5625)),520px)!important;
   }
 }
+
+/* Biblioteca v2: modelos editáveis em camadas, sem imagens rasterizadas. */
+.fs-photo-editor .fs-simple-tools{display:flex;justify-content:space-around;gap:5px}
+.fs-photo-editor .fs-simple-tool{min-width:0;flex:1}
+.fs-photo-editor .fs-template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-height:190px;overflow-y:auto;padding:5px 3px 9px}
+.fs-photo-editor .fs-template-card{appearance:none;display:flex;flex-direction:column;gap:7px;align-items:stretch;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.24);border-radius:12px;padding:10px 8px;color:white;box-shadow:none;min-width:0}
+.fs-photo-editor .fs-template-card:active{background:rgba(255,255,255,.18)}
+.fs-photo-editor .fs-template-preview{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:55px;background:rgba(0,0,0,.14);border-radius:8px;text-align:center;padding:6px}
+.fs-photo-editor .fs-template-preview strong{font-size:12px;line-height:1.1;font-weight:900;letter-spacing:.025em;overflow-wrap:anywhere}
+.fs-photo-editor .fs-template-preview small{font-size:8px;line-height:1.15;letter-spacing:.09em;opacity:.88}
+.fs-photo-editor .fs-template-label{font-size:11px;font-weight:650;text-align:center}
