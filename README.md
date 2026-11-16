@@ -1,4 +1,8 @@
-# Filtros Studio
+# Filtros Studio — Versão 2.0
+
+**Marco estável:** 16/11/2026. A versão 2.0 consolida a interface, câmera, editor de texto, filtros e administração existentes. O histórico anterior foi preservado para segurança; o backup de referência está na branch `backup/pre-v2-20261116`.
+
+**Importante:** o código do repositório não contém os registros de usuários, clientes e filtros. Eles permanecem no Supabase atual. Não recrie o projeto Supabase, não execute migrações destrutivas e não altere as credenciais ou a conexão de produção durante uma limpeza de histórico.
 
 Plataforma web independente do projeto antigo `filtros-personalizados`, projetada para até **100 empresas**. Interface brasileira responsiva, pensada para computadores (painel) e iPhone/Android (câmera e filtros).
 
